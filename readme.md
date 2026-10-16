@@ -63,15 +63,16 @@ persona shreds its keys so the deletion is real. most tools that even try
 to model multiple yous stop here, at isolation, and isolation alone is easy:
 it is just careful bookkeeping.
 
-### permissive permeability is the other half
+### freeze: the middle way between active and gone
 
-and there is a middle way between active and gone: you can freeze a persona,
-put it on ice. a frozen persona declines all activity (agent calls, routing,
-switching, bridges, new facts, packs, handoffs, even new connector
-credentials) but nothing is destroyed: the keys are not shredded and no
-record is removed. thaw brings the persona back exactly as it was, sealed
-facts readable again the moment it is active. deletion stays available for
-the times you really mean gone.
+you can also freeze a persona, put it on ice instead of deleting it. a frozen
+persona declines all activity (agent calls, routing, switching, bridges, new
+facts, packs, handoffs, even new connector credentials) but nothing is
+destroyed: the keys are not shredded and no record is removed. thaw brings
+the persona back exactly as it was, sealed facts readable again the moment it
+is active. deletion stays available for the times you really mean gone.
+
+### permissive permeability is the other half
 
 the hard half: hats are still one human's life, so they sometimes need to
 share. deliberately, narrowly, and reversibly. maybe the founder needs the
@@ -204,6 +205,15 @@ tree grows by addition. the people block is soft-tagged by design (a friend
 tagged as basically family is fine, overlap is welcome), and how much someone
 matters to you is tracked per persona, never for the owner wholesale: every
 persona is the real you, and none is a role.
+
+## the stack, stated not guessed
+
+ai agents tend to hallucinate your stack, so each persona carries an
+owner-stated one. declare it tool by tool, use by use (the same tool can be
+auth and postgres without implying storage), or category by category
+(frontend with its corresponding tools), your choice. agents read it through
+a pass and get exactly the structured declaration, never an inference and
+never another persona's stack.
 
 ## modality
 
