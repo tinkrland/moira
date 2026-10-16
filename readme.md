@@ -361,7 +361,7 @@ interface.
 | block | providers (first wave) | what it feeds |
 | --- | --- | --- |
 | files | google drive, onedrive, dropbox, mega | documents and notes a persona wants remembered |
-| ai assistants | chatgpt, claude | conversation history and learned preferences as context sources |
+| ai tools | subdivided by how they work, because they hold different context: assistants (chatgpt, claude, gemini, perplexity - conversation and learned preferences) - app builders (lovable, base44, bolt, v0 - what you're building and how) - vibecoding (cursor, windsurf, claude code, copilot - your coding patterns) - spec-driven (kiro, bmad - requirements and specs before code) |
 | taste | books: goodreads, storygraph, fable, wattpad - film: letterboxd - tv: serializd, tvtime, repov - music: last.fm, stats.fm, musicboard - stories: ao3 (import), wattpad | ratings, reviews, consumption history: deliberate acts of taste as v3 taste-graph signals |
 | knowledge | notion, google calendar, slack, pinterest | work products, schedules, references |
 | utility | youtube, maps, health | media consumption, places, bookings |
@@ -378,6 +378,11 @@ hub rules (per spec section 14, unchanged by the block model):
   becomes a preference basis without owner confirmation.
 - mega is the one non-oauth provider (login + session key), so its adapter
   keeps the same interface but its credential ceremony differs.
+- the ai-tools block subdivides by how a tool works, not just who makes it:
+  a chat assistant holds conversation and preferences; an app builder holds
+  what you are building; a vibecoding agent holds your coding patterns; a
+  spec-driven tool holds your requirements. different context shapes,
+  different rungs - so they are separate sub-blocks with their own adapters.
 - the taste block is the taste engine's fuel line, and its providers are
   deliberate acts of taste (a rating is a preference statement), not the
   shallow app pings ego.ist's lifestyle block collects. almost none of them
