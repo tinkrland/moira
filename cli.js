@@ -116,7 +116,16 @@ function run() {
       break;
     }
     case 'stack': {
-      if (sub === 'add') res = m.owner.stackAdd(ctx, { personaId: flags.persona, tool: flags.tool, uses: String(flags.uses ?? '').split(',').filter(Boolean) });
+      if (sub === 'add') {
+        const spec = { personaId: flags.persona, tool: flags.tool, uses: String(flags.uses ?? '').split(',').filter(Boolean) };
+        if (flags.category) {
+          // category-first: --category frontend --tools react,tailwindcss
+          spec.category = flags.category;
+          spec.tools = String(flags.tools ?? '').split(',').filter(Boolean).map((tool) => ({ tool }));
+          delete spec.tool; delete spec.uses;
+        }
+        res = m.owner.stackAdd(ctx, spec);
+      }
       else if (sub === 'remove') res = m.owner.stackRemove(ctx, { personaId: flags.persona, tool: flags.tool, uses: flags.uses ? String(flags.uses).split(',').filter(Boolean) : null });
       else if (sub === 'list') res = m.owner.stackList(ctx, { personaId: flags.persona });
       else return fail('unknown stack subcommand');

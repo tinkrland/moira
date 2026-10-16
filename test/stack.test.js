@@ -124,3 +124,53 @@ test('stack: agents read it pass-gated, structured, persona-scoped', () => {
   const recs = m.receipts.query({ personaId: founder.id });
   assert.ok(recs.some((r) => r.op === 'read' && r.reason === 'stack'), 'stack reads are audited');
 });
+
+test('stack: two declaration flows, tool-first or category-first', () => {
+  const { m, ctx, founder } = setup();
+
+  // category-first: define frontend with its corresponding stuff in one call
+  const cat = m.owner.stackAdd(ctx, {
+    personaId: founder.id, category: 'frontend',
+    tools: [{ tool: 'react', uses: ['ui framework'] }, { tool: 'tailwindcss' }]
+  });
+  assert.equal(cat.outcome, 'results');
+  assert.equal(cat.entries.length, 2);
+
+  const list = m.owner.stackList(ctx, { personaId: founder.id });
+  const react = list.entries.find((e) => e.tool === 'react');
+  const tailwind = list.entries.find((e) => e.tool === 'tailwindcss');
+  assert.equal(react.category, 'frontend', 'category rides along');
+  assert.deepEqual(react.uses, ['ui framework']);
+  assert.deepEqual(tailwind.uses, [], 'undescribed tool in a batch is fine');
+
+  // the pill flow still works on the same persona, and re-declaring a tool
+  // through either flow unions uses and never drops the category
+  const pill = m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'react', uses: ['spa'] });
+  assert.equal(pill.outcome, 'results');
+  assert.deepEqual(pill.entry.uses, ['spa', 'ui framework']);
+  assert.equal(pill.entry.category, 'frontend', 'a later pill add keeps the category');
+
+  const cat2 = m.owner.stackAdd(ctx, {
+    personaId: founder.id, category: 'frontend',
+    tools: [{ tool: 'react', uses: ['ssr'] }]
+  });
+  assert.equal(cat2.outcome, 'results');
+  assert.deepEqual(cat2.entries[0].uses, ['spa', 'ssr', 'ui framework']);
+});
+
+test('stack: mixed or malformed shapes decline deterministically', () => {
+  const { m, ctx, founder } = setup();
+  // both shapes at once
+  const both = m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'react', category: 'frontend', tools: [] });
+  assert.equal(both.outcome, 'declined');
+  // tools without a category
+  assert.equal(m.owner.stackAdd(ctx, { personaId: founder.id, tools: [{ tool: 'react' }] }).outcome, 'declined');
+  // category without tools
+  assert.equal(m.owner.stackAdd(ctx, { personaId: founder.id, category: 'frontend' }).outcome, 'declined');
+  // tools entries must be tool objects
+  const bad = m.owner.stackAdd(ctx, { personaId: founder.id, category: 'frontend', tools: ['react'] });
+  assert.equal(bad.outcome, 'declined');
+  // nothing declared means nothing half-applied
+  assert.equal(m.owner.stackList(ctx, { personaId: founder.id }).entries.length, 0);
+});
+

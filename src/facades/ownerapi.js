@@ -400,9 +400,9 @@ export class OwnerApi {
   // stack context declarations: the owner states the stack (tool + the
   // specific uses of it) so agents stop hallucinating it. per-persona,
   // owner-stated (basis 'stated'), structured - never inferred.
-  stackAdd(ctx, { personaId, tool, uses }) {
+  stackAdd(ctx, { personaId, tool, uses, category, tools }) {
     this._require(ctx);
-    return this.gw.stack.add(personaId, { tool, uses });
+    return this.gw.stack.add(personaId, { tool, uses, category, tools });
   }
 
   stackRemove(ctx, { personaId, tool, uses = null }) {

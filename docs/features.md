@@ -21,6 +21,11 @@ branch. nothing here pretends.
   be auth + postgres without implying storage). per-persona, basis
   `stated`, served to agents structured and pass-gated (category
   `stack`), never inferred and never prose
+- two declaration flows, the owner's choice: tool-first (pill flow, add
+  the tool then describe its uses; empty re-add is a no-op, never a
+  wipe) or category-first (define `frontend` with its corresponding
+  tools in one all-or-nothing call; the recorded category is never
+  dropped by a later add through either flow)
 - moment-of-risk linkage warnings (spec 22.4 v1 hook): adding an
   account whose payer would link decoupled personas returns the
   finding BEFORE the account exists; declared pairs (permanent) and
