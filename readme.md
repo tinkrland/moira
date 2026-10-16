@@ -362,7 +362,7 @@ interface.
 | --- | --- | --- |
 | files | google drive, onedrive, dropbox, mega | documents and notes a persona wants remembered |
 | ai assistants | chatgpt, claude | conversation history and learned preferences as context sources |
-| taste | goodreads, letterboxd, serializd, tvtime, repov, last.fm, stats.fm | ratings, consumption history and taste signals for the taste engine |
+| taste | books: goodreads, storygraph, fable, wattpad - film: letterboxd - tv: serializd, tvtime, repov - music: last.fm, stats.fm, musicboard - stories: ao3 (import), wattpad | ratings, reviews, consumption history: deliberate acts of taste as v3 taste-graph signals |
 | knowledge | notion, google calendar, slack, pinterest | work products, schedules, references |
 | utility | youtube, maps, health | media consumption, places, bookings |
 
@@ -378,9 +378,14 @@ hub rules (per spec section 14, unchanged by the block model):
   becomes a preference basis without owner confirmation.
 - mega is the one non-oauth provider (login + session key), so its adapter
   keeps the same interface but its credential ceremony differs.
-- the taste block is the taste engine's fuel line: goodreads, letterboxd,
-  serializd, tvtime, repov, last.fm and stats.fm carry real ratings and
-  history, not shallow app pings. per spec section 18 the taste block
-  registers with the hub in phase 3 but activates with the v3 taste engine -
-  the fact schema already carries typed entity references and signal kinds,
-  so v3 extends rather than rewrites.
+- the taste block is the taste engine's fuel line, and its providers are
+  deliberate acts of taste (a rating is a preference statement), not the
+  shallow app pings ego.ist's lifestyle block collects. almost none of them
+  have public apis: goodreads, storygraph, letterboxd and tv time live on
+  csv exports; serializd and musicboard have no export at all; ao3 is an
+  import. so the taste block's adapter kind is ingest - the owner brings an
+  export or paste, moira tags every row untrusted with source attribution -
+  rather than the oauth polling the files and ai-assistant blocks use.
+  per spec section 18 the taste block registers with the hub in phase 3 but
+  activates with the v3 taste engine - the fact schema already carries typed
+  entity references and signal kinds, so v3 extends rather than rewrites.
