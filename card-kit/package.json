@@ -1,0 +1,14 @@
+{
+  "name": "moira-card-kit",
+  "private": true,
+  "description": "the moira card: flip card + radial sections map, lifted from the intake app's make-your-own builder",
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.400.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}
