@@ -8,29 +8,100 @@ moira is a **context engine with personas**: one place where your context
 lives, split into personas you fully control, shared only through explicit
 consent, and fed from the apps and services each persona actually uses.
 
-## the core ideas
+## hats
 
-**personas, not one profile.** a persona is one of your hats: its own memory,
-its own keys, its own connectors, its own budget. personas never leak into
-each other unless you build an explicit bridge. deleting a persona shreds
-its keys - the deletion is real, not a flag flip.
+### what a hat is
 
-**passes, not raw access.** when an app or agent wants context, it never gets
-your keys. it gets a pass: scoped to one persona, one category, one purpose,
-one duration. every read leaves a signed receipt you can audit.
+a hat is a version of you that you put on deliberately: the student, the
+founder, the musician, the character you write. it has its own context - its
+own files, people, taste, history - and its own idea of what matters.
 
-**a bridge is consent on both ends.** sharing between two personas needs a
-matching bridge AND explicit ingress on each side. no bridge means
-"not available" - never a hint that anything exists.
+### you wear many at once
 
-**facts carry their provenance.** every memory is sealed and labeled (taint):
-where it came from, how linkable it is, how long it stays relevant. labels
-combine by most-restrictive-wins, so summaries cannot launder what a fact
-really is.
+nobody wears one hat. you move between several in a single day, and the
+number only grows: the founder's calendar means nothing to the student, the
+student's papers mean nothing to the character. the hats coexist.
 
-**connectors feed personas on their own terms.** each persona connects its
-own accounts; provider text is tagged untrusted at ingress and never becomes
-a preference without your confirmation.
+### hats are different personas
+
+in moira, a hat becomes a persona: a first-class object with its own memory,
+its own keys, its own connectors, and its own budget. not a folder, not a
+label - a real boundary that software has to respect.
+
+### what apps do instead
+
+every app today does the opposite. it melts all your hats together into one
+"personal context" - one profile, one recommendation feed, one ad identity -
+and calls it personalization. but a blend of the student, the founder, and the
+character is context about nobody. that mush is utterly useless: it can't
+serve any one hat well, it can't be split back apart, and it can't be deleted
+hat by hat. moira exists because the mush is not the only option.
+
+## personas, more than a sandbox
+
+### isolation is only the easy half of the sandbox problem
+
+the easy half is keeping hats apart: persona a's memory is invisible to
+persona b, personas never leak into each other, deleting a persona shreds its
+keys so the deletion is real. most tools that even try, stop here.
+
+### permissive permeability is the other half
+
+the hard half: hats are still one human's life, so they sometimes need to
+share - deliberately, narrowly, and reversibly. moira's answer is the bridge:
+a persona-to-persona connection that needs a matching bridge AND explicit
+ingress on each side. no bridge means "not available", with never a hint that
+anything exists on the other side. sharing is a built, audited act - never a
+default, never a leak. isolation without permeability is just another set of
+silos; permeability without consent is the mush again. moira does both, on
+purpose.
+
+### personas are not just you
+
+a persona does not have to be attached to your legal self. moira personas
+come in identity kinds:
+
+- **linked** - your real-world self. the one that can inherit shared core
+  facts from your other linked personas.
+- **pseudonymous** - a stable alias with its own context. not connected to
+  your legal identity; treated with the same first-class care.
+- **heteronymous** - a character, another person entirely. requires a
+  character sheet (name, backstory, voice, beliefs, expertise, red lines,
+  canon rules), never inherits your core facts, and its canon cannot leave
+  the character. bridges from a heteronym can carry themes and interests,
+  never biographical facts.
+
+all of them are the real you in the way that matters here: none is a "master
+profile" and none is a role being played by the "real" one. they are just
+different contexts, kept honestly different.
+
+### planned: decentral profiles
+
+persona storage tiers exist in the model for a reason: hosted, local, and
+decentral. the decentral tier - profiles you control on infrastructure you
+choose, movable, no single home - is planned, not built, and is not pretended
+otherwise.
+
+## the rest of the model
+
+### passes, not raw access
+
+when an app or agent wants context, it never gets your keys. it gets a pass:
+scoped to one persona, one category, one purpose, one duration. passes can be
+one-time, and every read leaves a signed receipt you can audit.
+
+### facts carry their provenance
+
+every memory is sealed and labeled (its taint): where it came from, how
+linkable it is, how long it stays relevant. labels combine by
+most-restrictive-wins, so summaries cannot launder what a fact really is.
+
+### connectors feed personas on their own terms
+
+each persona connects its own accounts - several accounts per provider, even
+(work drive and personal drive on the same hat). provider text is tagged
+untrusted at ingress and never becomes a preference without your
+confirmation.
 
 ## the connector tree
 
@@ -87,10 +158,6 @@ it does - moira's deterministic core never depends on it.
 
 ## how you use it
 
-**two surfaces, one rule:** the agent surface (what an mcp server or app
-calls) can never reach an owner action. the owner surface requires a minted
-owner context - a poisoned agent cannot approve itself into anything.
-
 ```
 # run the suite (offline, no network, no services)
 npm test
@@ -100,10 +167,6 @@ node cli.js personas list
 node cli.js persona create --name founder --identity linked
 node cli.js fact add --persona <id> --content "..." --category notes
 ```
-
-for the story in plain words, start with `docs/about.md` and
-`docs/explain.md`. for deployment, hosting, and the database, see `repo.md`
-and `technobabble/journal.md`.
 
 ## modality
 
@@ -118,22 +181,3 @@ moira is designed to be reached the way you actually live:
   to share context in person - the pass model (scope, purpose, duration,
   receipt) is exactly what a tap needs. deliberately still a "potentially":
   nothing is built, and it will not be pretended otherwise.
-
-## where to go deeper
-
-| doc | what is in it |
-| --- | --- |
-| `repo.md` | the repo map: every folder, what lives where, how it fits together |
-| `docs/about.md` | what moira is and the beliefs underneath it |
-| `docs/explain.md` | how moira works, for a person (the house metaphor) |
-| `docs/problemcase.md` | the problem in detail |
-| `docs/solution.md` | the answer, piece by piece |
-| `docs/features.md` | the feature inventory with honest status |
-| `docs/buildplan.md` | what is next and in what order |
-| `roadmap.md` | what is shipped, what is next, what is deliberately deferred |
-| `technobabble/underthehood.md` | how moira actually works: sync core, key sealing, taint algebra, cas, the store contract |
-| `technobabble/system-architecture.md` | the components and how data flows between them |
-| `technobabble/techstack.md` | every technology choice and why it was made |
-| `technobabble/journal.md` | the build log: phases, bugs found, live-verification runs |
-| `technobabble/technobabble.md` | the design ramble: why personas, why passes, why determinism |
-| `technobabble/inspiredby.md` | what moira draws from |

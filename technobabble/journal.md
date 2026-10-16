@@ -222,3 +222,19 @@ absent from your personal life. crucially: no persona is the real you
 with the others playing roles - they are all the real you. written into
 the registry comment, features, buildplan, readme.
 
+## 2026-10-16 - readme: keeberia voice reverted, structured sections instead
+
+owner rejected the keeberia-style narrative rewrite (reverted 4567044 +
+journal note) and asked for the opposite shape: MORE sections and
+subheadings. new readme structure: hats (what a hat is, wearing many, hats
+are different personas, what apps do instead - the "personal context" mush
+is utterly useless), personas more than a sandbox (isolation is only the
+EASY half of the sandbox problem; permissive permeability is the other
+half - bridges need consent on both ends, no hint without one), identity
+kinds (linked / pseudonymous / heteronymous with character sheets, canon
+that never leaves the character), planned decentral profiles (storage
+tier: hosted/local/decentral, planned not built), then passes, facts,
+connectors, the tree, cli, modality. owner explicit: NO under-the-hood
+and NO repo structure/doc map in the readme at all - the where-to-go-
+deeper table is gone.
+
