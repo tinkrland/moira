@@ -29,6 +29,12 @@ what is planned, what is deliberately deferred.
   session isolation, per-client default personas, the wrong-persona escape
   hatch (re-seal + taint review + provenance), canon containment. shipped
   2026-10-16. shared-core promotion deliberately deferred (no core entity yet).
+- [x] **persona isolation hooks (2026-10-17)**: moment-of-risk linkage
+  warnings (22.4 v1: shared payer across decoupled personas, declared vs
+  time-boxed acknowledgement, expiry reactivates), linkage-aware routing
+  (owner-view flags only, agent surface clean), and stack context
+  declarations (anti-hallucination: per-persona tool + uses, pass-gated
+  structured agent read).
 - [~] **phase 3 - connector hub**: the block model in the readme. **phase 3a
   shipped (2026-10-16, commit d99bca8)**: hub, files block (drive/dropbox/
   onedrive fixture-verified; mega honestly not built; live runs need oauth

@@ -100,8 +100,14 @@ export const RECEIPT_OP = {
   MOVE: 'move',
   PROMOTE: 'promote',
   DEMOTE: 'demote',
+  LINKAGE: 'linkage',
   PERSONA_FREEZE: 'persona_freeze',
   PERSONA_THAW: 'persona_thaw'
+};
+
+// linkage findings (spec 22): kinds only, never values
+export const LINKAGE_KIND = {
+  PAYER: 'payer'
 };
 
 export const RESHARE = {
@@ -156,6 +162,7 @@ export const LINKABILITY_ORDER = ['high', 'low', 'none'];
 export const STYLOMETRY_ORDER = ['high', 'low', 'none'];
 
 export const VOICE_CATEGORY = 'voice';
+export const STACK_CATEGORY = 'stack';
 export const WORKSPACE_CATEGORY = 'workspace';
 export const PREFERENCE_CATEGORIES = ['preferences', 'taste'];
 

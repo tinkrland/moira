@@ -7,7 +7,7 @@
 // way to reach these methods.
 
 import { OwnerContext } from './ownercontext.js';
-import { OUTCOME, VOICE_CATEGORY } from '../model/constants.js';
+import { OUTCOME, VOICE_CATEGORY, STACK_CATEGORY } from '../model/constants.js';
 import { randomId } from '../util/crypto.js';
 
 export class OwnerApi {
@@ -101,9 +101,38 @@ export class OwnerApi {
     return { outcome: OUTCOME.RESULTS, handoff: h };
   }
 
-  addAccount(ctx, personaId, spec) {
+  // addAccount with the moment-of-risk linkage hook (spec 22.4): if the new
+  // account's payer would create an UNDECLARED link between decoupled
+  // personas, the account is not created and the finding comes back for the
+  // owner to decide. declaredLink: true accepts and marks the pair declared
+  // (permanent, solid line). acknowledgeLinkUntil: <epoch ms> accepts for a
+  // limited time (gray line until expiry). findings carry kinds, never
+  // values, and are owner-only.
+  addAccount(ctx, personaId, spec = {}) {
     this._require(ctx);
-    return this.gw.ledger.add(personaId, spec);
+    const { declaredLink = false, acknowledgeLinkUntil = null, ...accountSpec } = spec;
+    const finding = this.gw.linkage.preLinkCheck(personaId, accountSpec.payerLabel);
+    if (finding) {
+      const [a, b] = finding.personaIds;
+      if (!declaredLink && (acknowledgeLinkUntil == null || acknowledgeLinkUntil <= this.gw.now())) {
+        return {
+          outcome: OUTCOME.APPROVAL_REQUIRED,
+          reason: 'linkage_finding',
+          finding,
+          choices: ['declaredLink: accept and mark the link declared', 'acknowledgeLinkUntil: accept until an epoch ms', 'change payerLabel: use a different payment method']
+        };
+      }
+      const kind = declaredLink ? 'declared' : 'acknowledged';
+      this.gw.store.put('linkageDeclarations', this.gw.linkage.pairKey(a, b), {
+        id: this.gw.linkage.pairKey(a, b),
+        personaIds: [a, b],
+        kind,
+        expiresAt: declaredLink ? null : acknowledgeLinkUntil,
+        declaredAt: this.gw.now()
+      });
+      this.gw.receipts.write({ actor: 'owner', personaId, op: 'linkage', reason: kind });
+    }
+    return this.gw.ledger.add(personaId, accountSpec);
   }
 
   killSwitch(ctx, personaId) {
@@ -271,7 +300,7 @@ export class OwnerApi {
 
   // owner declares that shared evidence between two personas is intentional
   // (section 22.4): the monitor then skips that pair.
-  declareLinkageIntention(ctx, { personaIds, note = null }) {
+  declareLinkageIntention(ctx, { personaIds, note = null, until = null }) {
     this._require(ctx);
     if (!Array.isArray(personaIds) || personaIds.length < 2) {
       return { outcome: OUTCOME.DECLINED, reason: 'need_two_persona_ids' };
@@ -280,6 +309,8 @@ export class OwnerApi {
     this.gw.store.put('linkageDeclarations', key, {
       id: key,
       personaIds: [...new Set(personaIds)],
+      kind: 'declared',
+      expiresAt: until, // null: permanent. an expired `until` stops silencing
       note,
       declaredAt: this.gw.now()
     });
@@ -366,6 +397,24 @@ export class OwnerApi {
     };
   }
 
+  // stack context declarations: the owner states the stack (tool + the
+  // specific uses of it) so agents stop hallucinating it. per-persona,
+  // owner-stated (basis 'stated'), structured - never inferred.
+  stackAdd(ctx, { personaId, tool, uses }) {
+    this._require(ctx);
+    return this.gw.stack.add(personaId, { tool, uses });
+  }
+
+  stackRemove(ctx, { personaId, tool, uses = null }) {
+    this._require(ctx);
+    return this.gw.stack.remove(personaId, { tool, uses });
+  }
+
+  stackList(ctx, { personaId }) {
+    this._require(ctx);
+    return this.gw.stack.list(personaId);
+  }
+
   // v1 decoupling monitor (section 22.4): pure owner-side function over keyed
   // hashes the owner's device computed. findings are not facts, are never
   // synced, and never reach agents. no finding does not mean safe (22.7).
@@ -395,9 +444,8 @@ export class OwnerApi {
       const undeclared = [];
       for (const id of personaIds) {
         if (id === decoupled[0]) continue;
-        const key = [decoupled[0], id].sort().join('|');
-        const declared = this.gw.store.get('linkageDeclarations', key);
-        if (!declared) undeclared.push(id);
+        // declared pairs are skipped; acknowledgements only until they expire
+        if (!this.gw.linkage.declarationActive(decoupled[0], id)) undeclared.push(id);
       }
       if (undeclared.length === 0) continue;
 

@@ -316,3 +316,30 @@ history consolidation) belongs to evie's latent-similarity approach, and
 a plaintext vector index would sit outside the sealed vault anyway.
 techstack.md pin removed same day it was added.
 
+## 2026-10-17 - linkage hooks (22.4 v1) + stack context declarations
+
+finished the persona context isolation wave. linkage service
+(src/core/linkage.js): pre-link check at addAccount on the ledger's
+existing keyed payer hashes (plaintext never stored or compared;
+findings carry kinds, never values). an undeclared shared payer across
+decoupled personas returns approval_required with the finding BEFORE
+the account exists; declaredLink marks the pair declared (permanent),
+acknowledgeLinkUntil accepts time-boxed (expiry reactivates findings;
+monitorScan now respects expiry too). linkage-aware routing: accounts
+whose payer links a decoupled persona to another are demoted below
+clean accounts; the flag list is opt-in owner view (route linkage: true)
+and NEVER on the agent surface (budget_route has no linkage field).
+test moment-of-risk semantics note: an undeclared shared pair can only
+exist behind a time-boxed ack, because the second addAccount is gated,
+so the routing test drives the clock past an ack's expiry.
+
+stack context declarations (src/core/stack.js): owner-stated,
+per-persona stack as tool + multiple uses (the nested multiselect
+shape from the owner's reference zip: one supabase entry, uses
+auth/postgres/storage selected independently; re-declaring unions,
+removal takes the whole tool or single uses). served to agents via
+stack_get, pass-gated (category 'stack', purpose 'context'), receipt
+written, structured output so agents stop hallucinating the stack.
+frozen personas decline stack writes like every other activity.
+cli: stack add/remove/list. suite: 189 tests, 177 pass, 12 gated.
+

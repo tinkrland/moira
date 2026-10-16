@@ -14,6 +14,19 @@ branch. nothing here pretends.
 - shared core with explicit promote/demote (audit-reeipted)
 - fact reassignment between personas (through the policy engine)
 - persona deletion = key shredding; kill switch per persona
+- freeze/thaw: a persona on ice instead of deleted (all activity
+  declines, nothing shredded, thaw resumes exactly)
+- stack context declarations (anti-hallucination): owner-stated tool +
+  the specific uses of it (the nested multiselect shape: supabase can
+  be auth + postgres without implying storage). per-persona, basis
+  `stated`, served to agents structured and pass-gated (category
+  `stack`), never inferred and never prose
+- moment-of-risk linkage warnings (spec 22.4 v1 hook): adding an
+  account whose payer would link decoupled personas returns the
+  finding BEFORE the account exists; declared pairs (permanent) and
+  acknowledged pairs (time-boxed) go quiet; expiry reactivates the
+  finding. linkage-aware routing demotes linking accounts and reports
+  them to the owner view only; findings never reach agents
 
 ## consent (live)
 

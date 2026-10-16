@@ -23,17 +23,18 @@ import { OUTCOME, AGENT_TIER, LEASE_STATUS, PERSONA_STATUS } from '../model/cons
 import { eligibility, rankAccounts, bindingCap, capDecision } from './policy.js';
 
 export class RouterService {
-  constructor({ store, ledger, agents, personas, receipts, now = Date.now }) {
+  constructor({ store, ledger, agents, personas, receipts, linkage = null, now = Date.now }) {
     this.store = store;
     this.ledger = ledger;
     this.agents = agents;
     this.personas = personas;
     this.receipts = receipts;
+    this.linkage = linkage;
     this.now = now;
     this.burnRateFraction = 0.5; // replaced by burn-rate learning in v2
   }
 
-  route({ personaId, agentId = null, task, constraints = {} }) {
+  route({ personaId, agentId = null, task, constraints = {}, linkage = false }) {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
     if (persona.locked) return { outcome: OUTCOME.LOCKED, reason: 'persona_kill_switch' };
@@ -79,11 +80,28 @@ export class RouterService {
       return { outcome: OUTCOME.EMPTY, reason: 'no_eligible_accounts', ineligible };
     }
 
-    const ranked = rankAccounts({
+    const rankedAll = rankAccounts({
       accounts: eligible.map((a) => ({ ...a, remainingValue: this.ledger.remainingValueOf(a) })),
       now: this.now(),
       burnRateFraction: this.burnRateFraction
     });
+
+    // linkage-aware routing (22.4): accounts whose payer links this decoupled
+    // persona to another one are demoted below clean accounts. preference is
+    // server-side for everyone; the DETAIL (which accounts and why) is
+    // owner-view only and never returned on the agent surface.
+    let linkageFlagged = [];
+    let ranked = rankedAll;
+    if (this.linkage) {
+      const flagged = this.linkage.flaggedAccounts(personaId);
+      if (flagged.size > 0) {
+        linkageFlagged = [...flagged.keys()];
+        ranked = [
+          ...rankedAll.filter((r) => !flagged.has(r.account.id)),
+          ...rankedAll.filter((r) => flagged.has(r.account.id))
+        ];
+      }
+    }
 
     const lease = agentId
       ? this._mint({ agentId, personaId, accountId: ranked[0].account.id, maxSpend: caps ?? estimate, unit: 'usd', ttlMs: constraints.leaseTtlMs ?? 60 * 60 * 1000, models: task.models ?? [] })
@@ -94,12 +112,14 @@ export class RouterService {
       reason: `routed:${ranked[0].account.provider}:availability`
     });
 
-    return {
+    const result = {
       outcome: OUTCOME.RESULTS,
       ranked: ranked.map((r) => ({ accountId: r.account.id, provider: r.account.provider, kind: r.account.kind, urgency: r.urgency })),
       ineligible,
       lease
     };
+    if (linkage) result.linkageFlagged = linkageFlagged; // owner view only (22.3)
+    return result;
   }
 
   // lease_request(account, max_spend, ttl, models) (8.7). tier gates who may hold.

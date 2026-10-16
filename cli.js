@@ -30,6 +30,7 @@ const HELP = `moira cli - owner surface
   personas list
   persona create --name <n> --identity <linked|pseudonymous|heteronymous> [--sheet <json>]
   persona freeze --id <personaId>   (put on ice instead of deleting; thaw brings it back)
+  stack add --persona <id> --tool <supabase> --uses <auth,postgres,storage>   (stack context: tool + its uses)
   fact add --persona <personaId> --content <text> --category <c>
   core list [--category <c>]
   fact promote --id <factId>
@@ -112,6 +113,13 @@ function run() {
       } else if (sub === 'promote') res = m.owner.promoteFact(ctx, { factId: flags.id });
       else if (sub === 'demote') res = m.owner.demoteFact(ctx, { factId: flags.id, toPersonaId: flags.to });
       else return fail('unknown fact subcommand');
+      break;
+    }
+    case 'stack': {
+      if (sub === 'add') res = m.owner.stackAdd(ctx, { personaId: flags.persona, tool: flags.tool, uses: String(flags.uses ?? '').split(',').filter(Boolean) });
+      else if (sub === 'remove') res = m.owner.stackRemove(ctx, { personaId: flags.persona, tool: flags.tool, uses: flags.uses ? String(flags.uses).split(',').filter(Boolean) : null });
+      else if (sub === 'list') res = m.owner.stackList(ctx, { personaId: flags.persona });
+      else return fail('unknown stack subcommand');
       break;
     }
     case 'core': {

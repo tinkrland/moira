@@ -6,7 +6,7 @@
 // if a future tool needs owner authority it does not belong in this class.
 
 import {
-  OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, PASS_DURATION, PERSONA_STATUS
+  OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, PASS_DURATION, PERSONA_STATUS, STACK_CATEGORY
 } from '../model/constants.js';
 import { nameToRank } from '../core/policy.js';
 import { randomId } from '../util/crypto.js';
@@ -295,6 +295,22 @@ export class AgentApi {
     const ctx = this._ctx(accessToken);
     if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
     return this.gw.handoffs.cancel(handoffId, { agentId: ctx.clientId });
+  }
+
+  // --- stack context (anti-hallucination) -----------------------------------------
+
+  // the persona's declared stack, pass-gated like every read: tool + sorted
+  // uses, structured on purpose - agents get exactly what the owner stated,
+  // nothing inferred, nothing from other personas.
+  stack_get(accessToken, {}) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    const pass = this.gw.passes.verify({ clientId: ctx.clientId, personaId: ctx.persona.id, category: STACK_CATEGORY, purpose: 'context' });
+    if (!pass) return { outcome: OUTCOME.APPROVAL_REQUIRED, reason: 'no_stack_pass' };
+    const res = this.gw.stack.list(ctx.persona.id);
+    if (res.outcome !== OUTCOME.RESULTS) return res;
+    this.gw.receipts.write({ actor: ctx.clientId, personaId: ctx.persona.id, op: 'read', reason: 'stack' });
+    return { outcome: OUTCOME.RESULTS, entries: res.entries };
   }
 
   // --- voice tools (7.5) ----------------------------------------------------------
