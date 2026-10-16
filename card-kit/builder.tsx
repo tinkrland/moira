@@ -22,15 +22,15 @@ const ICON_MAP: Record<string, any> = {
 };
 const ICON_KEYS = Object.keys(ICON_MAP);
 const ACCENTS = ['p1', 'p2', 'p3', 'p4', 'p5'] as const;
-type Accent = typeof ACCENTS[number];
+export type Accent = typeof ACCENTS[number];
 
-type Sub = { id: string; label: string; iconName: string; children?: Sub[] };
-type Cat = { id: string; label: string; iconName: string; accent: Accent; subtypes: Sub[] };
+export type Sub = { id: string; label: string; iconName: string; children?: Sub[] };
+export type Cat = { id: string; label: string; iconName: string; accent: Accent; subtypes: Sub[] };
 type CtxMenu = { catId: string; subId?: string; x: number; y: number };
 type TSub = { label: string; iconName: string; children?: TSub[] };
 type Tmpl = { label: string; iconName: string; accent: Accent; subs: TSub[] };
-type Side = 'front' | 'back';
-type CardData = { front: Cat[]; back: Cat[] };
+export type Side = 'front' | 'back';
+export type CardData = { front: Cat[]; back: Cat[] };
 
 const L = (label: string, iconName: string, children?: TSub[]): TSub => ({ label, iconName, children });
 const TEMPLATES: Tmpl[] = [
@@ -212,7 +212,7 @@ function IconCtxMenu({ menu, onPick, onClose }: { menu: CtxMenu; onPick: (name: 
 }
 
 // ── Moira ID Card (center node) ────────────────────────────────────────────
-function MoiraCardBuilder({ flipped, onFlip, onClick, onContextMenu, name, handle, width = 280 }: {
+export function MoiraCardBuilder({ flipped, onFlip, onClick, onContextMenu, name, handle, width = 280 }: {
   flipped: boolean; onFlip: () => void; onClick: () => void; onContextMenu: (e: React.MouseEvent) => void;
   name: string; handle: string; width?: number;
 }) {
@@ -292,7 +292,7 @@ function MoiraCardBuilder({ flipped, onFlip, onClick, onContextMenu, name, handl
 // ── Mindmap preview (right panel) ─────────────────────────────────────────────
 const MINDMAP_NODE = 60;
 
-function MindmapPreview({ cardData, flipped, onFlip, activeSide }: {
+export function MindmapPreview({ cardData, flipped, onFlip, activeSide }: {
   cardData: CardData; flipped: boolean; onFlip: () => void; activeSide: Side;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
