@@ -338,6 +338,15 @@ const networking = {
 // personas - your family relates to one of you, your friends from music
 // to another - so a relationship is always (person, persona), never
 // (person, owner) wholesale.
+//
+// two refinements the owner pinned:
+//   - circles are SOFT tags, not rigid buckets. tagging a friend as
+//     basically family is fine; overlap and fuzz are welcome, not errors
+//   - what differs across personas is the IMPORTANCE profile of the
+//     relationship, not which you is "real". someone can be very high on
+//     one persona's axis (say professional-alex) and nearly absent from
+//     your personal life. no persona is the real you with the others
+//     playing roles - they are all the real you
 const family = {
   id: 'family',
   label: 'family circle',
