@@ -45,12 +45,14 @@ def test_database_tables_and_counts(db):
     try:
         tables = {r[0] for r in con.execute("select name from sqlite_master where type = 'table'")}
         assert {"works", "work_links", "trait_values", "work_traits"} <= tables
-        assert con.execute("select count(*) from works").fetchone()[0] == 3
+        n_works = len({p.stem for p in works_dir.glob("*.yaml")})
+        assert con.execute("select count(*) from works").fetchone()[0] == n_works
         # trait_values rows come from the vocab files
         assert con.execute("select count(*) from trait_values").fetchone()[0] > 50
         # every layer 2 tag landed as an edge with evidence
+        n_works = len({p.stem for p in works_dir.glob("*.yaml")})
         rows = con.execute("select count(*) from work_traits").fetchone()[0]
-        assert rows >= 3 * 13  # every work carries all 13 core axes
+        assert rows >= n_works * 13  # every work carries all 13 core axes
     finally:
         con.close()
 
@@ -59,6 +61,6 @@ def test_only_expected_works_enter(db):
     con = sqlite3.connect(db)
     try:
         ids = {r[0] for r in con.execute("select id from works")}
-        assert ids == {"psych-2006", "the-rookie-2018", "gilmore-girls-2000"}
+        assert ids == {p.stem for p in works_dir.glob("*.yaml")}
     finally:
         con.close()

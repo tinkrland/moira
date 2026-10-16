@@ -26,7 +26,7 @@ def test_valid_context_passes(valid_context, work_ids, vocab):
 
 
 def test_unknown_work_in_liked_is_an_error(valid_context, work_ids, vocab):
-    valid_context["liked"].append({"work": "monk-2002", "strength": "loved"})
+    valid_context["liked"].append({"work": "columbo-1971", "strength": "loved"})
     assert any("unknown work in liked" in m for m in validate(valid_context, work_ids, vocab))
 
 
@@ -51,7 +51,8 @@ def test_bad_strength_rejected(valid_context, work_ids, vocab):
 
 
 def test_duplicate_liked_work_rejected(valid_context, work_ids, vocab):
-    valid_context["liked"].append({"work": "psych-2006", "strength": "liked"})
+    first = valid_context["liked"][0]["work"]
+    valid_context["liked"].append({"work": first, "strength": "liked"})
     assert any("appears twice" in m for m in validate(valid_context, work_ids, vocab))
 
 
