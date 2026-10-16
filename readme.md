@@ -1,9 +1,28 @@
 # moira backend
 
-persona-based context and application access sharing. backend core implementing
-spec **v0.5 (october 15, 2026)**: mvp scope (section 18) plus the v1
-resource-ledger/router core, with the policy engine as pure deterministic
-functions and the gateway facade an mcp server can expose directly.
+moira is a **context sharing engine with persona switching**. you wear many
+hats, and moira is built around exactly that: one place where your context
+lives, personas that keep your hats separate, and controlled sharing of each
+one with the people, apps and agents that need it.
+
+what that means in practice:
+
+- **persona switching.** student, founder, alter-ego, character: each persona
+  has its own memory, its own keys, its own connectors, its own budget. moira
+  never blends them unless you build an explicit bridge.
+- **context sharing.** apps and agents get passes, not raw access: a pass is
+  scoped to one persona, one category, one purpose, one duration, and every
+  read leaves a signed receipt.
+- **your context, everywhere.** a connector hub organized like ego.ist's
+  blocks - files (google drive, onedrive, dropbox, mega), ai assistants
+  (chatgpt, claude, ...), lifestyle, knowledge, utility - feeds each persona
+  on its own terms. provider text is always tagged untrusted; moira's memory
+  stays yours.
+
+backend core implementing spec **v0.5 (october 15, 2026)**: mvp scope (section
+18) plus the v1 resource-ledger/router core, with the policy engine as pure
+deterministic functions and the gateway facade an mcp server can expose
+directly.
 
 zero dependencies. node 20+ (built and tested on node 24). `npm test` runs the
 suite (61 tests: unit per domain + golden conformance scenarios).
@@ -331,3 +350,31 @@ device flow stores its records in `pendingConnects` with `kind: 'device_flow'`.
 
 tests: 127 total, 121 pass offline, 0 fail, 6 gated on a real supabase
 project (verified green against the local postgres + postgrest stack).
+
+## phase 3 design: the connector hub (ego.ist-style blocks)
+
+connectors are organized into blocks - a block is a category of context
+sources, and each persona connects its own identities inside a block. the hub
+itself is provider-agnostic; every provider is an adapter behind one
+interface.
+
+| block | providers (first wave) | what it feeds |
+| --- | --- | --- |
+| files | google drive, onedrive, dropbox, mega | documents and notes a persona wants remembered |
+| ai assistants | chatgpt, claude | conversation history and learned preferences as context sources |
+| lifestyle | spotify, netflix, strava, whoop | taste, routines, health signals |
+| knowledge | notion, google calendar, slack, pinterest | work products, schedules, references |
+| utility | youtube, maps, health | media consumption, places, bookings |
+
+hub rules (per spec section 14, unchanged by the block model):
+
+- per-persona identities: each persona authorizes its own accounts; a
+  connector identity never crosses personas.
+- credential isolation: provider tokens are sealed per persona with the same
+  envelope encryption as facts; leases never expose raw credentials.
+- connector passes are separate from memory passes: a connector read is
+  (persona, connector, purpose, duration), not a memory pass.
+- all provider text is tagged untrusted at ingress; nothing from a connector
+  becomes a preference basis without owner confirmation.
+- mega is the one non-oauth provider (login + session key), so its adapter
+  keeps the same interface but its credential ceremony differs.
