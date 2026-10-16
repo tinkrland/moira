@@ -361,9 +361,10 @@ interface.
 | block | providers (first wave) | what it feeds |
 | --- | --- | --- |
 | files | google drive, onedrive, dropbox, mega | documents and notes a persona wants remembered |
-| ai tools | subdivided by how they work, because they hold different context: assistants (chatgpt, claude, gemini, perplexity - conversation and learned preferences) - app builders (lovable, base44, bolt, v0 - what you're building and how) - vibecoding (cursor, windsurf, claude code, copilot - your coding patterns) - spec-driven (kiro, bmad - requirements and specs before code) |
-| taste | books: goodreads, storygraph, fable, wattpad - film: letterboxd - tv: serializd, tvtime, repov - music: last.fm, stats.fm, musicboard - stories: ao3 (import), wattpad | ratings, reviews, consumption history: deliberate acts of taste as v3 taste-graph signals |
-| knowledge | notion, google calendar, slack, pinterest | work products, schedules, references |
+| ai tools | subdivided by how they work, because they hold different context: assistants (chatgpt, claude, gemini, perplexity - conversation and learned preferences) - app builders (lovable, base44, bolt, v0 - what you're building and how) - vibecoding (cursor, windsurf, claude code, copilot - your coding patterns) - spec-driven (kiro, ibm bob - bob.ibm.com, agentic dev partner - specs, tasks, guardrails before code) |
+| taste | books: goodreads, storygraph, fable, pagebound, wattpad - film: letterboxd - tv: serializd, tvtime, repov - music: last.fm, stats.fm, musicboard, superfan - stories: ao3 (import), wattpad - shares: pi.fyi | ratings, reviews, consumption history: deliberate acts of taste as v3 taste-graph signals |
+| lifestyle | depop, ltk, pinterest, whering | fashion and shopping discovery: what a persona wears, buys, saves - taste signals, but about how you present, not what you consume |
+| knowledge | notion, google calendar, slack | work products, schedules, references |
 | utility | youtube, maps, health | media consumption, places, bookings |
 
 hub rules (per spec section 14, unchanged by the block model):
