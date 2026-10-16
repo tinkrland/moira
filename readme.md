@@ -1,9 +1,15 @@
 # moira backend
 
 moira is a **context sharing engine with persona switching**. you wear many
-hats, and moira is built around exactly that: one place where your context
-lives, personas that keep your hats separate, and controlled sharing of each
-one with the people, apps and agents that need it.
+hats - student, founder, character, alter ego - and moira is built around
+exactly that. just because you're one person doesn't mean you have the same
+context: what you're studying isn't what your investors need to know, and
+your creative side isn't your customer service voice. every app today solves
+this by blending everything into one gray profile. moira refuses.
+
+one place where your context lives. personas that keep your hats separate.
+controlled sharing of each one with the people, apps and agents that need it
+- and none of it leaking into the others.
 
 what that means in practice:
 
@@ -384,6 +390,11 @@ hub rules (per spec section 14, unchanged by the block model):
   what you are building; a vibecoding agent holds your coding patterns; a
   spec-driven tool holds your requirements. different context shapes,
   different rungs - so they are separate sub-blocks with their own adapters.
+- the taste engine is **evie** - a separate, decoupled component that
+  plugs into moira (reads facts and signal kinds; never writes without
+  owner confirmation; never gates access decisions). the deterministic core
+  stays deterministic. evie lives on its own git branch until it starts;
+  see roadmap.md.
 - the taste block is the taste engine's fuel line, and its providers are
   deliberate acts of taste (a rating is a preference statement), not the
   shallow app pings ego.ist's lifestyle block collects. almost none of them
