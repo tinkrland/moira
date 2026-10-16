@@ -29,16 +29,36 @@ export class StackService {
 
   // upsert: declaring a tool again unions the uses into one entry (the point
   // of the multiselect: multiple uses of supabase accumulate, they never
-  // spawn duplicate rows and never silently replace earlier uses)
+  // spawn duplicate rows and never silently replace earlier uses). the pill
+  // flow adds the tool FIRST and describes its uses after, so an empty uses
+  // list is a valid "not described yet" state, and an empty re-add is a
+  // quiet no-op, never a wipe.
   add(personaId, { tool, uses }) {
     const gate = this._usable(personaId);
     if (gate) return gate;
     const t = typeof tool === 'string' ? tool.trim() : '';
     if (!t) return { outcome: OUTCOME.DECLINED, reason: 'tool_required' };
-    if (!Array.isArray(uses) || uses.length === 0 || !uses.every((u) => typeof u === 'string' && u.trim() !== '')) {
+    if (uses !== undefined && uses !== null && (!Array.isArray(uses) || !uses.every((u) => typeof u === 'string' && u.trim() !== ''))) {
       return { outcome: OUTCOME.DECLINED, reason: 'uses_required' };
     }
-    const normalized = [...new Set(uses.map((u) => u.trim()))].sort();
+    const given = Array.isArray(uses) ? uses : [];
+    if (given.length === 0) {
+      const bare = this._list(personaId).find((e) => e.tool.toLowerCase() === t.toLowerCase());
+      if (bare) return { outcome: OUTCOME.RESULTS, entry: bare }; // no-op: empty add never wipes
+      const entry = {
+        id: randomId('stack'),
+        personaId,
+        tool: t,
+        uses: [],
+        basis: 'stated', // owner-stated, never inferred
+        createdAt: this.now(),
+        updatedAt: this.now()
+      };
+      this.store.put('stackEntries', entry.id, entry);
+      this.receipts.write({ actor: 'owner', personaId, op: 'read', reason: 'stack_declared' });
+      return { outcome: OUTCOME.RESULTS, entry };
+    }
+    const normalized = [...new Set(given.map((u) => u.trim()))].sort();
     const existing = this._list(personaId).find((e) => e.tool.toLowerCase() === t.toLowerCase());
     if (existing) {
       const merged = [...new Set([...existing.uses, ...normalized])].sort();

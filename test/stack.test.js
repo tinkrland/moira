@@ -72,9 +72,27 @@ test('stack: removal, whole tool or single uses', () => {
 test('stack: invalid input is declined deterministically', () => {
   const { m, ctx, founder } = setup();
   assert.equal(m.owner.stackAdd(ctx, { personaId: founder.id, tool: '', uses: ['x'] }).outcome, 'declined');
-  assert.equal(m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'supabase', uses: [] }).outcome, 'declined');
   assert.equal(m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'supabase', uses: 'auth' }).outcome, 'declined');
   assert.equal(m.owner.stackAdd(ctx, { personaId: 'psn_missing', tool: 'supabase', uses: ['auth'] }).outcome, 'unavailable');
+});
+
+test('stack: add-then-describe, like the pill flow (tool first, uses after)', () => {
+  const { m, ctx, founder } = setup();
+
+  // add the tool with no uses yet: the pill exists, the panel is open
+  const add = m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'supabase', uses: [] });
+  assert.equal(add.outcome, 'results', 'a tool can be declared before its uses');
+  assert.deepEqual(add.entry.uses, [], 'uses start empty, nothing implied');
+
+  // then describe how it is used, one declaration at a time
+  m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'supabase', uses: ['auth'] });
+  const done = m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'supabase', uses: ['postgres'] });
+  assert.deepEqual(done.entry.uses, ['auth', 'postgres']);
+
+  // re-adding with no uses is a quiet no-op, never a wipe
+  const noop = m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'supabase', uses: [] });
+  assert.equal(noop.outcome, 'results');
+  assert.deepEqual(noop.entry.uses, ['auth', 'postgres'], 'an empty add never clears existing uses');
 });
 
 test('stack: frozen personas decline stack writes', () => {

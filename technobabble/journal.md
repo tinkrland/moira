@@ -343,3 +343,14 @@ written, structured output so agents stop hallucinating the stack.
 frozen personas decline stack writes like every other activity.
 cli: stack add/remove/list. suite: 189 tests, 177 pass, 12 gated.
 
+## 2026-10-17 - stack: add-then-describe flow (owner's reference zip)
+
+read the full stack-selection quest from the owner's reference zip
+(incoming_files/4d8707d31_src.zip: ProjectSection + TechStackPills +
+techToolsData). the pill flow adds the tool FIRST with empty useCases,
+expands a "what are you using it for?" panel, then toggles uses on;
+custom tools and custom use cases are both allowed. moira's stackAdd now
+matches: uses may be empty (a declared tool with no uses yet implies
+nothing), and an empty re-add is a quiet no-op that never wipes existing
+uses. suite: 190 tests, 178 pass, 12 gated.
+
