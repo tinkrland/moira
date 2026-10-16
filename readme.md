@@ -1,226 +1,41 @@
-# moira ✧
+# moira
 
-> a context engine with personas: your memory, split by the hats you actually wear, shared only through explicit consent»
+you are one person, but you are not one profile. the student, the founder, the
+character, the alter ego - each has its own context, and today every app
+blends them into one gray mush. moira refuses to blend.
 
-## what is this
+moira is a **context engine with personas**: one place where your context
+lives, split into personas you fully control, shared only through explicit
+consent, and fed from the apps and services each persona actually uses.
 
-moira is basically me being tired of the same dance.
+## the core ideas
 
-for context: i'm not exactly one person. nobody is. there's the student me,
-the founder me, the character me, the alter ego me - and they don't want the
-same things. the student wants its papers and its pdfs. the founder wants its
-calendar, its people, its money. the character wants its stories.
+**personas, not one profile.** a persona is one of your hats: its own memory,
+its own keys, its own connectors, its own budget. personas never leak into
+each other unless you build an explicit bridge. deleting a persona shreds
+its keys - the deletion is real, not a flag flip.
 
-and every single app i touch does this:
+**passes, not raw access.** when an app or agent wants context, it never gets
+your keys. it gets a pass: scoped to one persona, one category, one purpose,
+one duration. every read leaves a signed receipt you can audit.
 
-- builds one profile.
-- blends everything into it.
-- watches what i do "for a better experience".
-- shares it with whoever asks nicely.
-- and then...
-- the study playlist shows up in my work account.
-- the ads follow me across all of it.
-- and deleting any one of these pieces is, of course, impossible.
+**a bridge is consent on both ends.** sharing between two personas needs a
+matching bridge AND explicit ingress on each side. no bridge means
+"not available" - never a hint that anything exists.
 
-none of these things are difficult individually. the annoying part is that
-there is no place where "the student" is a first-class thing that software
-has to respect. the profile is always the product, and it's always ONE
-profile.
+**facts carry their provenance.** every memory is sealed and labeled (taint):
+where it came from, how linkable it is, how long it stays relevant. labels
+combine by most-restrictive-wins, so summaries cannot launder what a fact
+really is.
 
-so... why not?
+**connectors feed personas on their own terms.** each persona connects its
+own accounts; provider text is tagged untrusted at ingress and never becomes
+a preference without your confirmation.
 
----
+## the connector tree
 
-## the problem
-
-your context currently lives in a weird collection of tools that each know
-one part of you.
-
-you might use:
-
-- google drive for the files
-- notion or craft for the projects
-- a calendar app for time
-- chatgpt, claude, whoever for thinking
-- letterboxd, goodreads, last.fm for taste
-- the list goes on
-
-and each of them builds its own little profile of you. on its own terms.
-with its own settings you'll never find.
-
-- the drive knows what you keep.
-- the calendar knows where you'll be.
-- the assistant knows how you think.
-- letterboxd knows what moves you.
-
-but they don't know about each other, and - the actual point - they don't
-know about your hats.
-
-so the human becomes the sync layer between all of them, while each of them
-quietly becomes a product about you.
-
-that feels backwards.
-
----
-
-## the repetitive part
-
-this is the part that really bothers me.
-
-- you sign up somewhere new.
-- you hand over your whole drive, or your whole inbox, because granular
-  access barely exists.
-- the app reads everything.
-- you can't tell what it read.
-- you can't undo what it keeps.
-- you switch projects, or moods, or jobs...
-- and the profile follows you anyway.
-
-these are not exotic demands:
-
-- access should be scoped to one hat, one purpose, one duration.
-- every read should leave a receipt you can audit.
-- revoking should actually revoke.
-- deleting should actually delete.
-
-they're relationships. and computers are very good at relationships.
-
-- if i hand an app a pass that says "read these files, for this purpose,
-  until friday", it should get exactly that and nothing else.
-- if i delete a persona, its keys should be shredded. not flagged. shredded.
-- if two of my hats want to share something, that should be a bridge i
-  built on purpose, not a default.
-
----
-
-## what moira is trying to do
-
-moira is a place where your context lives, split into personas you fully
-control, fed from the apps each persona actually uses, and shared only
-through explicit consent.
-
-instead of starting with:
-
-*"sign in with google and let me see everything"*
-
-you start with:
-
-«these are my hats»
-
-- «this one is the student»
-- «this one is the founder»
-- «this one is a character, actually»
-- «they don't see each other unless i say so»
-
-and moira holds the lines.
-
----
-
-# the views
-
-moira is split into a few major views.
-
-they aren't separate programs. they're ways of looking at the same context.
-
-```
-personas
-  ↓
-facts
-  ↓
-passes
-  ↓
-bridges
-  ↓
-connectors
-```
-
-you can jump between them whenever you want.
-
-- if i change what a fact is allowed to mix with, the policy engine reacts.
-- if i revoke a pass, the reads stop.
-- if i delete a bridge, "not available" comes back - with no hint that
-  anything ever existed.
-
-the context is one object. the views are just different windows into it.
-
----
-
-## the first view — personas
-
-this is the "who is asking" part.
-
-a persona is one of your hats, as a first-class thing:
-
-- its own memory
-- its own sealed keys
-- its own connectors
-- its own budget
-
-and one rule i want pinned in writing: none of your personas is the "real
-you" with the others playing roles. they are all the real you. what differs
-between them is what they know and who they matter to - someone can be very
-high on your founder's axis and nearly absent from your personal life, and
-that's just how knowing works.
-
-switching personas is deliberately heavy: you don't mutate a profile in
-place, you request a switch, approve it, and get a freshly minted session for
-the new hat. the old one keeps its own memories.
-
-deleting a persona is real. the keys are shredded; sealed facts become noise
-forever. the deletion is not a flag flip.
-
----
-
-## the second view — facts
-
-facts are what a persona remembers, and they carry their papers.
-
-every fact is sealed and labeled (we call the label its taint):
-
-- where it came from
-- how linkable it is to you
-- how long it stays relevant
-
-labels combine by most-restrictive-wins, so a summary of a private thing
-can't launder itself into a public one. a fact can move between personas
-only by being unsealed and re-sealed under the new persona's key, in front
-of the policy engine, provenance intact.
-
----
-
-## the third view — passes
-
-when an app or an agent wants context, it never gets your keys.
-
-it gets a pass: scoped to one persona, one category, one purpose, one
-duration. passes can be one-time. every read burns a signed receipt you can
-audit later.
-
-this is also what a tap should be: a pass is exactly the shape of "let this
-person, for this reason, until tonight, see this much."
-
----
-
-## the fourth view — bridges
-
-a persona never leaks into another one by accident. sharing needs a matching
-bridge AND explicit ingress on each side.
-
-no bridge means "not available" - never a hint that anything exists on the
-other side. absence is indistinguishable from emptiness, on purpose.
-
----
-
-## the fifth view — connectors
-
-this is where the context actually comes in.
-
-connectors are organized by the job you want done - you approve the job,
-and the providers under it are interchangeable (swap dropbox for drive and
-nobody re-consents). each persona connects its own accounts - several
-accounts per provider, even (work drive + personal drive on the same hat) -
-and provider text is tagged untrusted at ingress. it is evidence, never
-truth, and never becomes a preference without your confirmation.
+connectors are organized by the job you want done - you approve the job, and
+the providers under it are interchangeable:
 
 ```
 knowledge          (what you know, make, and keep)
@@ -264,35 +79,17 @@ utility            (plumbing)
 |__ health                   health platforms
 ```
 
-`[live]` means the adapter exists and is tested. everything else is
-registered but not built yet - the status is explicit in the code, and
-nothing here will pretend otherwise.
+`[live]` means the adapter exists and is tested; everything else is
+registered but not built yet (the status is explicit in the code - nothing
+pretends to work). the taste block is the fuel line for **evie**, the
+decoupled taste engine that lives on its own branch and activates only when
+it does - moira's deterministic core never depends on it.
 
----
+## how you use it
 
-## under the hood
-
-**the core is deterministic and boring on purpose.** zero dependencies,
-node 24, one process. the policy engine is pure logic - same inputs, same
-answers - which is the only reason any of the promises above can be tested
-instead of trusted.
-
-**two surfaces, one rule.** the agent surface (what an mcp server or an app
-calls) can never reach an owner action. owner actions require a minted owner
-context. a poisoned agent cannot approve itself into anything.
-
-**evie, the taste engine, never trains on you.** the taste block is her fuel
-line; she lives on her own branch and activates only when she does. she is
-deterministic: latent elements come from catalogues that already exist (tmdb
-for film and tv, per-axis equivalents elsewhere), and your ratings, logs and
-shares only position you in that space - nothing of you is ever absorbed
-into weights. recommendations map onto a per-persona graph by latent
-similarity, not the overt "because you watched" kind, and they explain
-themselves.
-
-**the deletion is real, one more time, because it matters.** personas shred
-their keys. unsealed-without-the-key is noise. this is the difference
-between "deleted" and hidden behind a flag, and moira only claims the first.
+**two surfaces, one rule:** the agent surface (what an mcp server or app
+calls) can never reach an owner action. the owner surface requires a minted
+owner context - a poisoned agent cannot approve itself into anything.
 
 ```
 # run the suite (offline, no network, no services)
@@ -304,53 +101,39 @@ node cli.js persona create --name founder --identity linked
 node cli.js fact add --persona <id> --content "..." --category notes
 ```
 
----
+for the story in plain words, start with `docs/about.md` and
+`docs/explain.md`. for deployment, hosting, and the database, see `repo.md`
+and `technobabble/journal.md`.
 
-## what i want moira to feel like
+## modality
 
-- not a password manager for your personality.
-- not another dashboard with a dark mode.
-- not a form where you surrender your drive and pray.
+moira is designed to be reached the way you actually live:
 
-i want it to feel like:
-
-"i have a weird little hat i wear"
-
-and then just start wearing it.
-
-- give the student its own drive.
-- give the founder its own people.
-- hand out passes that expire tonight.
-- watch every read leave a receipt.
-- build a bridge when two hats actually want to talk.
-- delete a hat when it's done, and mean it.
-
-and reach it the way you live: a browser, first (personas and passes as
-visible, touchable things), the command line as a first-class citizen, and -
-potentially, deliberately still just potentially - an nfc card you tap to
-hand someone a pass in person.
-
-because if the computer can already hold the boring, paranoid relationships
-between who-knows-what, i would much rather let it do that, and spend my time
-being several people on purpose.
-
----
+- **browser first.** the primary experience is a web app: personas, passes,
+  receipts, and connectors as visible, touchable things you manage directly.
+- **command line native.** the cli is not a debug tool - it is a first-class
+  surface. everything the owner can do is scriptable, and the same core runs
+  behind it.
+- **nfc tappable cards (potentially).** a persona as a physical card you tap
+  to share context in person - the pass model (scope, purpose, duration,
+  receipt) is exactly what a tap needs. deliberately still a "potentially":
+  nothing is built, and it will not be pretended otherwise.
 
 ## where to go deeper
 
 | doc | what is in it |
 | --- | --- |
-| `repo.md` | the repo map: every folder, what lives where |
+| `repo.md` | the repo map: every folder, what lives where, how it fits together |
 | `docs/about.md` | what moira is and the beliefs underneath it |
 | `docs/explain.md` | how moira works, for a person (the house metaphor) |
 | `docs/problemcase.md` | the problem in detail |
 | `docs/solution.md` | the answer, piece by piece |
 | `docs/features.md` | the feature inventory with honest status |
 | `docs/buildplan.md` | what is next and in what order |
-| `roadmap.md` | what is shipped, what is deferred, and why |
-| `technobabble/underthehood.md` | sync core, key sealing, taint algebra, cas |
-| `technobabble/system-architecture.md` | components and data flow |
-| `technobabble/techstack.md` | every technology choice and why |
-| `technobabble/journal.md` | the build log: phases, bugs, live runs |
-| `technobabble/technobabble.md` | the design ramble: why personas, why determinism |
+| `roadmap.md` | what is shipped, what is next, what is deliberately deferred |
+| `technobabble/underthehood.md` | how moira actually works: sync core, key sealing, taint algebra, cas, the store contract |
+| `technobabble/system-architecture.md` | the components and how data flows between them |
+| `technobabble/techstack.md` | every technology choice and why it was made |
+| `technobabble/journal.md` | the build log: phases, bugs found, live-verification runs |
+| `technobabble/technobabble.md` | the design ramble: why personas, why passes, why determinism |
 | `technobabble/inspiredby.md` | what moira draws from |
