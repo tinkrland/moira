@@ -14,7 +14,7 @@
 // requires an owner session the agent never holds.
 
 import { randomId } from '../util/crypto.js';
-import { FACT_STATUS, RUNG, OUTCOME, BASIS, PREFERENCE_CATEGORIES, CORE_PERSONA_ID } from '../model/constants.js';
+import { FACT_STATUS, RUNG, OUTCOME, BASIS, PREFERENCE_CATEGORIES, CORE_PERSONA_ID, PERSONA_STATUS } from '../model/constants.js';
 import { derivePolicy, serveRung, nameToRank, decideWrite } from './policy.js';
 
 export class FactService {
@@ -28,6 +28,10 @@ export class FactService {
   // --- proposal path (agent writes) ------------------------------------------
 
   propose(persona, spec, { actor = 'agent', clientId = null } = {}) {
+    if (persona && persona.status === PERSONA_STATUS.FROZEN) {
+      // a frozen persona is on ice: no new facts, no thaw-by-backdoor
+      return { outcome: OUTCOME.DECLINED, reason: 'persona_frozen' };
+    }
     const {
       content, category, rungs = {}, derivedFrom = [], basis = null,
       evidence = [], preferenceBasis = null, validUntil = null, truthBasis = 'owner',

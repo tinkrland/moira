@@ -9,7 +9,7 @@
 // every state change writes a receipt.
 
 import { randomId } from '../util/crypto.js';
-import { OUTCOME, RECEIPT_OP } from '../model/constants.js';
+import { OUTCOME, RECEIPT_OP, PERSONA_STATUS } from '../model/constants.js';
 
 export const SWITCH_STATUS = {
   PENDING: 'pending',
@@ -38,6 +38,7 @@ export class SwitchService {
     const to = this.personas.get(toPersonaId);
     if (!to) return { outcome: OUTCOME.UNAVAILABLE, reason: 'target_persona_missing' };
     if (fromPersonaId === toPersonaId) return { outcome: OUTCOME.DECLINED, reason: 'same_persona' };
+    if (to.status === PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.DECLINED, reason: 'persona_frozen' };
 
     const sw = {
       id: randomId('psw'),

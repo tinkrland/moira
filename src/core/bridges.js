@@ -17,7 +17,7 @@
 // spends by rung and linkability. exhausted -> refused until reset.
 
 import { randomId } from '../util/crypto.js';
-import { RUNG, OUTCOME, IDENTITY, BASIS, INSPIRATION_CATEGORIES, ATTRIBUTION_CATEGORIES, BRIDGE_EXPOSURE } from '../model/constants.js';
+import { RUNG, OUTCOME, IDENTITY, BASIS, INSPIRATION_CATEGORIES, ATTRIBUTION_CATEGORIES, BRIDGE_EXPOSURE, PERSONA_STATUS } from '../model/constants.js';
 import { serveRung, nameToRank } from './policy.js';
 
 const PRIVACY_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -71,6 +71,7 @@ export class BridgeService {
     if (!src || !dst) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
     if (src.id === dst.id) return { outcome: OUTCOME.DECLINED, reason: 'same_persona_use_persona_context' };
     if (src.locked || dst.locked) return { outcome: OUTCOME.LOCKED, reason: 'persona_kill_switch' };
+    if (src.status === PERSONA_STATUS.FROZEN || dst.status === PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.LOCKED, reason: 'persona_frozen' };
 
     // step 1: find bridges src->dst matching purpose. none -> not_available.
     const now = this.now();

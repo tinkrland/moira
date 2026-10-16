@@ -30,6 +30,14 @@ export const IDENTITY = {
   HETERONYMOUS: 'heteronymous'
 };
 
+// freeze/thaw (section 16 sibling of deletion): a frozen persona is on ice.
+// unlike deletion nothing is shredded; activity declines while frozen and
+// thaw resumes the persona exactly.
+export const PERSONA_STATUS = {
+  ACTIVE: 'active',
+  FROZEN: 'frozen'
+};
+
 export const STORAGE = {
   HOSTED: 'hosted',
   LOCAL: 'local',
@@ -91,7 +99,9 @@ export const RECEIPT_OP = {
   CONNECTOR: 'connector',
   MOVE: 'move',
   PROMOTE: 'promote',
-  DEMOTE: 'demote'
+  DEMOTE: 'demote',
+  PERSONA_FREEZE: 'persona_freeze',
+  PERSONA_THAW: 'persona_thaw'
 };
 
 export const RESHARE = {

@@ -42,6 +42,19 @@ mapping + one response-shape difference), verified against both.
   index server-side; pushdown is an optimization, the in-memory predicate
   stays the policy.
 
+## persona memory persistence: mem0 (open source, behind the scenes)
+
+each persona's long-lived memory (beyond the sealed fact vault) is persisted
+through **mem0, the open-source memory layer** (mem0ai/mem0), one isolated
+memory space per persona. it sits behind the scenes: the store interface and
+the deterministic core never depend on it directly, persona isolation is
+preserved by scoping every mem0 call to the persona's own memory (its user
+id / namespace), and moira's taint rules still govern what is allowed into
+a memory at all. chosen because memory extraction, consolidation and
+recall are a solved problem worth adopting rather than rebuilding, while
+the trust model (untrusted ingress, confirmed preferences, per-persona
+boundaries) stays ours.
+
 ## the worker-thread store
 
 node is single-threaded; the core is synchronous. rather than make every

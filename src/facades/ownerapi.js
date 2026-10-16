@@ -316,6 +316,43 @@ export class OwnerApi {
     return { outcome: OUTCOME.RESULTS, shredded: true, receiptStubs: stubs };
   }
 
+  // freeze persona (section 16 sibling of deletion): put it on ice instead of
+  // deleting it. the keys are NOT shredded and no facts, packs, handoffs or
+  // accounts are destroyed: activity surfaces decline while frozen (agent
+  // calls, routing, switching, bridges, fact adds, packs, handoffs, ledger
+  // mints) and thaw resumes the persona exactly. standing leases are revoked
+  // like the kill switch: leases are short-lived by design and thaw never
+  // resurrects revoked things; the owner re-issues.
+  freezePersona(ctx, personaId) {
+    this._require(ctx);
+    const persona = this.gw.personas.get(personaId);
+    if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    const res = this.gw.personas.freeze(personaId);
+    if (res.outcome !== OUTCOME.RESULTS) return res;
+    // standing leases are revoked outright (NOT via the kill switch: that
+    // flips the panic `locked` flag, and freeze is its own state); leases
+    // are short-lived by design and thaw never resurrects revoked things.
+    let frozenLeases = 0;
+    for (const l of this.gw.store.list('leases', (x) => x.personaId === personaId && x.status === 'active', { personaId, status: 'active' })) {
+      this.gw.router.revokeLease(l.id);
+      frozenLeases++;
+    }
+    this.gw.receipts.write({ actor: 'owner', personaId, op: 'persona_freeze', reason: 'put_on_ice' });
+    return { outcome: OUTCOME.RESULTS, frozen: true, frozenLeases };
+  }
+
+  // thaw persona: back from the ice, exactly as it was. keys were intact the
+  // whole time, so sealed facts open again the moment the persona is active.
+  thawPersona(ctx, personaId) {
+    this._require(ctx);
+    const persona = this.gw.personas.get(personaId);
+    if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    const res = this.gw.personas.thaw(personaId);
+    if (res.outcome !== OUTCOME.RESULTS) return res;
+    this.gw.receipts.write({ actor: 'owner', personaId, op: 'persona_thaw', reason: 'off_the_ice' });
+    return { outcome: OUTCOME.RESULTS, thawed: true };
+  }
+
   exportPersona(ctx, personaId) {
     this._require(ctx);
     const persona = this.gw.personas.get(personaId);

@@ -9,7 +9,7 @@
 // trust-tagged content (that is the consumer's contract; we mark trust here).
 
 import { randomId, signPayload, verifyPayloadSig } from '../util/crypto.js';
-import { OUTCOME, RESHARE } from '../model/constants.js';
+import { OUTCOME, RESHARE, PERSONA_STATUS } from '../model/constants.js';
 import { serveRung, nameToRank } from './policy.js';
 
 export class PackService {
@@ -27,6 +27,8 @@ export class PackService {
   create({ personaId, recipientAgentId, brief, factSelections, ttlMs = 24 * 60 * 60 * 1000, reshare = RESHARE.NO_RESHARE, connectorGrants = [], leaseId = null, voiceAttachment = null }) {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+
+    if (persona.status === PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.DECLINED, reason: 'persona_frozen' };
 
     const items = [];
     for (const sel of factSelections) {

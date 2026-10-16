@@ -65,6 +65,14 @@ it is just careful bookkeeping.
 
 ### permissive permeability is the other half
 
+and there is a middle way between active and gone: you can freeze a persona,
+put it on ice. a frozen persona declines all activity (agent calls, routing,
+switching, bridges, new facts, packs, handoffs, even new connector
+credentials) but nothing is destroyed: the keys are not shredded and no
+record is removed. thaw brings the persona back exactly as it was, sealed
+facts readable again the moment it is active. deletion stays available for
+the times you really mean gone.
+
 the hard half: hats are still one human's life, so they sometimes need to
 share. deliberately, narrowly, and reversibly. maybe the founder needs the
 student's schedule. maybe two hats share a set of facts about a project. the

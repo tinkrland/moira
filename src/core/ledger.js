@@ -11,7 +11,7 @@
 // dates show as estimated and never drive an irreversible action.
 
 import { randomId } from '../util/crypto.js';
-import { OUTCOME, RESOURCE_KIND, DATA_POLICY } from '../model/constants.js';
+import { OUTCOME, RESOURCE_KIND, DATA_POLICY, PERSONA_STATUS } from '../model/constants.js';
 import { rankAccounts } from './policy.js';
 
 const DAY_MS = 86400000;
@@ -30,6 +30,7 @@ export class LedgerService {
   add(personaId, spec, { confirmedByOwner = true } = {}) {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    if (persona.status === PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.DECLINED, reason: 'persona_frozen' };
     const {
       provider, label, kind, limits = [], capabilities = { models: [], tools: [], regions: [] },
       expiresAt = null, convertsToPaidAt = null, cancelBy = null, cardOnFile = false,

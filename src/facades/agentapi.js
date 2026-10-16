@@ -6,7 +6,7 @@
 // if a future tool needs owner authority it does not belong in this class.
 
 import {
-  OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, PASS_DURATION
+  OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, PASS_DURATION, PERSONA_STATUS
 } from '../model/constants.js';
 import { nameToRank } from '../core/policy.js';
 import { randomId } from '../util/crypto.js';
@@ -21,6 +21,7 @@ export class AgentApi {
     if (res.outcome !== OUTCOME.RESULTS) return res;
     const persona = this.gw.personas.get(res.personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    if (persona.status === PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.LOCKED, reason: 'persona_frozen' };
     return { outcome: OUTCOME.RESULTS, clientId: res.clientId, persona, sessionId: res.sessionId };
   }
 

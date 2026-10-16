@@ -14,7 +14,7 @@
 // return; overruns write a receipt and lower the agent's future auto-approval.
 
 import { randomId } from '../util/crypto.js';
-import { OUTCOME, HANDOFF_STATUS } from '../model/constants.js';
+import { OUTCOME, HANDOFF_STATUS, PERSONA_STATUS } from '../model/constants.js';
 
 export class HandoffService {
   constructor({ store, personas, agents, packs, receipts, router, facts, now = Date.now }) {
@@ -47,6 +47,7 @@ export class HandoffService {
 
     const persona = this.personas.get(pack.personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    if (persona.status === PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.DECLINED, reason: 'persona_frozen' };
     if (toAgent.personasAllowed.length > 0 && !toAgent.personasAllowed.includes(pack.personaId)) {
       return { outcome: OUTCOME.DECLINED, reason: 'receiver_persona_not_allowed' };
     }

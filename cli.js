@@ -29,6 +29,7 @@ import { Moira, FileStore } from './src/index.js';
 const HELP = `moira cli - owner surface
   personas list
   persona create --name <n> --identity <linked|pseudonymous|heteronymous> [--sheet <json>]
+  persona freeze --id <personaId>   (put on ice instead of deleting; thaw brings it back)
   fact add --persona <personaId> --content <text> --category <c>
   core list [--category <c>]
   fact promote --id <factId>
@@ -93,6 +94,8 @@ function run() {
       break;
     }
     case 'persona': {
+      if (sub === 'freeze') { res = m.owner.freezePersona(ctx, flags.id); break; }
+      if (sub === 'thaw') { res = m.owner.thawPersona(ctx, flags.id); break; }
       if (sub !== 'create') return fail('unknown persona subcommand');
       const spec = { name: flags.name, identity: flags.identity };
       if (flags.sheet) spec.characterSheet = JSON.parse(flags.sheet);

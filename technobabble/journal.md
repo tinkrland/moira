@@ -278,3 +278,26 @@ nothingness. intro now walks a day (founder at nine, student by noon,
 character at midnight). metaphor unified on "blob" throughout (intro,
 hats, permeability), since the section now defines it; still no dashes.
 
+## 2026-10-16 - persona freeze/thaw shipped; mem0 pinned for persona memory
+
+freeze/thaw (section 16 sibling of deletion) is live: freezePersona/
+thawPersona on the owner surface, PERSONA_STATUS active/frozen on the
+persona record, gates at the agent surface (_ctx), router.route,
+switching.request (target side), bridges.request (either side),
+facts.propose (so add too), packs.create, handoff pack-reshare, and
+ledger.add (no new credentials on ice). facade freeze reaps standing
+leases WITHOUT the kill switch (that flips the panic `locked` flag;
+freeze is its own state) and writes persona_freeze / persona_thaw
+receipts (new RECEIPT_OP entries). new ops surfaced in the cli
+(persona freeze/thaw --id). failing-tests-first: test/freeze.test.js
+pinned status flips, all-surface declines, switch-out-from-frozen also
+locked, switch-into-frozen declined, facts preserved (frozen is not
+deletion), thaw resumes exactly with keys intact. 177 tests: 165 pass,
+12 gated.
+
+owner decision: persona memory persistence (beyond the sealed vault)
+runs on mem0, open source, behind the scenes - one isolated memory
+space per persona; the deterministic core never depends on it directly
+and taint/consent rules still gate what may enter a memory. recorded
+in techstack.md.
+

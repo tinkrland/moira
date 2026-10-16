@@ -19,7 +19,7 @@
 // reason availability, and no preference fact is created or strengthened.
 
 import { randomId } from '../util/crypto.js';
-import { OUTCOME, AGENT_TIER, LEASE_STATUS } from '../model/constants.js';
+import { OUTCOME, AGENT_TIER, LEASE_STATUS, PERSONA_STATUS } from '../model/constants.js';
 import { eligibility, rankAccounts, bindingCap, capDecision } from './policy.js';
 
 export class RouterService {
@@ -37,6 +37,7 @@ export class RouterService {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
     if (persona.locked) return { outcome: OUTCOME.LOCKED, reason: 'persona_kill_switch' };
+    if (persona.status === PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.LOCKED, reason: 'persona_frozen' };
 
     const agent = agentId ? this.agents.get(agentId) : null;
     const estimate = constraints.estimatedCost ?? 0;

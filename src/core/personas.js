@@ -8,7 +8,7 @@
 
 import { randomId } from '../util/crypto.js';
 import {
-  IDENTITY, STORAGE, LINK_VISIBILITY, DISCLOSURE_MODE, RUNG, OUTCOME
+  IDENTITY, STORAGE, LINK_VISIBILITY, DISCLOSURE_MODE, RUNG, OUTCOME, PERSONA_STATUS
 } from '../model/constants.js';
 
 export class PersonaService {
@@ -38,6 +38,7 @@ export class PersonaService {
       name,
       identity,
       storage,
+      status: PERSONA_STATUS.ACTIVE,
       // heteronyms never inherit the shared core (forced false, section 10)
       inheritsCore: isHeteronym ? false : (inheritsCore ?? isLinked),
       characterSheet: isHeteronym ? characterSheet : null,
@@ -112,6 +113,26 @@ export class PersonaService {
   // the facade must call keys.shredPersona(id) alongside this.
   remove(id) {
     return this.store.del('personas', id);
+  }
+
+  // freeze/thaw (section 16 sibling of deletion): put a persona on ice
+  // instead of deleting it. the keys are NOT shredded and no record is
+  // destroyed; activity surfaces decline while frozen and thaw puts the
+  // persona back exactly as it was.
+  freeze(id) {
+    const persona = this.get(id);
+    if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    if (persona.status === PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.DECLINED, reason: 'persona_frozen' };
+    this.store.update('personas', id, (x) => ({ ...x, status: PERSONA_STATUS.FROZEN, frozenAt: this.now() }));
+    return { outcome: OUTCOME.RESULTS, frozen: true };
+  }
+
+  thaw(id) {
+    const persona = this.get(id);
+    if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    if (persona.status !== PERSONA_STATUS.FROZEN) return { outcome: OUTCOME.DECLINED, reason: 'persona_not_frozen' };
+    this.store.update('personas', id, (x) => ({ ...x, status: PERSONA_STATUS.ACTIVE, frozenAt: null, thawedAt: this.now() }));
+    return { outcome: OUTCOME.RESULTS, thawed: true };
   }
 }
 
