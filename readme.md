@@ -57,7 +57,9 @@ film, a share connecting to a song.
 ### reading as thinking (deliberately a different axis)
 
 substack, medium - the essays and publications a persona follows are
-not entertainment consumption; they shape thinking. evie treats the
+not entertainment consumption; they shape thinking. the axis covers
+readers and writers alike - a persona can be a pure consumer whose
+subscription and reading history is the whole signal. evie treats the
 reading axis as its own dimension: it informs what a persona is
 becoming, not just what they enjoy. (registered under the knowledge
 block's publish/reading job, distinct from the taste block.)
