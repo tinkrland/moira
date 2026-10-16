@@ -14,13 +14,14 @@
 // requires an owner session the agent never holds.
 
 import { randomId } from '../util/crypto.js';
-import { FACT_STATUS, RUNG, OUTCOME, BASIS, PREFERENCE_CATEGORIES } from '../model/constants.js';
+import { FACT_STATUS, RUNG, OUTCOME, BASIS, PREFERENCE_CATEGORIES, CORE_PERSONA_ID } from '../model/constants.js';
 import { derivePolicy, serveRung, nameToRank, decideWrite } from './policy.js';
 
 export class FactService {
-  constructor({ store, keys, now = Date.now }) {
+  constructor({ store, keys, personas = null, now = Date.now }) {
     this.store = store;
     this.keys = keys;
+    this.personas = personas; // for shared-core inheritance reads (section 17)
     this.now = now;
   }
 
@@ -167,7 +168,13 @@ export class FactService {
   // cap are reported as skipped, never served above their max_rung.
   serve(personaId, { categories = null, predicate = null, capRank = RUNG.FULL, purpose = null }) {
     const facts = this.active(personaId).filter((f) => categories === null || categories.includes(f.category));
-    const matched = predicate ? facts.filter(predicate) : facts;
+    // shared core: personas with inheritsCore read core facts by reference
+    // (spec 5/17). heteronyms never reach here - personas.js forces the flag
+    // false at create and update - but serve still guards, because the core is
+    // the one place a persona boundary could silently widen.
+    const persona = this.personas ? this.personas.get(personaId) : null;
+    const inherited = persona && persona.inheritsCore === true ? this.active(CORE_PERSONA_ID) : [];
+    const matched = predicate ? [...facts, ...inherited].filter(predicate) : [...facts, ...inherited];
     const served = [];
     const skipped = [];
     for (const fact of matched) {

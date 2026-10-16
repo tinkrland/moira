@@ -16,6 +16,10 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 2.5 - owner session auth**: proposal made (passkeys + recovery
   code, recommended, vs supabase auth). awaiting the call. /authorize stays
   401 until it lands.
+- [x] **shared core + promotion/demotion (section 5/17)**: core entity with
+  reserved id, inheritance-by-reference reads for linked personas, canon
+  containment, audited promote/demote, and cli.js making the whole owner
+  surface scriptable (FileStore local state). shipped 2026-10-16.
 - [x] **persona switching (section 17)**: request/approve/collect with full
   session isolation, per-client default personas, the wrong-persona escape
   hatch (re-seal + taint review + provenance), canon containment. shipped

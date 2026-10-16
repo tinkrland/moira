@@ -51,6 +51,8 @@ export const AGENT_TIER = {
   INTERNAL: 'internal'
 };
 
+export const CORE_PERSONA_ID = 'core'; // reserved id: the shared core (spec 5/17)
+
 export const FACT_STATUS = {
   PROPOSED: 'proposed',
   ACTIVE: 'active',
@@ -87,7 +89,9 @@ export const RECEIPT_OP = {
   DISCLOSURE: 'disclosure',
   DELETE: 'delete',
   CONNECTOR: 'connector',
-  MOVE: 'move'
+  MOVE: 'move',
+  PROMOTE: 'promote',
+  DEMOTE: 'demote'
 };
 
 export const RESHARE = {

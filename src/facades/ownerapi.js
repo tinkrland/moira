@@ -137,6 +137,23 @@ export class OwnerApi {
     return created;
   }
 
+  // --- shared core (spec 5/17) --------------------------------------------
+  // explicit, owner-approved, auditable promotion and demotion.
+  listCoreFacts(ctx, { category = null } = {}) {
+    this._require(ctx);
+    return this.gw.core.list({ category });
+  }
+
+  promoteFact(ctx, { factId }) {
+    this._require(ctx);
+    return this.gw.core.promote({ factId });
+  }
+
+  demoteFact(ctx, { factId, toPersonaId }) {
+    this._require(ctx);
+    return this.gw.core.demote({ factId, toPersonaId });
+  }
+
   // --- persona switching (section 17) ------------------------------------------
   // approval is the consent act; the old session is never touched.
   listPersonaSwitches(ctx, { status = null } = {}) {

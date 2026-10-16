@@ -65,3 +65,41 @@ export class MemoryStore {
     return { ...record };
   }
 }
+
+// file-backed store: the CLI's persistence. same interface as MemoryStore,
+// loaded from a single JSON file at boot and flushed atomically (write
+// temp + rename) after every mutation. good for a local, single-process
+// owner machine - the sovereign tier's simplest real store. not for
+// concurrency: last writer wins across processes, which is fine here
+// because the CLI is the only writer on an owner's laptop.
+import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { randomBytes } from 'node:crypto';
+
+export class FileStore extends MemoryStore {
+  constructor(path) {
+    super();
+    this.path = path;
+    if (existsSync(path)) {
+      const saved = JSON.parse(readFileSync(path, 'utf8'));
+      for (const [name, rows] of Object.entries(saved)) {
+        this._coll(name);
+        for (const [id, record] of Object.entries(rows)) this._coll(name).set(id, record);
+      }
+    }
+  }
+
+  _flush() {
+    const saved = {};
+    for (const [name, coll] of this.colls) saved[name] = Object.fromEntries(coll);
+    const tmp = `${this.path}.tmp-${randomBytes(4).toString('hex')}`;
+    if (!existsSync(dirname(this.path))) mkdirSync(dirname(this.path), { recursive: true });
+    writeFileSync(tmp, JSON.stringify(saved));
+    renameSync(tmp, this.path);
+  }
+
+  put(coll, id, record) { const r = super.put(coll, id, record); this._flush(); return r; }
+  update(coll, id, fn) { const r = super.update(coll, id, fn); this._flush(); return r; }
+  del(coll, id) { const r = super.del(coll, id); this._flush(); return r; }
+  append(coll, record) { const r = super.append(coll, record); this._flush(); return r; }
+}

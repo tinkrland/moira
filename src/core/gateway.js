@@ -34,6 +34,7 @@ import { OwnerContext, isValidOwnerSession } from '../facades/ownercontext.js';
 import { OUTCOME } from '../model/constants.js';
 import { ConnectorHub } from '../connectors/hub.js';
 import { SwitchService } from './switching.js';
+import { CoreService } from './core.js';
 
 function defaultStore() {
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -71,7 +72,7 @@ export class Moira {
     this.keys = new KeyService({ instanceKey, keyStore: this.store, now });
     this.receipts = new ReceiptLedger({ store, keys: this.keys, now });
     this.personas = new PersonaService({ store, keys: this.keys, now });
-    this.facts = new FactService({ store, keys: this.keys, now });
+    this.facts = new FactService({ store, keys: this.keys, personas: this.personas, now: () => this._nowMs() });
     this.agents = new AgentService({ store, receipts: this.receipts, now });
     this.sessions = new SessionService({ store, agents: this.agents, now });
     this.passes = new PassService({ store, agents: this.agents, receipts: this.receipts, now });
@@ -82,6 +83,7 @@ export class Moira {
     this.handoffs = new HandoffService({ store, personas: this.personas, agents: this.agents, packs: this.packs, receipts: this.receipts, router: this.router, facts: this.facts, now });
 
     // the two facades (spec section 6). there is no third surface.
+    this.core = new CoreService({ store: this.store, keys: this.keys, personas: this.personas, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
     this.switching = new SwitchService({ store: this.store, keys: this.keys, agents: this.agents, personas: this.personas, sessions: this.sessions, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
     this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: () => this._nowMs(), io });
     this.agent = new AgentApi(this);

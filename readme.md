@@ -467,3 +467,29 @@ switching is a new consent, never a mutation. `src/core/switching.js`:
 - one caveat, honestly: promotion/demotion to the SHARED CORE needs a core
   entity, which the codebase does not have yet (only `inheritsCore` flags on
   personas). that needs a design decision before it can be built.
+
+## shared core + cli (spec 5/17, shipped 2026-10-16)
+
+the shared core is now a real thing, and the whole owner surface is
+scriptable from a terminal.
+
+- **the core** (`src/core/core.js`): a single curated fact base with the
+  reserved persona id `core`. linked personas inherit core facts BY
+  REFERENCE in reads (`facts.serve` folds them in under the persona's own
+  pass; the fact's own policy and taint still apply). heteronyms never
+  inherit (forced at persona create/update, guarded again at serve).
+- **promotion / demotion**: `promoteFact` (persona -> core) opens the vault
+  seal and re-seals under the core key; policy and taint ride along
+  unchanged, canon refuses to leave a heteronym. `demoteFact` (core ->
+  persona) runs through the policy engine - propose under the target is
+  the taint review. both are owner-only, audited (`promote`/`demote`
+  receipt ops), provenance kept (`movedFrom` / `movedTo`).
+- **`cli.js`**: the owner's local surface. `persona create`, `fact add`,
+  `fact promote/demote`, `core list`, `personas list`, `switch
+  list/approve/deny` - one facade call per command, json in, json out.
+  state is a FileStore at `~/.moira/state.json` (atomic flush per mutation;
+  set `SUPABASE_URL` + service key and the same commands run against the
+  hosted database). owner authority comes from `MOIRA_OWNER_CONFIRMED=1`
+  on the owner's own machine - honestly a local-environment trust until
+  passkey auth lands (phase 2.5); the cli refuses owner commands without
+  it.
