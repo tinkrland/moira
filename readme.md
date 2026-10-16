@@ -362,7 +362,7 @@ interface.
 | --- | --- | --- |
 | files | google drive, onedrive, dropbox, mega | documents and notes a persona wants remembered |
 | ai assistants | chatgpt, claude | conversation history and learned preferences as context sources |
-| lifestyle | spotify, netflix, strava, whoop | taste, routines, health signals |
+| taste | goodreads, letterboxd, serializd, tvtime, repov, last.fm, stats.fm | ratings, consumption history and taste signals for the taste engine |
 | knowledge | notion, google calendar, slack, pinterest | work products, schedules, references |
 | utility | youtube, maps, health | media consumption, places, bookings |
 
@@ -378,3 +378,9 @@ hub rules (per spec section 14, unchanged by the block model):
   becomes a preference basis without owner confirmation.
 - mega is the one non-oauth provider (login + session key), so its adapter
   keeps the same interface but its credential ceremony differs.
+- the taste block is the taste engine's fuel line: goodreads, letterboxd,
+  serializd, tvtime, repov, last.fm and stats.fm carry real ratings and
+  history, not shallow app pings. per spec section 18 the taste block
+  registers with the hub in phase 3 but activates with the v3 taste engine -
+  the fact schema already carries typed entity references and signal kinds,
+  so v3 extends rather than rewrites.
