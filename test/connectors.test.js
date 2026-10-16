@@ -9,7 +9,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Moira } from '../src/index.js';
 import { MemoryStore } from '../src/store.js';
-import { REGISTRY, connectorsByBlock, CONNECTOR_STATUS, CONNECTOR_KIND } from '../src/connectors/registry.js';
+import { REGISTRY, BLOCKS, connectorsByBlock, providersForJob, jobOf, CONNECTOR_STATUS, CONNECTOR_KIND } from '../src/connectors/registry.js';
 import { driveAdapter, dropboxAdapter, megaAdapter } from '../src/connectors/adapters.js';
 
 const ownerSession = () => ({ kind: 'owner_session', verified: true, ownerRef: 'owner' });
@@ -44,14 +44,47 @@ function authorizeDrive(s) {
 
 // --- registry ------------------------------------------------------------------
 
-test('registry: files block is the first wave and all four are active + connected', () => {
-  const files = connectorsByBlock('files');
+// the registry is job-node shaped: blocks contain jobs, jobs carry the
+// consent (pass scopes), providers hang under jobs and are swappable
+// without re-consenting. a provider serves exactly the jobs it is listed
+// under - a swap of dropbox for drive touches one array, no scope changes.
+
+test('registry: retrieve-your-files job is the first wave - all four providers active + connected', () => {
+  const files = providersForJob('knowledge', 'files');
   assert.equal(files.length, 4);
+  assert.deepEqual(files.map((f) => f.id).sort(), ['dropbox', 'google_drive', 'mega', 'onedrive']);
   for (const f of files) {
     assert.equal(f.status, CONNECTOR_STATUS.ACTIVE);
     assert.equal(f.kind, CONNECTOR_KIND.CONNECTED);
+    assert.equal(f.block, 'knowledge');
+    assert.equal(f.job, 'files');
   }
-  assert.ok(files.every((f) => ['google_drive', 'onedrive', 'dropbox', 'mega'].includes(f.id)));
+});
+
+test('registry: jobs are the consent unit - pass scopes live on the job node', () => {
+  const job = jobOf('knowledge', 'files');
+  assert.equal(job.label, 'retrieve your files');
+  assert.ok(job.passScopes.includes('files.list'));
+  assert.ok(job.passScopes.includes('files.read'));
+  // scopes are job-level: no provider row needs to restate them
+  for (const p of providersForJob('knowledge', 'files')) {
+    assert.equal(p.passScopes, undefined, `${p.id}: pass scopes belong to the job, not the provider`);
+  }
+});
+
+test('registry: knowledge jobs - projects, time, publish (planned, connected or ingest)', () => {
+  const projects = providersForJob('knowledge', 'projects');
+  assert.deepEqual(projects.map((p) => p.id).sort(), ['craft_docs', 'linear', 'notion']);
+  const time = providersForJob('knowledge', 'time');
+  assert.deepEqual(time.map((p) => p.id).sort(), ['google_calendar', 'notion_calendar']);
+  const publish = providersForJob('knowledge', 'publish');
+  assert.deepEqual(publish.map((p) => p.id).sort(), ['medium', 'substack']);
+  for (const p of [...projects, ...time, ...publish]) {
+    assert.equal(p.status, CONNECTOR_STATUS.PLANNED);
+  }
+  for (const p of publish) {
+    assert.equal(p.kind, CONNECTOR_KIND.INGEST);
+  }
 });
 
 test('registry: taste block entries are evie-gated, never "active" before evie lands', () => {
@@ -63,9 +96,13 @@ test('registry: taste block entries are evie-gated, never "active" before evie l
   }
 });
 
-test('registry: every id is unique', () => {
+test('registry: every flattened provider row references a real block+job', () => {
+  const validPairs = new Set(BLOCKS.flatMap((b) => b.jobs.map((j) => `${b.id}/${j.id}`)));
   const ids = REGISTRY.map((c) => c.id);
   assert.equal(new Set(ids).size, ids.length);
+  for (const c of REGISTRY) {
+    assert.ok(validPairs.has(`${c.block}/${c.job}`), `${c.id} points at unknown block/job ${c.block}/${c.job}`);
+  }
 });
 
 // --- owner authorize / seal ------------------------------------------------------

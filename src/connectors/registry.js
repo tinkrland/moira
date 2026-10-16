@@ -1,6 +1,17 @@
-// connector registry (spec section 14; readme block model).
+// connector registry (spec section 14; the job-node block model).
 //
-// a connector is a source of context behind a persona. two adapter kinds:
+// a connector is a source of context behind a persona. the tree is:
+//
+//   block          the category of life ("knowledge", "taste", ...)
+//     job          THE CONSENT UNIT. what the owner actually wants done
+//       provider   swappable fulfillment (google drive, dropbox, ...)
+//
+// jobs are what the owner approves; pass scopes come from the job, not the
+// provider, so swapping dropbox for drive never re-consents anyone. a
+// provider can serve several jobs - it is listed under each, with its own
+// per-job scopes when they differ.
+//
+// two adapter kinds:
 //
 //   connected - the persona's account is linked (oauth or session key) and
 //     the adapter fetches live. credentials are sealed per persona and are
@@ -24,130 +35,231 @@ export const CONNECTOR_KIND = {
   INGEST: 'ingest'
 };
 
+// scope vocabulary. the files job is the first (and so far only) job with
+// mcp-visible pass scopes; the vocabulary lives here so the hub and the
+// registry never drift.
 export const CONNECTOR_PASS_SCOPE = {
   FILES_LIST: 'files.list',
   FILES_READ: 'files.read'
 };
 
-// blocks mirror the readme table. adapter files only for the first wave
-// (files); every other entry documents the block model without pretending
-// to fetch anything.
+// provider rows carry only what is genuinely per-provider (kind, status,
+// label, adapter/auth/scopes). block/job are stamped on at flatten time.
+const files = {
+  id: 'files',
+  label: 'retrieve your files',
+  passScopes: [CONNECTOR_PASS_SCOPE.FILES_LIST, CONNECTOR_PASS_SCOPE.FILES_READ],
+  providers: [
+    {
+      id: 'google_drive',
+      kind: CONNECTOR_KIND.CONNECTED,
+      status: CONNECTOR_STATUS.ACTIVE,
+      label: 'google drive',
+      adapter: 'drive',
+      auth: 'oauth2-bearer',
+      scopes: ['drive.readonly'],
+      scopesHint: 'readonly scope only: a connector never widens (section 9.3 applies to connectors too)'
+    },
+    {
+      id: 'onedrive',
+      kind: CONNECTOR_KIND.CONNECTED,
+      status: CONNECTOR_STATUS.ACTIVE,
+      label: 'onedrive',
+      adapter: 'onedrive',
+      auth: 'oauth2-bearer',
+      scopes: ['Files.Read']
+    },
+    {
+      id: 'dropbox',
+      kind: CONNECTOR_KIND.CONNECTED,
+      status: CONNECTOR_STATUS.ACTIVE,
+      label: 'dropbox',
+      adapter: 'dropbox',
+      auth: 'oauth2-bearer',
+      scopes: ['files.metadata.read', 'files.content.read']
+    },
+    {
+      id: 'mega',
+      kind: CONNECTOR_KIND.CONNECTED,
+      status: CONNECTOR_STATUS.ACTIVE,
+      label: 'mega',
+      adapter: 'mega',
+      auth: 'session-key',
+      // mega has no oauth: login yields a session key the owner pastes at
+      // authorize time. the protocol is a custom rpc with aes-encrypted
+      // payloads, so this adapter ships last in the files wave.
+      scopes: ['read']
+    }
+  ]
+};
 
-const filesBlock = [
-  {
-    id: 'google_drive',
-    block: 'files',
-    kind: CONNECTOR_KIND.CONNECTED,
-    status: CONNECTOR_STATUS.ACTIVE,
-    label: 'google drive',
-    adapter: 'drive',
-    auth: 'oauth2-bearer',
-    scopes: ['drive.readonly'],
-    scopesHint: 'readonly scope only: a connector never widens (section 9.3 applies to connectors too)'
-  },
-  {
-    id: 'onedrive',
-    block: 'files',
-    kind: CONNECTOR_KIND.CONNECTED,
-    status: CONNECTOR_STATUS.ACTIVE,
-    label: 'onedrive',
-    adapter: 'onedrive',
-    auth: 'oauth2-bearer',
-    scopes: ['Files.Read']
-  },
-  {
-    id: 'dropbox',
-    block: 'files',
-    kind: CONNECTOR_KIND.CONNECTED,
-    status: CONNECTOR_STATUS.ACTIVE,
-    label: 'dropbox',
-    adapter: 'dropbox',
-    auth: 'oauth2-bearer',
-    scopes: ['files.metadata.read', 'files.content.read']
-  },
-  {
-    id: 'mega',
-    block: 'files',
-    kind: CONNECTOR_KIND.CONNECTED,
-    status: CONNECTOR_STATUS.ACTIVE,
-    label: 'mega',
-    adapter: 'mega',
-    auth: 'session-key',
-    // mega has no oauth: login yields a session key the owner pastes at
-    // authorize time. the protocol is a custom rpc with aes-encrypted
-    // payloads, so this adapter ships last in the files wave.
-    scopes: ['read']
+const projects = {
+  id: 'projects',
+  label: 'manage projects',
+  providers: [
+    { id: 'linear', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'linear' },
+    { id: 'craft_docs', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'craft docs' },
+    { id: 'notion', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'notion' }
+  ]
+};
+
+const time = {
+  id: 'time',
+  label: 'plan your time',
+  providers: [
+    { id: 'google_calendar', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'google calendar' },
+    { id: 'notion_calendar', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'notion calendar' }
+  ]
+};
+
+const publish = {
+  id: 'publish',
+  label: 'write & publish',
+  providers: [
+    { id: 'substack', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'substack' },
+    { id: 'medium', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'medium' }
+  ]
+};
+
+const assistants = {
+  id: 'assistants',
+  label: 'talk to assistants',
+  providers: [
+    { id: 'chatgpt', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'chatgpt' },
+    { id: 'claude', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'claude' },
+    { id: 'gemini', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'gemini' },
+    { id: 'perplexity', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'perplexity' }
+  ]
+};
+
+const appBuilders = {
+  id: 'app-builders',
+  label: 'build apps',
+  providers: [
+    { id: 'lovable', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'lovable' },
+    { id: 'base44', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'base44' },
+    { id: 'bolt', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'bolt' },
+    { id: 'v0', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'v0' }
+  ]
+};
+
+const agents = {
+  id: 'agents',
+  label: 'code with agents',
+  providers: [
+    { id: 'cursor', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'cursor' },
+    { id: 'windsurf', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'windsurf' },
+    { id: 'claude_code', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'claude code' },
+    { id: 'copilot', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'github copilot' }
+  ]
+};
+
+const specs = {
+  id: 'specs',
+  label: 'work from specs',
+  providers: [
+    { id: 'kiro', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'kiro' },
+    { id: 'ibm_bob', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'ibm bob (bob.ibm.com)' }
+  ]
+};
+
+const taste = (id, label, providers) => ({
+  id,
+  label,
+  providers: providers.map((p) => ({ kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, ...p }))
+});
+
+const books = taste('books', 'track books', [
+  { id: 'goodreads', label: 'goodreads' },
+  { id: 'storygraph', label: 'storygraph' },
+  { id: 'fable', label: 'fable' },
+  { id: 'pagebound', label: 'pagebound' }
+]);
+
+const film = taste('film', 'track film', [
+  { id: 'letterboxd', label: 'letterboxd' }
+]);
+
+const tv = taste('tv', 'track tv', [
+  { id: 'serializd', label: 'serializd' },
+  { id: 'tvtime', label: 'tv time' },
+  { id: 'repov', label: 'repov' }
+]);
+
+const music = taste('music', 'track music', [
+  { id: 'lastfm', label: 'last.fm' },
+  { id: 'statsfm', label: 'stats.fm' },
+  { id: 'musicboard', label: 'musicboard' },
+  { id: 'superfan', label: 'superfan' }
+]);
+
+const stories = taste('stories', 'read & write stories', [
+  { id: 'ao3', label: 'archive of our own (import)' },
+  { id: 'wattpad', label: 'wattpad' }
+]);
+
+const shares = taste('shares', 'share taste', [
+  { id: 'pi_fyi', label: 'pi.fyi' },
+  { id: 'tastify', label: 'tastify' }
+]);
+
+const lifestyle = (id, label, providers) => ({
+  id,
+  label,
+  providers: providers.map((p) => ({ kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, ...p }))
+});
+
+const dressShop = lifestyle('dress-shop', 'dress & shop', [
+  { id: 'depop', label: 'depop' },
+  { id: 'ltk', label: 'ltk' },
+  { id: 'pinterest', label: 'pinterest' },
+  { id: 'whering', label: 'whering' }
+]);
+
+const logLife = lifestyle('log-life', 'log your life', [
+  { id: 'anylog', label: 'anylog' },
+  { id: 'retro', label: 'retro' }
+]);
+
+const utility = (id, label, providers) => ({
+  id,
+  label,
+  providers: providers.map((p) => ({ kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, ...p }))
+});
+
+const watch = utility('watch', 'watch', [
+  { id: 'youtube', label: 'youtube' }
+]);
+
+const places = utility('places', 'places', [
+  { id: 'maps', label: 'maps' }
+]);
+
+const health = utility('health', 'health', [
+  { id: 'health', label: 'health platforms' }
+]);
+
+export const BLOCKS = [
+  { id: 'knowledge', label: 'knowledge', jobs: [files, projects, time, publish] },
+  { id: 'ai-tools', label: 'ai tools', jobs: [assistants, appBuilders, agents, specs] },
+  { id: 'taste', label: 'taste', jobs: [books, film, tv, music, stories, shares] },
+  { id: 'lifestyle', label: 'lifestyle', jobs: [dressShop, logLife] },
+  { id: 'utility', label: 'utility', jobs: [watch, places, health] }
+];
+
+// stamp every provider row with its block and job, in place, so job nodes
+// and the flattened registry expose the same row shape. job is the consent
+// handle; block/job always resolve back to a real node.
+for (const block of BLOCKS) {
+  for (const job of block.jobs) {
+    for (const p of job.providers) {
+      p.block = block.id;
+      p.job = job.id;
+    }
   }
-];
+}
 
-const aiToolsBlock = [
-  { id: 'chatgpt', block: 'ai-tools', sub: 'assistants', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'chatgpt' },
-  { id: 'claude', block: 'ai-tools', sub: 'assistants', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'claude' },
-  { id: 'gemini', block: 'ai-tools', sub: 'assistants', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'gemini' },
-  { id: 'perplexity', block: 'ai-tools', sub: 'assistants', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'perplexity' },
-  { id: 'lovable', block: 'ai-tools', sub: 'app-builders', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'lovable' },
-  { id: 'base44', block: 'ai-tools', sub: 'app-builders', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'base44' },
-  { id: 'bolt', block: 'ai-tools', sub: 'app-builders', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'bolt' },
-  { id: 'v0', block: 'ai-tools', sub: 'app-builders', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'v0' },
-  { id: 'cursor', block: 'ai-tools', sub: 'vibecoding', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'cursor' },
-  { id: 'windsurf', block: 'ai-tools', sub: 'vibecoding', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'windsurf' },
-  { id: 'claude_code', block: 'ai-tools', sub: 'vibecoding', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'claude code' },
-  { id: 'copilot', block: 'ai-tools', sub: 'vibecoding', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'github copilot' },
-  { id: 'kiro', block: 'ai-tools', sub: 'spec-driven', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'kiro' },
-  { id: 'ibm_bob', block: 'ai-tools', sub: 'spec-driven', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'ibm bob (bob.ibm.com)' }
-];
-
-const tasteBlock = [
-  { id: 'goodreads', block: 'taste', sub: 'books', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'goodreads' },
-  { id: 'storygraph', block: 'taste', sub: 'books', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'storygraph' },
-  { id: 'fable', block: 'taste', sub: 'books', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'fable' },
-  { id: 'pagebound', block: 'taste', sub: 'books', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'pagebound' },
-  { id: 'wattpad_books', block: 'taste', sub: 'books', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'wattpad' },
-  { id: 'letterboxd', block: 'taste', sub: 'film', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'letterboxd' },
-  { id: 'serializd', block: 'taste', sub: 'tv', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'serializd' },
-  { id: 'tvtime', block: 'taste', sub: 'tv', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'tv time' },
-  { id: 'repov', block: 'taste', sub: 'tv', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'repov' },
-  { id: 'lastfm', block: 'taste', sub: 'music', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'last.fm' },
-  { id: 'statsfm', block: 'taste', sub: 'music', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'stats.fm' },
-  { id: 'musicboard', block: 'taste', sub: 'music', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'musicboard' },
-  { id: 'superfan', block: 'taste', sub: 'music', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'superfan' },
-  { id: 'ao3', block: 'taste', sub: 'stories', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'archive of our own (import)' },
-  { id: 'wattpad', block: 'taste', sub: 'stories', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'wattpad' },
-  { id: 'pi_fyi', block: 'taste', sub: 'shares', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'pi.fyi' },
-  { id: 'tastify', block: 'taste', sub: 'shares', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.EVIE, label: 'tastify' }
-];
-
-const lifestyleBlock = [
-  { id: 'depop', block: 'lifestyle', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'depop' },
-  { id: 'ltk', block: 'lifestyle', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'ltk' },
-  { id: 'pinterest', block: 'lifestyle', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'pinterest' },
-  { id: 'whering', block: 'lifestyle', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'whering' },
-  { id: 'retro', block: 'lifestyle', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'retro' },
-  { id: 'anylog', block: 'lifestyle', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'anylog' }
-];
-
-const knowledgeBlock = [
-  { id: 'notion', block: 'knowledge', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'notion' },
-  { id: 'google_calendar', block: 'knowledge', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'google calendar' },
-  { id: 'slack', block: 'knowledge', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'slack' },
-  { id: 'substack', block: 'knowledge', sub: 'reading', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'substack' },
-  { id: 'medium', block: 'knowledge', sub: 'reading', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'medium' }
-];
-
-const utilityBlock = [
-  { id: 'youtube', block: 'utility', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'youtube' },
-  { id: 'maps', block: 'utility', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'maps' },
-  { id: 'health', block: 'utility', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'health' }
-];
-
-export const REGISTRY = [
-  ...filesBlock,
-  ...aiToolsBlock,
-  ...tasteBlock,
-  ...lifestyleBlock,
-  ...knowledgeBlock,
-  ...utilityBlock
-];
+export const REGISTRY = BLOCKS.flatMap((b) => b.jobs.flatMap((j) => [...j.providers]));
 
 const byId = new Map(REGISTRY.map((c) => [c.id, c]));
 
@@ -157,4 +269,12 @@ export function connectorDef(id) {
 
 export function connectorsByBlock(block) {
   return REGISTRY.filter((c) => c.block === block);
+}
+
+export function jobOf(block, job) {
+  return BLOCKS.find((b) => b.id === block)?.jobs.find((j) => j.id === job) ?? null;
+}
+
+export function providersForJob(block, job) {
+  return jobOf(block, job)?.providers ?? [];
 }
