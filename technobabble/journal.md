@@ -301,3 +301,18 @@ space per persona; the deterministic core never depends on it directly
 and taint/consent rules still gate what may enter a memory. recorded
 in techstack.md.
 
+## 2026-10-16 - mem0 considered and rejected
+
+looked up mem0 (open source memory layer, mem0ai/mem0) as the candidate
+for per-persona memory persistence. verdict: dropped. its core loop is
+llm-driven (extract, consolidate, retrieve via embedder + vector store),
+which cuts against three moira principles: (1) persistence is already
+solved by the sealed per-persona fact vault on insforge, (2) mem0
+auto-writes model-inferred memories - inverting the propose/approve/taint
+gate that governs what enters memory, (3) it is exactly the
+training-adjacent preference inference moira rejects ("usage is not
+liking", deterministic core). the one real gap it names (semantic recall,
+history consolidation) belongs to evie's latent-similarity approach, and
+a plaintext vector index would sit outside the sealed vault anyway.
+techstack.md pin removed same day it was added.
+
