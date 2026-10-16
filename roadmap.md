@@ -10,7 +10,12 @@ what is planned, what is deliberately deferred.
 - [x] **phase 1 - persistence**: supabase adapter (cas rpc, rls, triggers),
   verified against a local real-postgres/postgrest stack. two real adapter
   bugs found and fixed with regression tests (explicit role grants; filter
-  quoting). the hosted supabase run is still pending scratch credentials.
+  quoting). 2026-10-16: backend target moved to insforge - `insforgestore.js`
+  (subclass), `scripts/apply-insforge.mjs` (role/tag transport adaptations),
+  and the full phase 1 battery run live against the insforge project:
+  6/6 (parity, restart, pushdown, append-only triggers, anon denial, cli
+  e2e). cas conflict-retry remains mock-verified only; the live run exercised
+  the rpc happy path.
 - [x] **phase 2 - transport and auth**: mcp streamable http (2025-11-25),
   jose-signed tokens, pkce s256, rfc 8628 device flow, discovery metadata.
 - [ ] **phase 2.5 - owner session auth**: proposal made (passkeys + recovery

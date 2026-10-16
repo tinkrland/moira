@@ -8,8 +8,9 @@
 // first-run setup grants. never set it in shared or hosted environments.
 //
 // state: MOIRA_STATE path (default ~/.moira/state.json, a FileStore). for a
-// hosted deployment set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY instead and
-// the same commands run against the real database.
+// hosted deployment set INSFORGE_URL + INSFORGE_ADMIN_KEY (or, on supabase,
+// SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY) and the same commands run against
+// the real database.
 //
 // usage: node cli.js <command> [subcommand] [flags]
 //   personas list
@@ -53,8 +54,9 @@ function parse(argv) {
 
 function boot() {
   let store;
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    store = undefined; // gateway auto-picks SupabaseStore from env
+  if ((process.env.INSFORGE_URL && process.env.INSFORGE_ADMIN_KEY) ||
+      (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+    store = undefined; // gateway auto-picks InsForgeStore/SupabaseStore from env
   } else {
     const path = process.env.MOIRA_STATE ?? join(homedir(), '.moira', 'state.json');
     mkdirSync(dirname(path), { recursive: true });

@@ -184,6 +184,12 @@ export class SupabaseStore {
     return resp;
   }
 
+  // postgrest returns 204 + empty body when the rpc's update matched no row
+  // (version conflict). subclasses with a different miss shape override this.
+  _casMiss(resp) {
+    return resp.status === 204;
+  }
+
   _table(coll) {
     return `moira_${snake(coll)}`;
   }
@@ -253,7 +259,7 @@ export class SupabaseStore {
       const resp = this._request('POST', '/rpc/moira_cas_update', {
         body: { p_table: snake(coll), p_id: id, p_version: current.version, p_data: next }
       });
-      if (resp.status === 204) continue; // cas miss: concurrent update, retry
+      if (this._casMiss(resp)) continue; // cas miss: concurrent update, retry
       const updated = resp.json;
       if (updated && typeof updated === 'object' && updated.data !== undefined) {
         return { ...updated.data };

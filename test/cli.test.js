@@ -96,3 +96,18 @@ test('cli: switch inbox is reachable and empty without any requests', () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('cli: insforge env selects the insforge store, not the local file store', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'moira-cli-'));
+  // a bogus url: with the insforge env honored the command must fail loudly
+  // trying to reach it; if the env is ignored it silently uses the file store
+  // and exits 0 with empty results.
+  const out = cli(dir, ['personas', 'list'], {
+    MOIRA_OWNER_CONFIRMED: '1',
+    INSFORGE_URL: 'https://insforge.invalid.example',
+    INSFORGE_ADMIN_KEY: 'ik_test'
+  });
+  assert.notEqual(out.status, 0, 'insforge env must not fall back to the file store');
+  assert.match(out.stderr, /request failed|fetch failed/i, `expected a network failure against the configured url, got: ${out.stderr.slice(0, 200)}`);
+  rmSync(dir, { recursive: true, force: true });
+});

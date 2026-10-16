@@ -28,6 +28,7 @@ import { LedgerService } from './ledger.js';
 import { RouterService } from './router.js';
 import { randomId } from '../util/crypto.js';
 import { SupabaseStore } from '../supabasestore.js';
+import { InsForgeStore } from '../insforgestore.js';
 import { AgentApi } from '../facades/agentapi.js';
 import { OwnerApi } from '../facades/ownerapi.js';
 import { OwnerContext, isValidOwnerSession } from '../facades/ownercontext.js';
@@ -37,6 +38,9 @@ import { SwitchService } from './switching.js';
 import { CoreService } from './core.js';
 
 function defaultStore() {
+  if (process.env.INSFORGE_URL && process.env.INSFORGE_ADMIN_KEY) {
+    return InsForgeStore.fromEnv();
+  }
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return SupabaseStore.fromEnv();
   }

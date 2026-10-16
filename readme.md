@@ -61,8 +61,10 @@ npm test
 | `src/facades/ownerapi.js` | 6 | **owner surface**: every method takes an `OwnerContext` (a minted capability). a plain `{ owner: true }` is rejected |
 | `src/core/errors.js` | 16 | `VaultKeyUnavailableError`: an unreadable key wrap fails closed, never crashes or re-keys |
 | `src/supabasestore.js` | — | **supabase adapter**: postgrest-backed store. sync facade over a worker thread (the core stays deterministic/synchronous), atomic cas updates via rpc, range pagination, `where` pushdown |
+| `src/insforgestore.js` | — | **insforge adapter** (primary target): subclass of the supabase adapter over insforge's postgrest-shaped records api; maps `/rest/v1` paths to `/api/database/records`+`/rpc`, and treats the rpc's 200+`null` cas-miss like postgrest's 204 |
 | `supabase/schema.sql` | — | the database: moira_ tables, generated persona_id columns, hot-path indexes, the cas rpc (security invoker, explicit table allowlist, service-role-only execute), RLS default-deny, append-only receipts triggers |
 | `supabase/migrations/` | — | point-in-time migrations for databases created before 2026-10-15, with the manual verification steps the mock cannot run |
+| `scripts/apply-insforge.mjs` | — | applies `supabase/schema.sql` to an insforge project (quote-aware statement splitting, role/tag adaptations, see the insforge deployment section) |
 | `src/index.js` | — | exports `Moira`, `AgentApi`, `OwnerApi`, `MemoryStore`, `SupabaseStore`, `constants`, `policy`, `VaultKeyUnavailableError` |
 
 ## the two surfaces
@@ -142,7 +144,39 @@ choice), `grantPass` (tier-gated), `revokePass`, `createBridge`,
   time in this build. read-time llm transforms are a v1+ decision; the
   `serveRung` fallback keeps it deterministic either way.
 
-## supabase deployment (the default persistent backend)
+## insforge deployment (the primary persistent backend)
+
+1. apply the schema: `node scripts/apply-insforge.mjs` with `INSFORGE_URL` +
+   `INSFORGE_ADMIN_KEY` set (fresh projects need only `supabase/schema.sql` -
+   it already contains everything the migrations add). the script is the
+   transport shim for insforge's rawsql endpoint: it splits statements
+   dollar-quote-aware (their endpoint splits on bare semicolons), rewrites
+   `$$`-incompatible `$f$` bodies to single-quoted strings, and rewrites
+   `service_role` to `project_admin` - insforge forbids role management, and
+   `project_admin` is the runtime role and table owner (owners bypass rls,
+   the same semantics supabase's service_role has).
+2. set the environment:
+
+   ```
+   INSFORGE_URL=https://<project>.insforge.app
+   INSFORGE_ADMIN_KEY=<ik_... key>              # server-side only
+   MOIRA_INSTANCE_KEY=<openssl rand -hex 32>    # stable across restarts
+   ```
+
+3. `new Moira({})` (and `cli.js`) pick the insforge store automatically when
+   the env is present; `InsForgeStore.fromEnv()` explicitly.
+
+verified live (2026-10-16, `MOIRA_REAL_INSFORGE=1 node --test
+ test/real-insforge.test.js`, 6/6): the records api is postgrest-shaped
+ (bare-array responses, prefer headers, `data->>` filters, range/count
+ pagination); the cas rpc is security invoker with the table allowlist; the
+ receipts append-only triggers fire; anon is denied at the grant level
+ (`permission denied`, pg 42501) with the anon key. honest gap: the cas
+ conflict-retry path still needs an injected concurrent writer; here the rpc
+ ran its happy path (insforge returns 200 + json `null` on a miss, which
+ `_casMiss` handles).
+
+## supabase deployment (alternative persistent backend)
 
 1. run `supabase/schema.sql` once (sql editor or a migration). it creates the
    `moira_` tables (one per store collection, generated `persona_id` columns),
