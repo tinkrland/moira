@@ -152,30 +152,37 @@ connectors are organized by the job you want done. you approve the job, and
 the providers under it are interchangeable: swap dropbox for drive and
 nobody re-consents, because the consent attached to the job, not the brand.
 
-| block | job | providers |
-| --- | --- | --- |
-| knowledge | retrieve your files | google drive, onedrive, dropbox, mega (live) |
-| knowledge | manage projects | linear, craft docs, notion |
-| knowledge | plan your time | google calendar, notion calendar |
-| knowledge | read & write | substack, medium |
-| knowledge | tech & dev (opt-in) | developer: github, gitlab, bitbucket. design: figma, kittl, canva, penpot, balsamiq |
-| knowledge | academia | zotero, mendeley, semantic scholar, google scholar (export/webhook) |
-| knowledge | people (later phase) | meetings: calendly, cal.com, z cal, granola, zoom, google meet. social: instagram, x, threads, bluesky, tiktok. networking: linkedin, polywork. family: life360, familywall, google family link. friends: groupme, discord, find my (export/webhook) |
-| ai tools | talk to assistants | chatgpt, claude, gemini, perplexity |
-| ai tools | build apps | lovable, base44, bolt, v0 |
-| ai tools | code with agents | cursor, windsurf, claude code, github copilot |
-| ai tools | work from specs | kiro, ibm bob |
-| taste | track books | goodreads, storygraph, fable, pagebound |
-| taste | track film | letterboxd |
-| taste | track tv | serializd, tv time, repov |
-| taste | track music | last.fm, stats.fm, musicboard, superfan |
-| taste | read & write stories | ao3 (import), wattpad |
-| taste | share taste | pi.fyi, tastify |
-| lifestyle | dress & shop | depop, ltk, pinterest, whering |
-| lifestyle | log your life | anylog, retro |
-| utility | watch | youtube |
-| utility | places | maps |
-| utility | health | health platforms |
+<table>
+  <tr><th>block</th><th>job</th><th>providers</th></tr>
+  <tr><td rowspan="4">knowledge</td><td>retrieve your files</td><td>google drive, onedrive, dropbox, mega (live, connected)</td></tr>
+  <tr><td>manage projects</td><td>linear, craft docs, notion</td></tr>
+  <tr><td>plan your time</td><td>google calendar, notion calendar</td></tr>
+  <tr><td>read & write</td><td>substack, medium (ingest)</td></tr>
+  <tr><td rowspan="2">tech & dev (opt-in)</td><td>develop software</td><td>github, gitlab, bitbucket</td></tr>
+  <tr><td>design & prototype</td><td>figma, kittl, canva, penpot, balsamiq</td></tr>
+  <tr><td rowspan="2">academia</td><td rowspan="2">manage research</td><td>connected: zotero, mendeley, semantic scholar</td></tr>
+  <tr><td>export/webhook: arxiv, google scholar</td></tr>
+  <tr><td rowspan="5">people (later phase)</td><td>meet & schedule</td><td>calendly, cal.com, z cal, granola, zoom, google meet</td></tr>
+  <tr><td>social media</td><td>instagram, x, threads, bluesky, tiktok</td></tr>
+  <tr><td>networking</td><td>linkedin, polywork</td></tr>
+  <tr><td>family circle</td><td>life360, familywall, google family link</td></tr>
+  <tr><td>friends circle</td><td>groupme, discord, find my (export/webhook)</td></tr>
+  <tr><td rowspan="4">ai tools</td><td>talk to assistants</td><td>chatgpt, claude, gemini, perplexity</td></tr>
+  <tr><td>build apps</td><td>lovable, base44, bolt, v0</td></tr>
+  <tr><td>code with agents</td><td>cursor, windsurf, claude code, github copilot</td></tr>
+  <tr><td>work from specs</td><td>kiro, ibm bob</td></tr>
+  <tr><td rowspan="6">taste</td><td>track books</td><td>goodreads, storygraph, fable, pagebound</td></tr>
+  <tr><td>track film</td><td>letterboxd</td></tr>
+  <tr><td>track tv</td><td>serializd, tv time, repov</td></tr>
+  <tr><td>track music</td><td>last.fm, stats.fm, musicboard, superfan</td></tr>
+  <tr><td>read & write stories</td><td>archive of our own (import), wattpad</td></tr>
+  <tr><td>share taste</td><td>pi.fyi, tastify</td></tr>
+  <tr><td rowspan="2">lifestyle</td><td>dress & shop</td><td>depop, ltk, pinterest, whering</td></tr>
+  <tr><td>log your life</td><td>anylog, retro</td></tr>
+  <tr><td rowspan="3">utility</td><td>watch</td><td>youtube</td></tr>
+  <tr><td>places</td><td>maps</td></tr>
+  <tr><td>health</td><td>health platforms</td></tr>
+</table>
 
 every row's status is explicit in the code. only the file adapters exist and
 are tested today; everything else is registered but not built yet, and

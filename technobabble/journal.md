@@ -259,3 +259,13 @@ where the owner confirms them, and taint labels keep provenance even after
 confirmation. sections expanded throughout; still no em dashes, no dash
 separators, no under-the-hood, no repo map.
 
+## 2026-10-16 - readme v5: merged-cell connector table
+
+owner clarified the table shape: like google docs merged cells. the flat
+markdown table is now an html table with rowspan: the block cell spans all
+its job rows, and a job cell spans its provider sub-rows where access
+splits (academia: connected zotero/mendeley/semantic scholar vs export/
+webhook arxiv + google scholar). corrected a stale row while at it: arxiv
+was missing from the readme's research providers. the registry remains the
+source of truth and matches row for row.
+
