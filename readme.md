@@ -49,7 +49,10 @@ knowledge          (what you know, make, and keep)
 |__ academia                 zotero, mendeley, semantic scholar; api-less
 |                             sources join via export/webhook (ingest)
 |__ people (later phase)    meetings (calendly, cal.com, z cal, granola),
-|                             social media, networking
+|                             social media, networking, family + friends
+|                             circles - cresca-style but per-persona: the
+|                             context of knowing a person belongs to a
+|                             persona, never the owner wholesale
 
 ai tools           (what you build and how you work with machines)
 |__ talk to assistants       chatgpt, claude, gemini, perplexity

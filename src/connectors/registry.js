@@ -330,11 +330,40 @@ const networking = {
   ]
 };
 
+// family and friends are CIRCLES, not just app surfaces: the cresca-style
+// people connections themselves are persona-to-persona bridges (connect
+// codes), but the providers below are where those circles already live
+// day to day. the key twist vs cresca: the context of knowing is
+// PER-PERSONA. the same human can be connected to several of your
+// personas - your family relates to one of you, your friends from music
+// to another - so a relationship is always (person, persona), never
+// (person, owner) wholesale.
+const family = {
+  id: 'family',
+  label: 'family circle',
+  providers: [
+    peoplePlanned('life360', 'life360'),
+    peoplePlanned('family_wall', 'familywall'),
+    peoplePlanned('google_family', 'google family link')
+  ]
+};
+
+const friends = {
+  id: 'friends',
+  label: 'friends circle',
+  providers: [
+    peoplePlanned('groupme', 'groupme'),
+    peoplePlanned('discord', 'discord'),
+    // find my has no public api: the export/webhook fallback, ingest-style
+    { id: 'findmy', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'find my', via: 'webhook' }
+  ]
+};
+
 export const BLOCKS = [
   { id: 'knowledge', label: 'knowledge', jobs: [files, projects, time, reading] },
   { id: 'tech', label: 'tech & dev', onboarding: 'opt-in', jobs: [developer, design] },
   { id: 'academia', label: 'academia', jobs: [research] },
-  { id: 'people', label: 'people', status: 'planned', jobs: [meetings, social, networking] },
+  { id: 'people', label: 'people', status: 'planned', jobs: [meetings, social, networking, family, friends] },
   { id: 'ai-tools', label: 'ai tools', jobs: [assistants, appBuilders, agents, specs] },
   { id: 'taste', label: 'taste', jobs: [books, film, tv, music, stories, shares] },
   { id: 'lifestyle', label: 'lifestyle', jobs: [dressShop, logLife] },

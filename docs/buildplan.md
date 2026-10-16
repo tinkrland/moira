@@ -45,11 +45,15 @@ what actually shipped (with commits and bug hunts) is
    registered. until then, honestly not verified.
 5. **people connections (the people phase).** the people block
    (meetings: calendly, cal.com, z cal, granola, zoom, google meet;
-   social media; networking) activates here, alongside
-   persona-to-persona bridges between two owners - connect codes
-   exist; the product surface around them (accept/decline,
-   per-persona relationship management) comes with the browser
-   surface.
+   social media; networking; family and friends circles) activates
+   here, alongside persona-to-persona bridges between two owners -
+   connect codes exist; the product surface around them (accept/
+   decline, per-persona relationship management) comes with the
+   browser surface. the cresca twist: the context of knowing is
+   per-persona. the same human can be connected to several of your
+   personas - family relates to one of you, friends from music to
+   another - so bridges are (person, persona), never (person,
+   owner) wholesale.
 6. **evie (separate branch, taste engine).** fuel line is registered;
    activates only when evie does. deliberately last among majors:
    taste without consent infrastructure is just another profiler.

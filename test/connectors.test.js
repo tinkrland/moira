@@ -149,7 +149,12 @@ test('registry: people block lands with the people phase (meetings, social, netw
   assert.ok(meetings.some((p) => p.id === 'granola'));
   assert.ok(providersForJob('people', 'social').some((p) => p.id === 'instagram'));
   assert.ok(providersForJob('people', 'networking').some((p) => p.id === 'linkedin'));
-  for (const j of ['meetings', 'social', 'networking']) {
+  // family and friends: circles, not just apps. the same human connects to
+  // different personas of yours - the context of knowing is per-persona
+  // (family knows one of you, friends from music another)
+  assert.ok(providersForJob('people', 'family').some((p) => p.id === 'life360'));
+  assert.ok(providersForJob('people', 'friends').some((p) => p.id === 'groupme'));
+  for (const j of ['meetings', 'social', 'networking', 'family', 'friends']) {
     for (const p of providersForJob('people', j)) {
       assert.equal(p.status, CONNECTOR_STATUS.PLANNED, 'nothing in people activates before that phase');
     }

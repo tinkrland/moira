@@ -60,8 +60,11 @@ branch. nothing here pretends.
   design: figma, kittl, canva, penpot, balsamiq) and academia (zotero,
   mendeley, semantic scholar; api-less sources via export/webhook) -
   tech is onboarding opt-in, not assumed; the people block (meetings:
-  calendly, cal.com, z cal, granola; social; networking) activates
-  with the people phase
+  calendly, cal.com, z cal, granola; social; networking; family
+  and friends CIRCLES - cresca-style, but per-persona: the same
+  human can know different personas of yours, so a relationship is
+  always (person, persona), never (person, owner) wholesale)
+  activates with the people phase
 - **honestly missing:** mega (encrypted rpc protocol, its own work
   item; returns documented `not_implemented`)
 

@@ -199,3 +199,15 @@ same-millisecond ties - the first attempt used random ids as tiebreak
 and the tests caught the nondeterminism). connector passes can pin to
 one account. failing tests first; suite 172 tests, 160 pass, 12 gated.
 
+## 2026-10-16 - people block: family and friends circles
+
+family and friends jobs added to the people block (planned, people
+phase). the distinction from cresca.ai written into the contract: the
+context of knowing is per-persona. the same human can be connected to
+several of your personas - family relates to one of you, friends from
+music another - so a relationship is always (person, persona), never
+(person, owner) wholesale. circle providers: life360, familywall,
+google family link, groupme, discord; find my joins via the
+export/webhook fallback (no public api, ingest-style). failing test
+first.
+
