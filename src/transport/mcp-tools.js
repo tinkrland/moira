@@ -295,6 +295,29 @@ export const MCP_TOOLS = [
     method: 'audit_receipts'
   },
   {
+    name: 'requestPersonaSwitch',
+    description: 'ask the owner to operate as another persona. nothing changes until they approve; approval mints a new session, it never mutates the current one',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        toPersonaId: { type: 'string', description: 'target persona id' },
+        purpose: { type: 'string', description: 'why the switch is needed, shown to the owner' }
+      },
+      required: ['toPersonaId']
+    },
+    method: 'requestPersonaSwitch'
+  },
+  {
+    name: 'collectPersonaSwitch',
+    description: 'collect the new session tokens after the owner approved a persona switch. one-time',
+    inputSchema: {
+      type: 'object',
+      properties: { switchId: { type: 'string', description: 'switch id from requestPersonaSwitch' } },
+      required: ['switchId']
+    },
+    method: 'collectPersonaSwitch'
+  },
+  {
     name: 'connector_list',
     description: 'list the context connectors this persona has connected. no credential material is ever returned.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },

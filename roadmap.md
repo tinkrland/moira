@@ -16,6 +16,10 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 2.5 - owner session auth**: proposal made (passkeys + recovery
   code, recommended, vs supabase auth). awaiting the call. /authorize stays
   401 until it lands.
+- [x] **persona switching (section 17)**: request/approve/collect with full
+  session isolation, per-client default personas, the wrong-persona escape
+  hatch (re-seal + taint review + provenance), canon containment. shipped
+  2026-10-16. shared-core promotion deliberately deferred (no core entity yet).
 - [~] **phase 3 - connector hub**: the block model in the readme. **phase 3a
   shipped (2026-10-16, commit d99bca8)**: hub, files block (drive/dropbox/
   onedrive fixture-verified; mega honestly not built; live runs need oauth

@@ -385,6 +385,23 @@ export class AgentApi {
     return { outcome: OUTCOME.RESULTS, receipts };
   }
 
+  // --- persona switching (section 17) -------------------------------------------
+  // request: nothing changes yet; approval lands in the owner's inbox.
+  requestPersonaSwitch(accessToken, { toPersonaId, purpose = null }) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    return this.gw.switching.request({
+      clientId: ctx.clientId, fromPersonaId: ctx.persona.id, toPersonaId, purpose
+    });
+  }
+
+  // collect: one-time handoff of the new session's tokens after approval.
+  collectPersonaSwitch(accessToken, { switchId }) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    return this.gw.switching.collect({ clientId: ctx.clientId, switchId });
+  }
+
   // --- directed disclosure (section 11, borrowed from ego.ist) ------------------------
 
   // protected-field delivery to one exact https destination, owner-approved,

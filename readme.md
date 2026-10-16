@@ -443,3 +443,27 @@ consumption, adapter normalization against fixtures, and the mcp parity. the
 drive/dropbox/onedrive adapters are fixture-tested only; a live provider run
 waits on oauth app credentials. mega returns a documented
 `not_implemented` outcome.
+
+## persona switching (section 17, shipped 2026-10-16)
+
+switching is a new consent, never a mutation. `src/core/switching.js`:
+
+- **request -> approve -> collect.** an agent asks to operate as another
+  persona (`requestPersonaSwitch`); the request waits in the owner's inbox;
+  approval is the consent act - it extends the agent's allowed personas and
+  mints a NEW session bound to the target; the agent collects it one-time
+  (`collectPersonaSwitch`). the old session is never touched and keeps
+  working on the old persona. nothing ever auto-switches.
+- **default persona helpers.** `setDefaultPersona` / `clearDefaultPersona`
+  ride on the agent record so consent screens preselect - explicit choice
+  at grant time stays the source of truth.
+- **wrong-persona escape hatch.** `reassignFact` moves a fact or proposal to
+  another persona by opening the vault seal and re-sealing under the target
+  persona's key - the propose step IS the taint review, so a category or
+  label the target refuses is a declined move. provenance survives
+  (movedFrom / movedTo), and both sides get receipts.
+- **canon containment (section 13).** canon facts never leave a heteronym;
+  reassigning one to a non-heteronym is refused outright.
+- one caveat, honestly: promotion/demotion to the SHARED CORE needs a core
+  entity, which the codebase does not have yet (only `inheritsCore` flags on
+  personas). that needs a design decision before it can be built.

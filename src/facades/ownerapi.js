@@ -137,6 +137,44 @@ export class OwnerApi {
     return created;
   }
 
+  // --- persona switching (section 17) ------------------------------------------
+  // approval is the consent act; the old session is never touched.
+  listPersonaSwitches(ctx, { status = null } = {}) {
+    this._require(ctx);
+    return { outcome: OUTCOME.RESULTS, switches: this.gw.switching.list({ status }) };
+  }
+
+  approvePersonaSwitch(ctx, { switchId }) {
+    this._require(ctx);
+    return this.gw.switching.approve({ switchId });
+  }
+
+  denyPersonaSwitch(ctx, { switchId }) {
+    this._require(ctx);
+    return this.gw.switching.deny({ switchId });
+  }
+
+  // per-client default persona: the consent screen preselects it. explicit
+  // choice at grant time stays the source of truth - this is only a helper.
+  setDefaultPersona(ctx, { clientId, personaId }) {
+    this._require(ctx);
+    if (!this.gw.personas.get(personaId)) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_missing' };
+    this.gw.agents.update(clientId, (a) => ({ ...a, defaultPersonaId: personaId }));
+    return { outcome: OUTCOME.RESULTS };
+  }
+
+  clearDefaultPersona(ctx, { clientId }) {
+    this._require(ctx);
+    this.gw.agents.update(clientId, (a) => ({ ...a, defaultPersonaId: null }));
+    return { outcome: OUTCOME.RESULTS };
+  }
+
+  // wrong-persona escape hatch: moves a fact or proposal with taint review.
+  reassignFact(ctx, { factId, toPersonaId }) {
+    this._require(ctx);
+    return this.gw.switching.reassign({ factId, toPersonaId });
+  }
+
   // --- connectors (section 14) ------------------------------------------------
 
   connectConnector(ctx, { personaId, connectorId, credentials, label = null }) {

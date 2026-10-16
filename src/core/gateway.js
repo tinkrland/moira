@@ -33,6 +33,7 @@ import { OwnerApi } from '../facades/ownerapi.js';
 import { OwnerContext, isValidOwnerSession } from '../facades/ownercontext.js';
 import { OUTCOME } from '../model/constants.js';
 import { ConnectorHub } from '../connectors/hub.js';
+import { SwitchService } from './switching.js';
 
 function defaultStore() {
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -81,6 +82,7 @@ export class Moira {
     this.handoffs = new HandoffService({ store, personas: this.personas, agents: this.agents, packs: this.packs, receipts: this.receipts, router: this.router, facts: this.facts, now });
 
     // the two facades (spec section 6). there is no third surface.
+    this.switching = new SwitchService({ store: this.store, keys: this.keys, agents: this.agents, personas: this.personas, sessions: this.sessions, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
     this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: () => this._nowMs(), io });
     this.agent = new AgentApi(this);
     this.owner = new OwnerApi(this);
