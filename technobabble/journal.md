@@ -238,3 +238,12 @@ connectors, the tree, cli, modality. owner explicit: NO under-the-hood
 and NO repo structure/doc map in the readme at all - the where-to-go-
 deeper table is gone.
 
+## 2026-10-16 - readme: ascii connector tree removed
+
+owner: the ascii tree "looks soooo ai written". connectors now live in one
+prose paragraph (job-first, providers interchangeable, spans named in
+sentences). also scrubbed every hyphen-as-dash separator from the readme:
+no em dashes anywhere, punctuation is periods/commas/colons/parens. the
+tree itself still lives in registry.js, features.md, and the cli help where
+a table is the honest format. suite green.
+
