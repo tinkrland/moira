@@ -1,0 +1,86 @@
+id: fleabag-2016
+title: fleabag
+medium: tv
+unit: series
+first_release: 2016
+origin:
+- uk
+language: english
+creators:
+- phoebe waller-bridge
+external_ids: null
+status: reviewed
+tag_version: 1
+tagged_by: model
+date: '2026-10-16'
+genre_tradition:
+- comedy
+- drama
+setting_geo: uk
+lead_performers:
+- phoebe waller-bridge
+tags:
+  tone:
+  - value: dry-satirical
+    role: primary
+    evidence: cutting direct-address wit defines the show
+  - value: melancholic
+    role: secondary
+    evidence: the jokes sit on top of grief
+  authority_stance:
+  - value: unknown
+    role: primary
+    evidence: no institutional power relationship drives the story
+  protagonist_gift:
+  - value: charm
+    role: primary
+    evidence: the fourth wall is her charm weapon
+  - value: people-reading
+    role: secondary
+    evidence: sees through everyone she talks to
+  ensemble_shape:
+  - value: literal-family
+    role: primary
+    evidence: the family is the arena of every conflict
+  fantasy:
+  - value: transgression
+    role: primary
+    evidence: breaking rules, norms and the fourth wall is the pleasure
+  - value: belonging
+    role: secondary
+    evidence: under the wit she is begging to be let in
+  structure:
+  - value: serialized
+    role: primary
+    evidence: one continuous arc per season
+  resolution:
+  - value: open
+    role: primary
+    evidence: ends on a loss, no restoration
+  stakes:
+  - value: low
+    role: primary
+    evidence: conflicts are relational, no physical threat
+  world:
+  - value: realist
+    role: primary
+    evidence: present-day london
+  tech_mediation:
+  - value: low
+    role: primary
+    evidence: technology never mediates the drama
+  lead_gender:
+  - value: female
+    role: primary
+    evidence: the unnamed lead is a woman
+  lead_manner:
+  - value: abrasive
+    role: primary
+    evidence: sardonic, cutting, self-sabotaging
+  - value: charming
+    role: secondary
+    evidence: impossible not to like her
+  lead_flaw_treatment:
+  - value: flaw-tolerated
+    role: primary
+    evidence: her cruelty and grief are never demanded fixed; the show sits with her

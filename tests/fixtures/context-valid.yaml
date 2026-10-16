@@ -1,14 +1,16 @@
+# example taste context against the fixture catalog. liked works must be
+# in the reviewed query graph.
 taste_context_version: 1
 liked:
-- work: psych-2006
+- work: monk-2002
   strength: loved
-- work: the-rookie-2018
+- work: elsbeth-2024
   strength: liked
 incidental:
-- work: gilmore-girls-2000
+- work: elsbeth-2024
   trait:
-    axis: tone
-    value: cozy
+    axis: mystery_mechanism
+    value: howdunnit
 - work: null
   trait:
     axis: world

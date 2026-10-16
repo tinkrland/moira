@@ -1,0 +1,92 @@
+id: elsbeth-2024
+title: elsbeth
+medium: tv
+unit: series
+first_release: 2024
+origin:
+- us
+language: english
+creators:
+- michelle king
+- robert king
+external_ids: null
+status: reviewed
+tag_version: 1
+tagged_by: model
+date: '2026-10-16'
+genre_tradition:
+- crime
+- drama
+setting_geo: us
+lead_performers:
+- carrie preston
+crime_module:
+  crime_relation: solving
+  mystery_mechanism:
+  - howdunnit
+  lens:
+  - consultant
+  detecting_subject:
+  - murder
+tags:
+  tone:
+  - value: warm-comedic
+    role: primary
+    evidence: the lead's outsider energy is played warmly, never grim
+  authority_stance:
+  - value: adjacent-consultant
+    role: primary
+    evidence: court-appointed monitor who works alongside the nypd as a peer
+  protagonist_gift:
+  - value: puzzle-intellect
+    role: primary
+    evidence: spots the off detail that cracks each case
+  - value: people-reading
+    role: secondary
+    evidence: disarms suspects by being underestimated
+  ensemble_shape:
+  - value: workplace-team
+    role: primary
+    evidence: the precinct and her investigator allies form the unit
+  fantasy:
+  - value: puzzle
+    role: primary
+    evidence: howdunnit inversions let the audience watch her assemble proof
+  - value: belonging
+    role: secondary
+    evidence: the precinct slowly takes her in
+  structure:
+  - value: episodic-closed
+    role: primary
+    evidence: each episode closes its case
+  resolution:
+  - value: always-closed
+    role: primary
+    evidence: every case resolves by the episode's end
+  stakes:
+  - value: medium
+    role: primary
+    evidence: murder cases without ongoing personal threat
+  world:
+  - value: realist
+    role: primary
+    evidence: present-day new york, no supernatural elements
+  tech_mediation:
+  - value: low
+    role: primary
+    evidence: cases turn on observation, not forensics tech
+  lead_gender:
+  - value: female
+    role: primary
+    evidence: elsbeth tascioni is the lead
+  lead_manner:
+  - value: eccentric
+    role: primary
+    evidence: her quirkiness is constant and central
+  - value: charming
+    role: secondary
+    evidence: wins over nearly everyone
+  lead_flaw_treatment:
+  - value: flaw-tolerated
+    role: primary
+    evidence: her oddness is never treated as a problem to fix

@@ -1,0 +1,92 @@
+id: mare-of-easttown-2021
+title: mare of easttown
+medium: tv
+unit: series
+first_release: 2021
+origin:
+- us
+language: english
+creators:
+- brad ingelsby
+external_ids: null
+status: reviewed
+tag_version: 1
+tagged_by: model
+date: '2026-10-16'
+genre_tradition:
+- crime
+- drama
+setting_geo: us
+lead_performers:
+- kate winslet
+crime_module:
+  crime_relation: solving
+  mystery_mechanism:
+  - whodunit
+  lens:
+  - cop
+  detecting_subject:
+  - murder
+  - disappearance
+tags:
+  tone:
+  - value: grounded-gritty
+    role: primary
+    evidence: a worn town and worn people, played straight
+  - value: melancholic
+    role: secondary
+    evidence: grief saturates the investigation
+  authority_stance:
+  - value: institution-believer
+    role: primary
+    evidence: she is the institution's honest face and the story sides with that duty
+  protagonist_gift:
+  - value: procedural-craft
+    role: primary
+    evidence: methodical local policing carries the case
+  - value: people-reading
+    role: secondary
+    evidence: a lifetime of knowing the town tells her who is lying
+  ensemble_shape:
+  - value: literal-family
+    role: primary
+    evidence: her family is the second case the show investigates
+  fantasy:
+  - value: justice
+    role: primary
+    evidence: the payoff is the town getting its answer
+  structure:
+  - value: standalone
+    role: primary
+    evidence: one closed arc across a limited series
+  resolution:
+  - value: always-closed
+    role: primary
+    evidence: the case is answered completely
+  stakes:
+  - value: high
+    role: primary
+    evidence: a missing girl, a murder, and a family falling apart
+  world:
+  - value: realist
+    role: primary
+    evidence: small-town pennsylvania, unglamorous and real
+  tech_mediation:
+  - value: medium
+    role: primary
+    evidence: forensics present but testimony and community drive the case
+  lead_gender:
+  - value: female
+    role: primary
+    evidence: mare sheehan is the lead
+  lead_manner:
+  - value: abrasive
+    role: primary
+    evidence: blunt and brusque with everyone
+  - value: reserved
+    role: secondary
+    evidence: guards every personal truth
+  lead_flaw_treatment:
+  - value: flaw-corrected
+    role: primary
+    evidence: her arc forces her grief and denial into the open and she changes

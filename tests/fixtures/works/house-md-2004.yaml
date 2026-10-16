@@ -1,0 +1,82 @@
+id: house-md-2004
+title: house
+medium: tv
+unit: series
+first_release: 2004
+origin:
+- us
+language: english
+creators:
+- david shore
+external_ids: null
+status: reviewed
+tag_version: 1
+tagged_by: model
+date: '2026-10-16'
+genre_tradition:
+- drama
+setting_geo: us
+lead_performers:
+- hugh laurie
+tags:
+  tone:
+  - value: dry-satirical
+    role: primary
+    evidence: sardonic wit carries every differential scene
+  authority_stance:
+  - value: institution-cynic
+    role: primary
+    evidence: works inside the hospital but treats its rules and admins as obstacles
+  protagonist_gift:
+  - value: puzzle-intellect
+    role: primary
+    evidence: the show exists to watch him out-think the case
+  - value: social-manipulation
+    role: secondary
+    evidence: provokes patients and staff to extract truth
+  ensemble_shape:
+  - value: workplace-team
+    role: primary
+    evidence: the diagnostics fellowship is the unit
+  fantasy:
+  - value: competence
+    role: primary
+    evidence: each episode delivers a display of diagnostic mastery
+  - value: transgression
+    role: secondary
+    evidence: his rule-breaking is rewarded as brilliance
+  structure:
+  - value: episodic-closed
+    role: primary
+    evidence: patient of the week, solved by the end
+  resolution:
+  - value: always-closed
+    role: primary
+    evidence: nearly every case closes with a diagnosis
+  stakes:
+  - value: high
+    role: primary
+    evidence: patients' lives hang on every case
+  world:
+  - value: realist
+    role: primary
+    evidence: grounded hospital medicine
+  tech_mediation:
+  - value: high
+    role: primary
+    evidence: imaging and labs drive the differentials
+  lead_gender:
+  - value: male
+    role: primary
+    evidence: gregory house is the lead
+  lead_manner:
+  - value: abrasive
+    role: primary
+    evidence: his cruelty is constant and deliberate
+  - value: deadpan
+    role: secondary
+    evidence: every exchange is delivered flat and cutting
+  lead_flaw_treatment:
+  - value: flaw-celebrated
+    role: primary
+    evidence: the narrative rewards his worst behavior as genius

@@ -1,0 +1,94 @@
+id: monk-2002
+title: monk
+medium: tv
+unit: series
+first_release: 2002
+origin:
+- us
+language: english
+creators:
+- andy breckman
+external_ids: null
+status: reviewed
+tag_version: 1
+tagged_by: model
+date: '2026-10-16'
+genre_tradition:
+- crime
+- comedy
+setting_geo: us
+lead_performers:
+- tony shalhoub
+crime_module:
+  crime_relation: solving
+  mystery_mechanism:
+  - whodunit
+  lens:
+  - consultant
+  detecting_subject:
+  - murder
+tags:
+  tone:
+  - value: warm-comedic
+    role: primary
+    evidence: cases played through gentle comedy around his rituals
+  - value: cozy
+    role: secondary
+    evidence: san francisco stays warm and safe
+  authority_stance:
+  - value: outsider-underestimated
+    role: primary
+    evidence: police tolerate him until he solves what they cannot
+  protagonist_gift:
+  - value: puzzle-intellect
+    role: primary
+    evidence: notices what everyone else misses
+  ensemble_shape:
+  - value: odd-couple
+    role: primary
+    evidence: monk and his assistant anchor every episode
+  fantasy:
+  - value: puzzle
+    role: primary
+    evidence: fair-play cases the audience can solve alongside him
+  - value: comfort
+    role: secondary
+    evidence: the ritual of the format is the reassurance
+  - value: underdog-vindication
+    role: secondary
+    evidence: the dismissed consultant is proven right weekly
+  structure:
+  - value: episodic-closed
+    role: primary
+    evidence: case-of-the-week, fully resolved
+  resolution:
+  - value: always-closed
+    role: primary
+    evidence: every case closes within the hour
+  stakes:
+  - value: medium
+    role: primary
+    evidence: murder investigations without personal danger to the lead
+  world:
+  - value: realist
+    role: primary
+    evidence: his condition is the only unusual element
+  tech_mediation:
+  - value: low
+    role: primary
+    evidence: detection is observation, not technology
+  lead_gender:
+  - value: male
+    role: primary
+    evidence: adrian monk is the lead
+  lead_manner:
+  - value: eccentric
+    role: primary
+    evidence: rituals and phobias define him
+  - value: overzealous
+    role: secondary
+    evidence: his fixations drive every scene
+  lead_flaw_treatment:
+  - value: flaw-tolerated
+    role: primary
+    evidence: his condition is the tool and the joke, never a problem the story demands he fix
