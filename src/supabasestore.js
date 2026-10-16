@@ -11,7 +11,7 @@
 // exactly one worker; requests are sequential from the calling thread.
 //
 // concurrency: update() uses an atomic compare-and-swap rpc
-// (public.moira_cas_update in supabase/schema.sql) on a version column, with
+// (public.moira_cas_update, defined in backend/base.sql) on a version column, with
 // a bounded retry loop. no read-modify-write is ever lost silently.
 //
 // configuration:
@@ -20,7 +20,7 @@
 //                                shipped to a client). RLS is enabled on all
 //                                moira_ tables; the service role bypasses it.
 //
-// before first use, run supabase/schema.sql in the sql editor (or via the
+// before first use, run the backend/ topic sql files in the sql editor (or via the
 // migration directory) to create the moira_ tables, indexes and the CAS rpc.
 
 import { Worker } from 'node:worker_threads';

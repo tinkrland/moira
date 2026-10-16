@@ -50,13 +50,17 @@ moira/
 |   |__ store.js             the narrow store interface + MemoryStore
 |   |__ supabasestore.js    the postgrest-backed store (supabase adapter)
 |   |__ insforgestore.js    insforge adapter (primary persistent backend)
-|__ supabase/
-|   |__ schema.sql           the whole database (fresh installs need only this)
-|   |__ migrations/          point-in-time migrations for pre-existing databases
+|__ backend/
+|   |__ base.sql              core tables, indexes, the cas rpc (the allowlist)
+|   |__ security.sql          role hygiene, rls, append-only receipts triggers
+|   |__ connectors.sql        connector identities + passes (own their grants)
+|   |__ switchpersona.sql     persona switch requests (own their grants)
+|   |__ migrations/           point-in-time migrations for pre-existing databases
 |__ scripts/
 |   |__ apply-insforge.mjs     applies schema.sql to an insforge project
 |   |__ local-verify-stack.mjs local postgres + postgrest verify environment
 |   |__ serve.mjs               runs the http server standalone
+|__ docs/                    the story: about, explain, problemcase, solution, features, buildplan
 |__ test/                    the suite - one file per domain + conformance + cli
 |__ technobabble/            the deep docs (see below)
 ```
@@ -97,9 +101,10 @@ one narrow interface (`src/store.js`), three implementations:
 
 `new Moira({})` auto-picks from env: `INSFORGE_URL`+`INSFORGE_ADMIN_KEY`
 wins, then supabase env, else memory. the database is defined by
-`supabase/schema.sql` (tables, generated persona columns, the cas rpc,
-rls default-deny, append-only receipt triggers) - applied to insforge via
-`node scripts/apply-insforge.mjs`.
+the four topic files under `backend/` (tables, generated persona columns,
+the cas rpc, rls default-deny, append-only receipt triggers) - applied to
+insforge via `node scripts/apply-insforge.mjs` in order: base, security,
+connectors, switchpersona.
 
 ## the database, in one breath
 

@@ -7,7 +7,7 @@
 // memorystore and supabasestore.
 //
 // a real deployment replaces the mock with SUPABASE_URL +
-// SUPABASE_SERVICE_ROLE_KEY after running supabase/schema.sql.
+// SUPABASE_SERVICE_ROLE_KEY after running the backend/ topic sql files.
 
 import test from 'node:test';
 import assert from 'node:assert/strict';

@@ -13,7 +13,7 @@
 //   curl -L -o /tmp/postgrest https://github.com/postgrest/postgrest/releases/... (static x64)
 //   (psql) create roles anon, authenticated, service_role (bypassrls),
 //          authenticator with a password; grant the three to authenticator;
-//          createdb moira_scratch; apply supabase/schema.sql
+//          createdb moira_scratch; apply the backend/ topic files
 //
 // run from the repo root:
 //   MOIRA_LOCAL_VERIFY=1 PGRST_BIN=/tmp/postgrest node scripts/local-verify-stack.mjs

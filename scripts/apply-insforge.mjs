@@ -81,11 +81,11 @@ async function run(stmt) {
   return body;
 }
 
-// fresh installs need only schema.sql - it already contains everything the
+// fresh installs need the four topic files in order - together they contain everything the
 // three migrations add (their headers say so; they exist for pre-2026-10-16
 // databases). verify with: select table_name from information_schema.tables
 // where table_name like 'moira_%' - expect 21 tables.
-const files = ['supabase/schema.sql'];
+const files = ['backend/base.sql', 'backend/security.sql', 'backend/connectors.sql', 'backend/switchpersona.sql'];
 
 // insforge's rawsql endpoint splits on bare semicolons and only understands
 // $$ dollar quoting, not custom $tag$ quotes - so normalize both: roles

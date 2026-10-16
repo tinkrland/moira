@@ -147,3 +147,27 @@ re-consenting anyone. knowledge now holds four jobs (retrieve your files,
 manage projects, plan your time, write & publish); slack left the tree
 (deliberate - comms is not a knowledge job in this model; it can return
 under a future job if wanted).
+
+## 2026-10-16 - the schema becomes topic files (and a real bug surfaced)
+
+the sql moved from `supabase/schema.sql` to `backend/` as topic files -
+base.sql (core tables, indexes, cas rpc), security.sql (role hygiene, rls,
+append-only receipts), connectors.sql and switchpersona.sql (each owning
+its tables completely: creation + grants + rls). migrations live under
+`backend/migrations/` for databases created before the split. apply order
+is now explicit: base, security, connectors, switchpersona.
+
+splitting the schema forced the allowlist question, and it caught a real
+bug: `moira_cas_update`'s table allowlist named only the core 19 tables -
+connector_identities, connector_passes and persona_switches were missing,
+so connector revocation, one-time pass consumption, and switch
+approval/collection would throw "table not allowed" against any real
+database. the mock postgrest cannot execute the rpc body, so the parity
+tests could not see it. fixed (allowlist == created tables), pinned with a
+new schema-safety invariant so the two lists can never drift again, and a
+migration (20261016_04) carries the fix to pre-existing databases.
+
+also: .gitignore untracked from the repo (patterns kept locally in
+.git/info/exclude), and the docs/ folder added: about, explain,
+problemcase, solution, features, buildplan - the story for humans,
+separate from technobabble/ (the story for builders).

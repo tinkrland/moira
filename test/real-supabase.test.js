@@ -4,7 +4,7 @@
 //   MOIRA_REAL_SUPABASE=1
 //   SUPABASE_URL=https://<project>.supabase.co
 //   SUPABASE_SERVICE_ROLE_KEY=<service key>
-// are set, and supabase/schema.sql has been applied in the sql editor.
+// are set, and the backend/ topic sql files have been applied in the sql editor.
 //
 // run: MOIRA_REAL_SUPABASE=1 node --test test/real-supabase.test.js
 //
@@ -58,7 +58,7 @@ test('preflight: migration applied, tables and cas rpc exist', opts, async () =>
   const openapi = await res.json();
   const defs = Object.keys(openapi.definitions || {});
   for (const t of EXPECTED_TABLES) {
-    assert.ok(defs.includes(t), `table ${t} missing: apply supabase/schema.sql in the sql editor first`);
+    assert.ok(defs.includes(t), `table ${t} missing: apply backend/base.sqlhema.sql in the sql editor first`);
   }
   const paths = Object.keys(openapi.paths || {});
   assert.ok(paths.includes('/rpc/moira_cas_update'), 'moira_cas_update rpc missing: schema.sql not fully applied');

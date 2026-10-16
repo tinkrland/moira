@@ -90,8 +90,9 @@ node cli.js persona create --name founder --identity linked
 node cli.js fact add --persona <id> --content "..." --category notes
 ```
 
-for deployment, hosting, and the database, see `repo.md` (the repo map) and
-`technobabble/journal.md` (the build log with every hard-won detail).
+for the story in plain words, start with `docs/about.md` and
+`docs/explain.md`. for deployment, hosting, and the database, see `repo.md`
+and `technobabble/journal.md`.
 
 ## modality
 
@@ -112,6 +113,12 @@ moira is designed to be reached the way you actually live:
 | doc | what is in it |
 | --- | --- |
 | `repo.md` | the repo map: every folder, what lives where, how it fits together |
+| `docs/about.md` | what moira is and the beliefs underneath it |
+| `docs/explain.md` | how moira works, for a person (the house metaphor) |
+| `docs/problemcase.md` | the problem in detail |
+| `docs/solution.md` | the answer, piece by piece |
+| `docs/features.md` | the feature inventory with honest status |
+| `docs/buildplan.md` | what is next and in what order |
 | `roadmap.md` | what is shipped, what is next, what is deliberately deferred |
 | `technobabble/underthehood.md` | how moira actually works: sync core, key sealing, taint algebra, cas, the store contract |
 | `technobabble/system-architecture.md` | the components and how data flows between them |

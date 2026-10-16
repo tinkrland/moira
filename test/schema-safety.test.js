@@ -8,8 +8,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const schema = readFileSync(new URL('../supabase/schema.sql', import.meta.url), 'utf8');
-const migration = readFileSync(new URL('../supabase/migrations/20261015_01_phase0_security.sql', import.meta.url), 'utf8');
+const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
+// the schema lives in topic files under backend/, applied in this order.
+const base = read('../backend/base.sql');
+const security = read('../backend/security.sql');
+const connectors = read('../backend/connectors.sql');
+const switchpersona = read('../backend/switchpersona.sql');
+const schema = [base, security, connectors, switchpersona].join('\n');
+const migration = read('../backend/migrations/20261015_01_phase0_security.sql', 'utf8');
 
 const COLLECTIONS = [
   'personas', 'facts', 'agents', 'sessions', 'tokens', 'passes',
@@ -75,7 +81,7 @@ for (const [name, sql] of [['schema.sql', schema], ['migration', migration]]) {
   });
 }
 
-test('schema.sql creates a table for every collection the backend stores, including linkage_declarations', () => {
+test('schema creates a table for every collection the backend stores, including linkage_declarations', () => {
   const createBlock = schema.slice(0, schema.indexOf('-- hot-path indexes'));
   for (const coll of COLLECTIONS) {
     assert.ok(createBlock.includes(`'${coll}'`), `schema must create moira_${coll}`);
@@ -84,6 +90,43 @@ test('schema.sql creates a table for every collection the backend stores, includ
   const rlsBlock = schema.slice(schema.indexOf('row level security'));
   for (const coll of COLLECTIONS) {
     assert.ok(rlsBlock.includes(`'${coll}'`), `RLS must be enabled for moira_${coll}`);
+  }
+});
+
+test('cas allowlist covers EVERY table - a real bug class found 2026-10-16', () => {
+  // hub.js and switching.js update connector/switch rows via store.update,
+  // which goes through moira_cas_update. the allowlist originally named only
+  // the core 19 tables, so connector revocation / switch approval threw
+  // "table not allowed" against any real database (the mock rpc cannot
+  // execute the allowlist, so parity tests could not catch it).
+  // invariant: the create-table array and the allowlist are the same set.
+  const array = (sql) => {
+    const m = sql.match(/tables text\[\] := array\[([^\]]+)\]/);
+    return new Set(m[1].match(/'([a-z_]+)'/g).map((s) => s.slice(1, -1)));
+  };
+  // tables are created in base.sql AND in the topic files (connectors,
+  // switchpersona each own their tables). the allowlist must equal the union.
+  const created = new Set([...array(base), ...array(connectors), ...array(switchpersona)]);
+  const allow = new Set(
+    schema.match(/if p_table not in \(([\s\S]*?)\) then/)[1].match(/'([a-z_]+)'/g).map((s) => s.slice(1, -1))
+  );
+  assert.deepEqual([...created].sort(), [...allow].sort(), 'cas allowlist must cover exactly the created tables');
+  for (const extra of ['connector_identities', 'connector_passes', 'persona_switches']) {
+    assert.ok(allow.has(extra), `${extra} must be cas-updatable (hub/switching update these rows)`);
+  }
+});
+
+test('topic files own their tables completely (creation + grants + rls)', () => {
+  for (const [file, tables] of [
+    [connectors, ['connector_identities', 'connector_passes']],
+    [switchpersona, ['persona_switches']]
+  ]) {
+    for (const tbl of tables) {
+      assert.ok(file.includes(`'${tbl}'`), `${tbl} created in its topic file`);
+      assert.ok(new RegExp(`grant all on table public\\.moira_${tbl} to service_role`, 'i').test(file), `${tbl} granted`);
+      assert.ok(new RegExp(`revoke all on table public\\.moira_${tbl} from public, anon, authenticated`, 'i').test(file), `${tbl} revoked`);
+      assert.ok(new RegExp(`'${tbl}'`).test(file) && /enable row level security/.test(file), `${tbl} rls`);
+    }
   }
 });
 

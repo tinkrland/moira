@@ -1,106 +1,13 @@
--- moira backend schema (supabase / postgres 15+)
+-- moira security posture (postgres 15+; applied after base.sql)
 --
--- run in the supabase sql editor (or via the migration directory). creates
--- one table per store collection, the atomic compare-and-swap rpc used by
--- the store's update(), indexes for persona-scoped reads, and row level
--- security.
+-- role hygiene, row level security, and the append-only receipts
+-- enforcement for the CORE tables. the connector and switch tables ship
+-- their own grants and rls inside their topic files.
 --
--- table shape: id (primary key, minted by the backend), data (the record as
--- written by the backend), version (cas counter), created_at (insertion
--- order, also the listing order), owner_ref (tenancy anchor). persona_id is
--- a generated column extracted from data so persona-scoped queries hit a
--- real index without the backend maintaining a second source of truth.
---
--- the backend speaks to these tables through the service role key
+-- the backend speaks to these tables through the service/admin role key
 -- (server-side only). RLS is enabled on every table with a default-deny
 -- posture: authenticated/anon keys get nothing unless the owner policy
 -- matches (see the commented policy at the bottom).
-
-create extension if not exists pgcrypto;
-
-do $$
-declare
-  t text;
-  tables text[] := array[
-    'personas', 'facts', 'agents', 'sessions', 'tokens', 'passes',
-    'bridges', 'packs', 'handoffs', 'accounts', 'leases', 'receipts',
-    'workspace', 'privacy_budgets', 'disclosures', 'connect_codes',
-    'pending_connects', 'keywraps', 'linkage_declarations',
-    'connector_identities', 'connector_passes',
-    'persona_switches'
-  ];
-begin
-  foreach t in array tables loop
-    execute format($f$
-      create table if not exists public.moira_%I (
-        id text primary key,
-        persona_id text generated always as (data->>'personaId') stored,
-        data jsonb not null default '{}'::jsonb,
-        version integer not null default 1,
-        owner_ref text not null default 'owner',
-        created_at timestamptz not null default now()
-      );
-    $f$, t);
-    execute format($f$
-      create index if not exists moira_%I_persona_idx on public.moira_%I (persona_id);
-    $f$, t, t);
-  end loop;
-end $$;
-
--- hot-path indexes (beyond persona_id)
-create index if not exists moira_facts_status_idx on public.moira_facts (persona_id, (data->>'status'));
-create index if not exists moira_receipts_ts_idx on public.moira_receipts (persona_id, ((data->>'ts')::bigint));
-create index if not exists moira_receipts_op_idx on public.moira_receipts (persona_id, (data->>'op'));
-create index if not exists moira_passes_client_idx on public.moira_passes (persona_id, (data->>'clientId'));
-create index if not exists moira_tokens_session_idx on public.moira_tokens ((data->>'sessionId'));
-create index if not exists moira_tokens_family_idx on public.moira_tokens ((data->>'family'));
-create index if not exists moira_sessions_client_idx on public.moira_sessions ((data->>'clientId'));
-create index if not exists moira_leases_status_idx on public.moira_leases (persona_id, (data->>'status'));
-create index if not exists moira_bridges_src_idx on public.moira_bridges ((data->>'src'));
-create index if not exists moira_bridges_dst_idx on public.moira_bridges ((data->>'dst'));
-create index if not exists moira_handoffs_status_idx on public.moira_handoffs (persona_id, (data->>'status'));
-create index if not exists moira_workspace_ts_idx on public.moira_workspace (persona_id, ((data->>'ts')::bigint));
-create index if not exists moira_packs_status_idx on public.moira_packs (persona_id, (data->>'status'));
-create index if not exists moira_accounts_provider_idx on public.moira_accounts (persona_id, (data->>'provider'));
-
--- atomic compare-and-swap update used by the store adapter: no
--- read-modify-write is ever lost silently across processes.
-create or replace function public.moira_cas_update(
-  p_table text,
-  p_id text,
-  p_version integer,
-  p_data jsonb
-)
-returns jsonb
-language plpgsql
-security invoker          -- runs with the caller's rights; no definer escape hatch
-set search_path = public
-as $$
-declare
-  v_result jsonb;
-begin
-  -- explicit allowlist: no regex, no dynamic surface beyond these tables.
-  if p_table not in (
-    'personas', 'facts', 'agents', 'sessions', 'tokens', 'passes',
-    'bridges', 'packs', 'handoffs', 'accounts', 'leases', 'receipts',
-    'workspace', 'privacy_budgets', 'disclosures', 'connect_codes',
-    'pending_connects', 'keywraps', 'linkage_declarations'
-  ) then
-    raise exception 'moira_cas_update: table not allowed: %', p_table;
-  end if;
-
-  execute format(
-    'update public.moira_%I
-        set data = $1, version = version + 1
-      where id = $2 and version = $3
-      returning data',
-    p_table
-  ) into v_result
-  using p_data, p_id, p_version;
-
-  return v_result;
-end;
-$$;
 
 -- execute: service role only. authenticated and anon must never reach this.
 -- explicit role grants (phase 1 finding: supabase's platform default
@@ -108,7 +15,6 @@ $$;
 -- stack must both get service access from this file, never from the platform.
 -- posture unchanged: anon and authenticated get nothing on tables; rls is the
 -- second layer, not the first.
-
 
 grant all on table public.moira_personas to service_role;
 revoke all on table public.moira_personas from public, anon, authenticated;
@@ -148,12 +54,6 @@ grant all on table public.moira_keywraps to service_role;
 revoke all on table public.moira_keywraps from public, anon, authenticated;
 grant all on table public.moira_linkage_declarations to service_role;
 revoke all on table public.moira_linkage_declarations from public, anon, authenticated;
-grant all on table public.moira_connector_identities to service_role;
-revoke all on table public.moira_connector_identities from public, anon, authenticated;
-grant all on table public.moira_connector_passes to service_role;
-revoke all on table public.moira_connector_passes from public, anon, authenticated;
-grant all on table public.moira_persona_switches to service_role;
-revoke all on table public.moira_persona_switches from public, anon, authenticated;
 
 revoke all on function public.moira_cas_update(text, text, integer, jsonb) from public, anon, authenticated;
 grant execute on function public.moira_cas_update(text, text, integer, jsonb) to service_role;
@@ -167,9 +67,7 @@ declare
     'personas', 'facts', 'agents', 'sessions', 'tokens', 'passes',
     'bridges', 'packs', 'handoffs', 'accounts', 'leases', 'receipts',
     'workspace', 'privacy_budgets', 'disclosures', 'connect_codes',
-    'pending_connects', 'keywraps', 'linkage_declarations',
-    'connector_identities', 'connector_passes',
-    'persona_switches'
+    'pending_connects', 'keywraps', 'linkage_declarations'
   ];
 begin
   foreach t in array tables loop
@@ -178,7 +76,7 @@ begin
 end $$;
 
 -- owner access policy for JWT-authenticated callers. enable by uncommenting
--- when the backend writes owner_ref as the owner's supabase user id:
+-- when the backend writes owner_ref as the owner's user id:
 --
 -- do $$
 -- declare t text;
