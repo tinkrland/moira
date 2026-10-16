@@ -1,8 +1,11 @@
 # moira
 
-you are one person, but you are not one profile. the student, the founder, the
-character, the alter ego: each has its own context, and today every app blends
-them into one gray mush. moira refuses to blend.
+you are one person, but you are not one profile. in a single day you are the
+founder answering email at nine, the student buried in papers by noon, and
+the character drafting scenes at midnight. each of those versions of you has
+its own context: its own files, its own people, its own taste, its own
+history. and yet every app you use sees one account, one profile, one you,
+and quietly blends all of it into one gray blob. moira refuses to blend.
 
 moira is a **context engine with personas**: one place where your context
 lives, split into personas you fully control, shared only through explicit
@@ -39,14 +42,16 @@ keys are shredded, which means the deletion is real and not a flag flip.
 
 ### what apps do instead
 
-every app today does the opposite. it melts all your hats together into one
-"personal context": one profile, one recommendation feed, one ad identity,
-one engagement score. it calls this personalization, but a blend of the
-student, the founder, and the character is context about nobody. the mush is
-utterly useless. it cannot serve any single hat well, because it answers to
-the average of all of them. it cannot be split back apart, because nothing
-was ever kept separate. and it cannot be deleted hat by hat, because there
-is only one thing. moira exists because the mush is not the only option.
+every app today does the opposite. it combines everything, in the name of
+"personal context", into one single blob: one profile, one recommendation
+feed, one ad identity, one engagement score. it calls this personalization,
+but that blob is not context about you at all. it is all of your contexts
+diluted together until they mean fundamentally nothing: a blend of the
+student, the founder, and the character is context about nobody. the blob
+cannot serve any single hat well, because it answers to the average of all
+of them. it cannot be split back apart, because nothing was ever kept
+separate. and it cannot be deleted hat by hat, because there is only one
+thing. moira exists because the blob is not the only option.
 
 ## personas, more than a sandbox
 
@@ -64,7 +69,7 @@ the hard half: hats are still one human's life, so they sometimes need to
 share. deliberately, narrowly, and reversibly. maybe the founder needs the
 student's schedule. maybe two hats share a set of facts about a project. the
 answer cannot be "they can always see each other", because that recreates the
-mush with extra steps. it also cannot be "they can never see each other",
+blob with extra steps. it also cannot be "they can never see each other",
 because then you have built silos, not a life.
 
 moira's answer is the bridge. a bridge is a persona-to-persona connection
@@ -73,7 +78,7 @@ side, so consent is doubled and revocable on either end. no bridge means
 "not available", with never a hint that anything exists on the other side:
 absence is indistinguishable from emptiness, on purpose. sharing is a built,
 audited act. never a default, never a leak. isolation without permeability
-is just another set of silos; permeability without consent is the mush again.
+is just another set of silos; permeability without consent is the blob again.
 moira does both, on purpose.
 
 ### personas are not just you

@@ -269,3 +269,12 @@ webhook arxiv + google scholar). corrected a stale row while at it: arxiv
 was missing from the readme's research providers. the registry remains the
 source of truth and matches row for row.
 
+## 2026-10-16 - readme v6: illustrative intro, blob wording
+
+owner: first paragraph should be more illustrative, and the "what apps do
+instead" section should say apps combine everything, in the name of
+"personal context", into one single blob fundamentally diluted to
+nothingness. intro now walks a day (founder at nine, student by noon,
+character at midnight). metaphor unified on "blob" throughout (intro,
+hats, permeability), since the section now defines it; still no dashes.
+
