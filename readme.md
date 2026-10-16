@@ -291,3 +291,43 @@ afterwards, since the delete trigger is the point.
 test infrastructure note: the mock postgrest harness moved to
 `test/helpers/mock-harness.mjs` (shared, with a startup timeout so a crashed
 mock can never hang the suite).
+
+## phase 2: transport and auth
+
+built (2026-10-16) in `src/transport/` - zero dependencies, node 24 built-ins
+only (`node:http`, `node:crypto`). `scripts/serve.mjs` runs a local instance:
+
+```
+MOIRA_TOKEN_KEY=$(openssl rand -hex 32) node scripts/serve.mjs
+```
+
+- `tokens.js` - JOSE-signed JWTs (HS256) wrapping the core's opaque session
+  tokens. the transport never invents its own identity: every jwt carries the
+  core token id, and revocation/rotation stays in the core (session service).
+  rfc 7636 appendix b is the known-answer test vector for pkce s256.
+- `mcpserver.js` - MCP streamable http transport, protocol 2025-11-25.
+  single `/mcp` endpoint, JSON responses (no server-initiated streams),
+  `Mcp-Session-Id` lifecycle with 404 on unknown sessions, `DELETE /mcp`
+  terminates a session, origin validation, `MCP-Protocol-Version` checking,
+  JSON-RPC error codes per the spec. all 26 agentapi tools are exposed via the
+  manifest in `mcp-tools.js`; tools/call requires a valid access jwt and maps
+  error outcomes to mcp `isError: true` results.
+- `authserver.js` - oauth 2.1-style authorization server for mcp clients:
+  pkce s256 code flow (`/authorize`, `/token`), rfc 8628 device flow
+  (`/device/code`, `grant_type=...device_code`), rfc 8414/9728 discovery
+  metadata, rfc 7662-style introspection at `/tokeninfo`. refresh rotation,
+  replay detection and family revocation are the core session service's,
+  exercised end to end over http in the tests.
+- `server.js` - composition: one http server mounting everything; hosts
+  provide `getOwnerContext(req)` for the owner-consent step.
+
+owner-session authentication (supabase auth vs passkeys) is deliberately
+unbuilt: the review asked for a proposal first. `/authorize` answers 401
+until the host wires `getOwnerContext`.
+
+core contracts worth knowing: an access token lives out its short ttl even
+after its refresh family is revoked (access tokens carry no family); the
+device flow stores its records in `pendingConnects` with `kind: 'device_flow'`.
+
+tests: 127 total, 121 pass offline, 0 fail, 6 gated on a real supabase
+project (verified green against the local postgres + postgrest stack).

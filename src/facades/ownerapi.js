@@ -137,6 +137,35 @@ export class OwnerApi {
     return created;
   }
 
+  // device flow (rfc 8628): the owner sees the user_code (on the device
+  // verification screen), chooses which persona the device may bind to, and
+  // approves or denies. the auth server's token endpoint completes the grant.
+  approveDeviceCode(ctx, { userCode, personaId }) {
+    this._require(ctx);
+    const rec = this.gw.store.list('pendingConnects', (p) => p.kind === 'device_flow' && p.userCode === userCode, {})[0];
+    if (!rec) return { outcome: OUTCOME.UNAVAILABLE, reason: 'device_code_not_found' };
+    if (rec.expiresAt < this.gw.now()) return { outcome: OUTCOME.EXPIRED, reason: 'device_code_expired' };
+    if (rec.status !== 'pending') return { outcome: OUTCOME.DECLINED, reason: 'device_code_not_pending' };
+    const agent = this.gw.agents.get(rec.clientId);
+    if (!agent || agent.revoked) return { outcome: OUTCOME.DECLINED, reason: 'unknown_or_revoked_agent' };
+    if (agent.personasAllowed.length > 0 && !agent.personasAllowed.includes(personaId)) {
+      return { outcome: OUTCOME.DECLINED, reason: 'persona_not_allowed_for_agent' };
+    }
+    this.gw.store.update('pendingConnects', rec.id, (p) => ({ ...p, status: 'approved', personaId }));
+    this.gw.receipts.write({ actor: 'owner', personaId, op: 'session', reason: 'device_code_approved' });
+    return { outcome: OUTCOME.RESULTS, userCode };
+  }
+
+  denyDeviceCode(ctx, { userCode }) {
+    this._require(ctx);
+    const rec = this.gw.store.list('pendingConnects', (p) => p.kind === 'device_flow' && p.userCode === userCode, {})[0];
+    if (!rec) return { outcome: OUTCOME.UNAVAILABLE, reason: 'device_code_not_found' };
+    if (rec.status !== 'pending') return { outcome: OUTCOME.DECLINED, reason: 'device_code_not_pending' };
+    this.gw.store.update('pendingConnects', rec.id, (p) => ({ ...p, status: 'denied' }));
+    this.gw.receipts.write({ actor: 'owner', personaId: null, op: 'session', reason: 'device_code_denied' });
+    return { outcome: OUTCOME.RESULTS, userCode };
+  }
+
   // owner approves a directed disclosure: attestation delivered at most once.
   approveDisclosure(ctx, disclosureId) {
     this._require(ctx);

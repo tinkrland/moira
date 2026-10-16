@@ -1,0 +1,136 @@
+// the moira server: one node:http server hosting the transport layer.
+//
+//   get  /.well-known/oauth-protected-resource      rfc 9728 (mcp clients start here)
+//   get  /.well-known/oauth-authorization-server  rfc 8414 metadata
+//   get  /authorize                               401 until owner-session auth lands
+//                                                    (host may wire getOwnerContext to finish it)
+//   post /token                                   authorization_code + pkce / refresh / device grants
+//   post /device/code                             rfc 8628 start
+//   get  /device                                  device verification hint (owner approves out of band)
+//   post /tokeninfo                               introspection (rfc 7662 shape)
+//   any  /mcp                                     the mcp streamable http endpoint
+//
+// ownership note: /authorize and /device approval REQUIRE owner authority.
+// owner-session authentication is the phase 2 open item (supabase auth vs
+// passkeys - proposal pending with the reviewer). until it lands, hosts pass
+// a `getOwnerContext(req)` callback that mints the owner context after their
+// own owner verification; without it, both answer 401. there is no path
+// where the transport mints owner authority itself.
+//
+// binding: binds 127.0.0.1 by default (spec guidance for local servers).
+
+import http from 'node:http';
+import { AuthServer } from './authserver.js';
+import { McpServer } from './mcpserver.js';
+import { TokenService } from './tokens.js';
+
+export function createMoiraServer({
+  moira,
+  baseUrl = 'http://127.0.0.:8080',
+  tokenKey = undefined,
+  getOwnerContext = null,
+  allowedOrigins = [],
+  endpoint = '/mcp',
+  port = 8080,
+  host = '127.0.0.1'
+} = {}) {
+  const tokens = new TokenService({ key: tokenKey ?? process.env.MOIRA_TOKEN_KEY, issuer: new URL(baseUrl).host });
+  const auth = new AuthServer({ moira, tokens, baseUrl });
+  const mcp = new McpServer({ moira, tokens, allowedOrigins, now: () => moira.now() });
+
+  function json(res, status, body, headers = {}) {
+    res.writeHead(status, { 'content-type': 'application/json', ...headers });
+    res.end(JSON.stringify(body));
+  }
+
+  async function readBody(req) {
+    let body = '';
+    for await (const chunk of req) body += chunk;
+    if (!body) return {};
+    const ct = req.headers['content-type'] || '';
+    if (ct.includes('application/json')) return JSON.parse(body);
+    // form-encoded (rfc token endpoints)
+    const out = {};
+    for (const [k, v] of new URLSearchParams(body)) out[k] = v;
+    return out;
+  }
+
+  const server = http.createServer(async (req, res) => {
+    try {
+      const url = new URL(req.url, baseUrl);
+      const path = url.pathname;
+
+      if (path === '/.well-known/oauth-protected-resource') {
+        return json(res, 200, auth.discovery().protectedResource);
+      }
+      if (path === '/.well-known/oauth-authorization-server') {
+        return json(res, 200, auth.discovery().authorizationServer);
+      }
+      if (path === endpoint && await mcp.handle(req, res, { endpoint })) return;
+
+      if (req.method === 'GET' && path === '/authorize') {
+        const ctx = getOwnerContext ? getOwnerContext(req) : null;
+        if (!ctx) {
+          return json(res, 401, {
+            error: 'owner_session_required',
+            error_description: 'the consent screen requires owner authentication; the host must provide getOwnerContext(req) until owner-session auth lands'
+          }, { 'www-authenticate': 'Bearer' });
+        }
+        try {
+          const p = Object.fromEntries(url.searchParams);
+          const out = auth.mintAuthorizationCode(ctx, {
+            clientId: p.client_id,
+            personaId: p.persona_id,
+            redirectUri: p.redirect_uri,
+            codeChallenge: p.code_challenge,
+            state: p.state ?? null
+          });
+          const redirect = new URL(p.redirect_uri);
+          redirect.searchParams.set('code', out.code);
+          if (p.state) redirect.searchParams.set('state', p.state);
+          res.writeHead(302, { location: redirect.toString() });
+          return res.end();
+        } catch (e) {
+          return json(res, 400, { error: 'invalid_request', error_description: e.message });
+        }
+      }
+
+      if (req.method === 'POST' && path === '/device/code') {
+        const p = await readBody(req);
+        try {
+          return json(res, 200, auth.deviceCode({ clientId: p.client_id, agentName: p.agent_name ?? null }));
+        } catch (e) {
+          return json(res, 400, { error: 'invalid_client', error_description: e.message });
+        }
+      }
+
+      if (req.method === 'GET' && path === '/device') {
+        return json(res, 200, {
+          verification_uri: `${auth.baseUrl}/device`,
+          hint: 'the owner approves or denies a pending user_code via ownerapi.approveDeviceCode / denyDeviceCode (owner-session auth pending, phase 2 open item)',
+          user_code: url.searchParams.get('user_code')
+        });
+      }
+
+      if (req.method === 'POST' && path === '/token') {
+        const p = await readBody(req);
+        const out = auth.token(p);
+        const status = out.error ? (out.error === 'authorization_pending' ? 400 : 400) : 200;
+        return json(res, status, out, status === 200 ? { 'cache-control': 'no-store', pragma: 'no-cache' } : {});
+      }
+
+      if (req.method === 'POST' && path === '/tokeninfo') {
+        const p = await readBody(req);
+        return json(res, 200, tokens.introspect(p.token, moira));
+      }
+
+      res.writeHead(404);
+      res.end(JSON.stringify({ error: 'not_found' }));
+    } catch (e) {
+      if (res.headersSent) { res.destroy(); return; }
+      json(res, 500, { error: 'server_error', error_description: e.message });
+    }
+  });
+
+  return { server, auth, mcp, tokens, listen: (opts = {}) => new Promise((r) => server.listen({ port, host, ...opts }, () => r(server.address()))) };
+}
