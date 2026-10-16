@@ -66,10 +66,27 @@ block's publish/reading job, distinct from the taste block.)
 
 ## how the latent similarities get built
 
+evie is fairly deterministic, and it never trains on your data.
+
+- no model is trained on persona signals, ever. your ratings, logs and
+  shares are evidence that positions you in an existing space - they
+  never reshape the space itself. nothing about you is absorbed into
+  weights
+- the latent elements of each entity come from an engine that already
+  catalogues them, sourced from reference databases - tmdb for film
+  and tv, and per-axis equivalents for books, music, and the rest.
+  evie reads that catalogue; it does not infer taste by staring at
+  your history until something pops out
+- entities map onto a per-persona graph by their LATENT similarities,
+  not the overt ones: not "same genre", "same platform", "because you
+  watched X". netflix-style engines optimize engagement with overt
+  similarity; evie cares about why something resonates - the latent
+  element a book and a film can share even across axes
+- same inputs, same catalogue, same graph, same answers: the engine is
+  deterministic and reproducible, which is why recommendations can be
+  explained instead of blamed on the algorithm
 - every signal enters tagged untrusted with source attribution, per
   persona - platform telemetry is data, never truth
-- entities (books, films, shows, albums, essays, products) link into
-  one per-persona taste graph; affinities connect across axes
 - taste evolution is first-class: month-over-month change, with
   tastify-style archived rooms as the time-series anchor
 - recommendations are explainable ("because you rated X, shared Y"),
