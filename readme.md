@@ -12,75 +12,124 @@ consent, and fed from the apps and services each persona actually uses.
 
 ### what a hat is
 
-a hat is a version of you that you put on deliberately: the student, the
-founder, the musician, the character you write. it has its own context (its
-own files, people, taste, history) and its own idea of what matters.
+a hat is a version of you that you put on deliberately. the student, the
+founder, the musician, the character you write: these are not moods or
+filters, they are contexts. each one has its own files, its own people, its
+own taste, its own history, and its own idea of what matters. the founder's
+wednesday and the student's wednesday can happen on the same day and still
+have almost nothing to do with each other.
 
 ### you wear many at once
 
-nobody wears one hat. you move between several in a single day, and the
-number only grows: the founder's calendar means nothing to the student, the
-student's papers mean nothing to the character. the hats coexist.
+nobody wears one hat. you move between several in a single day, sometimes in
+the same hour: the founder takes a call, the student opens a paper, the
+character gets a new scene. and the number only grows over a life. what makes
+this bearable today is that humans are good at keeping hats apart without
+thinking about it. what makes it unbearable online is that no software even
+tries.
 
 ### hats are different personas
 
 in moira, a hat becomes a persona: a first-class object with its own memory,
-its own keys, its own connectors, and its own budget. not a folder, not a
-label. a real boundary that software has to respect.
+its own sealed keys, its own connectors, and its own budget. this is not a
+folder, not a label, not a "mode". a persona is a real boundary that software
+has to respect: persona a's memory is physically invisible to persona b,
+because they are sealed under different keys. when you delete a persona its
+keys are shredded, which means the deletion is real and not a flag flip.
 
 ### what apps do instead
 
 every app today does the opposite. it melts all your hats together into one
-"personal context" (one profile, one recommendation feed, one ad identity)
-and calls it personalization. but a blend of the student, the founder, and
-the character is context about nobody. that mush is utterly useless: it
-can't serve any one hat well, it can't be split back apart, and it can't be
-deleted hat by hat. moira exists because the mush is not the only option.
+"personal context": one profile, one recommendation feed, one ad identity,
+one engagement score. it calls this personalization, but a blend of the
+student, the founder, and the character is context about nobody. the mush is
+utterly useless. it cannot serve any single hat well, because it answers to
+the average of all of them. it cannot be split back apart, because nothing
+was ever kept separate. and it cannot be deleted hat by hat, because there
+is only one thing. moira exists because the mush is not the only option.
 
 ## personas, more than a sandbox
 
 ### isolation is only the easy half of the sandbox problem
 
-the easy half is keeping hats apart: persona a's memory is invisible to
-persona b, personas never leak into each other, and deleting a persona shreds
-its keys so the deletion is real. most tools that even try, stop here.
+the easy half is keeping hats apart. persona a's memory is invisible to
+persona b. personas never leak into each other accidentally. deleting a
+persona shreds its keys so the deletion is real. most tools that even try
+to model multiple yous stop here, at isolation, and isolation alone is easy:
+it is just careful bookkeeping.
 
 ### permissive permeability is the other half
 
 the hard half: hats are still one human's life, so they sometimes need to
-share. deliberately, narrowly, and reversibly. moira's answer is the bridge,
-a persona-to-persona connection that needs a matching bridge AND explicit
-ingress on each side. no bridge means "not available", with never a hint that
-anything exists on the other side. sharing is a built, audited act, never a
-default and never a leak. isolation without permeability is just another set
-of silos; permeability without consent is the mush again. moira does both, on
-purpose.
+share. deliberately, narrowly, and reversibly. maybe the founder needs the
+student's schedule. maybe two hats share a set of facts about a project. the
+answer cannot be "they can always see each other", because that recreates the
+mush with extra steps. it also cannot be "they can never see each other",
+because then you have built silos, not a life.
+
+moira's answer is the bridge. a bridge is a persona-to-persona connection
+that requires a matching bridge on both ends AND explicit ingress on each
+side, so consent is doubled and revocable on either end. no bridge means
+"not available", with never a hint that anything exists on the other side:
+absence is indistinguishable from emptiness, on purpose. sharing is a built,
+audited act. never a default, never a leak. isolation without permeability
+is just another set of silos; permeability without consent is the mush again.
+moira does both, on purpose.
 
 ### personas are not just you
 
 a persona does not have to be attached to your legal self. moira personas
-come in identity kinds:
+come in identity kinds, and the kind is a first-class property:
 
 - **linked**: your real-world self. the one that can inherit shared core
-  facts from your other linked personas.
-- **pseudonymous**: a stable alias with its own context. not connected to
-  your legal identity, and treated with the same first-class care.
-- **heteronymous**: a character, another person entirely. requires a
+  facts from your other linked personas, because those facts genuinely belong
+  to the person behind them.
+- **pseudonymous**: a stable alias with its own context. it is not connected
+  to your legal identity, and it gets the same first-class care as every
+  other persona: its own keys, memory, connectors, and budget.
+- **heteronymous**: a character, another person entirely. it requires a
   character sheet (name, backstory, voice, beliefs, expertise, red lines,
-  canon rules), never inherits your core facts, and its canon cannot leave
-  the character. bridges from a heteronym can carry themes and interests,
-  never biographical facts.
+  canon rules), it never inherits your core facts, and its canon cannot
+  leave the character. bridges from a heteronym can carry themes and
+  interests, never biographical facts.
 
 all of them are the real you in the way that matters here: none is a "master
-profile" and none is a role being played by the "real" one. they are just
-different contexts, kept honestly different.
+profile" and none is a role being played by the "real" one. they are different
+contexts, kept honestly different.
 
 ### planned: decentral profiles
 
 persona storage tiers exist in the model for a reason: hosted, local, and
-decentral. the decentral tier (profiles you control on infrastructure you
-choose, movable, no single home) is planned, not built, and is not pretended
-otherwise.
+decentral. the decentral tier means profiles you control on infrastructure
+you choose, movable, with no single home that can be subpoenaed, breached, or
+simply shut down. it is planned, not built, and it is not pretended otherwise.
+
+## usage is not liking
+
+apps today treat every tap as an endorsement. you watched it, so you like
+it. you have the app, so you wanted it. but free usage is not preference:
+you watch what autoplay served you, you use the family plan, you keep the
+tool your work mandates, you read the link your friend sent. consuming
+something for free tells almost nothing about whether you actually like it.
+
+moira keeps the two apart:
+
+- **signals** are what services report: plays, reads, purchases, clicks.
+  every signal enters the system tagged untrusted, with its source attached.
+  a signal is evidence of what happened, never a statement of what you like.
+- **preferences** are what you confirm. nothing becomes a preference without
+  your explicit confirmation, so no engagement metric can quietly decide
+  your taste for you.
+- and even a confirmed preference keeps its provenance: every fact carries a
+  taint label recording where it came from, how linkable it is to you, and
+  how long it stays relevant. labels combine by most-restrictive-wins, so
+  summaries cannot launder what a fact really is.
+
+this split matters most for taste, the block that feeds the decoupled taste
+engine (evie, on its own branch). evie never trains on your data and never
+absorbs signals into weights: your ratings, logs, and shares only position
+you in an existing catalogue space. keeping usage and liking separate is
+what makes that positioning honest.
 
 ## the rest of the model
 
@@ -88,58 +137,64 @@ otherwise.
 
 when an app or agent wants context, it never gets your keys. it gets a pass:
 scoped to one persona, one category, one purpose, one duration. passes can
-be one-time, and every read leaves a signed receipt you can audit.
-
-### facts carry their provenance
-
-every memory is sealed and labeled (its taint): where it came from, how
-linkable it is, how long it stays relevant. labels combine by
-most-restrictive-wins, so summaries cannot launder what a fact really is.
+be one-time, and every read leaves a signed receipt you can audit. this is
+also what a tap should be: a pass is exactly the shape of "let this person,
+for this reason, until tonight, see this much".
 
 ### connectors feed personas on their own terms
 
-each persona connects its own accounts, and can even hold several accounts
-per provider (work drive and personal drive on the same hat). provider text
-is tagged untrusted at ingress and never becomes a preference without your
-confirmation.
+each persona connects its own accounts, and can hold several accounts per
+provider: work drive and personal drive on the same hat is a normal case.
+provider text is tagged untrusted at ingress and never becomes a preference
+without your confirmation (the same split as above).
 
 connectors are organized by the job you want done. you approve the job, and
-the providers under it are interchangeable: swap dropbox for drive and nobody
-re-consents. jobs span what you know, make, and keep (your files, projects,
-calendar, reading, dev and design work, academia, and eventually people),
-the machines you work with (assistants, app builders, coding agents, spec
-tools), deliberate acts of taste (books, film, tv, music, stories, shared
-taste), how you live (dressing, shopping, life logs), and plumbing (watch,
-places, health).
+the providers under it are interchangeable: swap dropbox for drive and
+nobody re-consents, because the consent attached to the job, not the brand.
 
-only the file adapters (google drive, onedrive, dropbox, mega) exist and are
-tested today; everything else is registered but not built yet. the status is
-explicit in the code, nothing pretends to work. the taste entries are the
-fuel line for **evie**, the decoupled taste engine that lives on its own
-branch and activates only when it does. moira's deterministic core never
-depends on it.
+| block | job | providers |
+| --- | --- | --- |
+| knowledge | retrieve your files | google drive, onedrive, dropbox, mega (live) |
+| knowledge | manage projects | linear, craft docs, notion |
+| knowledge | plan your time | google calendar, notion calendar |
+| knowledge | read & write | substack, medium |
+| knowledge | tech & dev (opt-in) | developer: github, gitlab, bitbucket. design: figma, kittl, canva, penpot, balsamiq |
+| knowledge | academia | zotero, mendeley, semantic scholar, google scholar (export/webhook) |
+| knowledge | people (later phase) | meetings: calendly, cal.com, z cal, granola, zoom, google meet. social: instagram, x, threads, bluesky, tiktok. networking: linkedin, polywork. family: life360, familywall, google family link. friends: groupme, discord, find my (export/webhook) |
+| ai tools | talk to assistants | chatgpt, claude, gemini, perplexity |
+| ai tools | build apps | lovable, base44, bolt, v0 |
+| ai tools | code with agents | cursor, windsurf, claude code, github copilot |
+| ai tools | work from specs | kiro, ibm bob |
+| taste | track books | goodreads, storygraph, fable, pagebound |
+| taste | track film | letterboxd |
+| taste | track tv | serializd, tv time, repov |
+| taste | track music | last.fm, stats.fm, musicboard, superfan |
+| taste | read & write stories | ao3 (import), wattpad |
+| taste | share taste | pi.fyi, tastify |
+| lifestyle | dress & shop | depop, ltk, pinterest, whering |
+| lifestyle | log your life | anylog, retro |
+| utility | watch | youtube |
+| utility | places | maps |
+| utility | health | health platforms |
 
-## how you use it
-
-```
-# run the suite (offline, no network, no services)
-npm test
-
-# script the owner surface from the terminal
-node cli.js personas list
-node cli.js persona create --name founder --identity linked
-node cli.js fact add --persona <id> --content "..." --category notes
-```
+every row's status is explicit in the code. only the file adapters exist and
+are tested today; everything else is registered but not built yet, and
+nothing pretends to work. provider lists are examples, not the universe: the
+tree grows by addition. the people block is soft-tagged by design (a friend
+tagged as basically family is fine, overlap is welcome), and how much someone
+matters to you is tracked per persona, never for the owner wholesale: every
+persona is the real you, and none is a role.
 
 ## modality
 
 moira is designed to be reached the way you actually live:
 
 - **browser first.** the primary experience is a web app: personas, passes,
-  receipts, and connectors as visible, touchable things you manage directly.
+  bridges, receipts, and connectors as visible, touchable things you manage
+  directly, not settings buried four menus deep.
 - **command line native.** the cli is not a debug tool; it is a first-class
-  surface. everything the owner can do is scriptable, and the same core runs
-  behind it.
+  surface. everything the owner can do is scriptable, and the same
+  deterministic core runs behind it.
 - **nfc tappable cards (potentially).** a persona as a physical card you tap
   to share context in person; the pass model (scope, purpose, duration,
   receipt) is exactly what a tap needs. deliberately still a "potentially":

@@ -247,3 +247,15 @@ no em dashes anywhere, punctuation is periods/commas/colons/parens. the
 tree itself still lives in registry.js, features.md, and the cli help where
 a table is the honest format. suite green.
 
+## 2026-10-16 - readme v4: table, preferences section, no cli block
+
+owner: drop the "how you use it" section entirely, make the sections longer
+and better explained, and render the connector hierarchy as a real markdown
+table (block | job | providers, each column narrowing one level) instead of
+ascii. added the preferences section the owner pinned earlier: usage is not
+liking. free usage is not preference (autoplay, family plans, work-mandated
+tools); signals enter untrusted with source attached, preferences only exist
+where the owner confirms them, and taint labels keep provenance even after
+confirmation. sections expanded throughout; still no em dashes, no dash
+separators, no under-the-hood, no repo map.
+
