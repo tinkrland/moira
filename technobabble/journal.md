@@ -211,3 +211,14 @@ google family link, groupme, discord; find my joins via the
 export/webhook fallback (no public api, ingest-style). failing test
 first.
 
+## 2026-10-16 - circles refined: soft tags, per-persona importance, no "real you"
+
+owner pinned two refinements on the family/friends circles. one: circles
+are soft tags, not rigid buckets - tagging a friend as basically family
+is fine; fuzz is welcome, not an error. two: what differs across personas
+is the importance profile of the relationship, not which persona is
+"real". someone can be very high on professional-alex's axis and nearly
+absent from your personal life. crucially: no persona is the real you
+with the others playing roles - they are all the real you. written into
+the registry comment, features, buildplan, readme.
+

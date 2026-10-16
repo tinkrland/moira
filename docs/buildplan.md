@@ -53,7 +53,12 @@ what actually shipped (with commits and bug hunts) is
    per-persona. the same human can be connected to several of your
    personas - family relates to one of you, friends from music to
    another - so bridges are (person, persona), never (person,
-   owner) wholesale.
+   owner) wholesale. circles are soft tags, not rigid buckets (a
+   friend tagged as basically family is fine). and what varies per
+   persona is the importance profile of the relationship - someone
+   can be very high on professional-alex's axis and nearly absent
+   from your personal life - with no persona treated as the "real
+   you" and the rest as roles: they are all the real you.
 6. **evie (separate branch, taste engine).** fuel line is registered;
    activates only when evie does. deliberately last among majors:
    taste without consent infrastructure is just another profiler.

@@ -63,8 +63,11 @@ branch. nothing here pretends.
   calendly, cal.com, z cal, granola; social; networking; family
   and friends CIRCLES - cresca-style, but per-persona: the same
   human can know different personas of yours, so a relationship is
-  always (person, persona), never (person, owner) wholesale)
-  activates with the people phase
+  always (person, persona), never (person, owner) wholesale. circles
+  are soft tags (a friend tagged as basically family is fine); what
+  differs per persona is the relationship's importance profile, not
+  which you is real - they are all the real you) activates with the
+  people phase
 - **honestly missing:** mega (encrypted rpc protocol, its own work
   item; returns documented `not_implemented`)
 

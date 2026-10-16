@@ -50,9 +50,10 @@ knowledge          (what you know, make, and keep)
 |                             sources join via export/webhook (ingest)
 |__ people (later phase)    meetings (calendly, cal.com, z cal, granola),
 |                             social media, networking, family + friends
-|                             circles - cresca-style but per-persona: the
-|                             context of knowing a person belongs to a
-|                             persona, never the owner wholesale
+|                             circles (soft tags - a friend tagged as
+|                             family is fine). per-persona importance: how
+|                             much someone matters can differ per persona.
+|                             every persona is the real you; none is a role
 
 ai tools           (what you build and how you work with machines)
 |__ talk to assistants       chatgpt, claude, gemini, perplexity
