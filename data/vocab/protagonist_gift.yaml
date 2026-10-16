@@ -1,0 +1,12 @@
+axis: protagonist_gift
+layer: 2
+select: multi
+values:
+- puzzle-intellect
+- people-reading
+- social-manipulation
+- physical-tactical
+- procedural-craft
+- moral-authority
+- charm
+- supernatural

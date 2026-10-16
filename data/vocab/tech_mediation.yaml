@@ -1,0 +1,7 @@
+axis: tech_mediation
+layer: 2
+select: single
+values:
+- low
+- medium
+- high

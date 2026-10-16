@@ -1,0 +1,9 @@
+axis: world
+layer: 2
+select: single
+values:
+- realist
+- heightened
+- supernatural-overlay
+- scifi-overlay
+- period

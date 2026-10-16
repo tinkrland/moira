@@ -1,0 +1,8 @@
+axis: stakes
+layer: 2
+select: single
+values:
+- low
+- medium
+- high
+- existential

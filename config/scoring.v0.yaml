@@ -1,0 +1,42 @@
+# scoring config, versioned. the query path reads weights only from here.
+# schema.md: initial default 1.0 for every axis except fantasy and
+# authority_stance, which start at 2.0 (to be tested, not trusted).
+# layer 1 axes never appear in dna_score. in the recommend path they are
+# eligible at a lower default weight (open question 19: ratio unconfirmed).
+version: scoring.v0
+
+axis_weights:
+  tone: 1.0
+  authority_stance: 2.0
+  protagonist_gift: 1.0
+  ensemble_shape: 1.0
+  fantasy: 2.0
+  structure: 1.0
+  resolution: 1.0
+  stakes: 1.0
+  world: 1.0
+  tech_mediation: 1.0
+  lead_gender: 1.0
+  lead_manner: 1.0
+  lead_flaw_treatment: 1.0
+  motifs: 1.0
+  # layer 1, recommend path only
+  genre_tradition: 0.5
+  crime_relation: 0.5
+  mystery_mechanism: 0.5
+  lens: 0.5
+  detecting_subject: 0.5
+  legal_role: 0.5
+
+cousins:
+  min_dna_score: 0.6
+  max_layer1_overlap: 0
+
+recommend:
+  strength:
+    loved: 1.0
+    liked: 0.6
+  role_weight:
+    primary: 1.0
+    secondary: 0.5
+  priority_rule: lexicographic-gate

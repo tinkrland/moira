@@ -1,0 +1,10 @@
+axis: mystery_mechanism
+layer: 1
+select: multi
+values:
+- whodunit
+- howdunnit
+- whydunnit
+- proving-it
+- inverted
+- caper

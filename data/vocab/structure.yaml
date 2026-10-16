@@ -1,0 +1,8 @@
+axis: structure
+layer: 2
+select: single
+values:
+- standalone
+- episodic-closed
+- hybrid-arc
+- serialized

@@ -1,0 +1,16 @@
+axis: genre_tradition
+layer: 1
+select: multi
+values:
+- crime
+- noir
+- cozy-mystery
+- legal
+- thriller
+- spy
+- fantasy
+- sci-fi
+- romance
+- horror
+- drama
+- comedy

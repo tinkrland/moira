@@ -1,0 +1,8 @@
+axis: crime_relation
+layer: 1
+select: single
+values:
+- solving
+- committing
+- defending
+- combination

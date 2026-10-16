@@ -1,0 +1,8 @@
+axis: resolution
+layer: 2
+select: single
+values:
+- always-closed
+- mostly-closed
+- often-open
+- open

@@ -1,0 +1,8 @@
+axis: lead_flaw_treatment
+layer: 2
+select: single
+values:
+- flaw-corrected
+- flaw-tolerated
+- flaw-celebrated
+- no-flaw-focus

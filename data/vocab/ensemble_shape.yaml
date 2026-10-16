@@ -1,0 +1,9 @@
+axis: ensemble_shape
+layer: 2
+select: single
+values:
+- solo
+- odd-couple
+- workplace-team
+- found-family
+- literal-family

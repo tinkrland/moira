@@ -1,0 +1,13 @@
+axis: tone
+layer: 2
+select: multi
+values:
+- warm-comedic
+- dry-satirical
+- cozy
+- earnest
+- grounded-gritty
+- stylized-dark
+- paranoid-tense
+- absurdist
+- melancholic

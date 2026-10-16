@@ -1,0 +1,11 @@
+axis: lead_manner
+layer: 2
+select: multi
+values:
+- abrasive
+- eccentric
+- charming
+- earnest
+- deadpan
+- overzealous
+- reserved

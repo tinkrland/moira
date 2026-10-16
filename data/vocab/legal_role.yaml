@@ -1,0 +1,9 @@
+axis: legal_role
+layer: 1
+select: multi
+values:
+- prosecution
+- public-defense
+- criminal-defense
+- civil
+- white-collar-legal

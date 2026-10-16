@@ -1,0 +1,9 @@
+axis: lead_gender
+layer: 2
+select: single
+values:
+- female
+- male
+- nonbinary
+- mixed-ensemble
+- unknown

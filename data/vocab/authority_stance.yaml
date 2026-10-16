@@ -1,0 +1,10 @@
+axis: authority_stance
+layer: 2
+select: single
+values:
+- institution-believer
+- institution-cynic
+- adjacent-consultant
+- outsider-underestimated
+- adversarial-vigilante
+- criminal-protagonist

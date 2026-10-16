@@ -1,0 +1,13 @@
+axis: detecting_subject
+layer: 1
+select: multi
+values:
+- murder
+- financial
+- disappearance
+- fraud
+- cybercrime
+- organized-crime
+- cold-case
+- espionage
+- other
