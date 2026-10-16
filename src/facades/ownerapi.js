@@ -194,9 +194,9 @@ export class OwnerApi {
 
   // --- connectors (section 14) ------------------------------------------------
 
-  connectConnector(ctx, { personaId, connectorId, credentials, label = null }) {
+  connectConnector(ctx, { personaId, connectorId, credentials, label = null, account = null }) {
     this._require(ctx);
-    return this.gw.connectors.authorize(ctx, { personaId, connectorId, credentials, label });
+    return this.gw.connectors.authorize(ctx, { personaId, connectorId, credentials, label, account });
   }
 
   revokeConnector(ctx, { identityId }) {
@@ -204,9 +204,9 @@ export class OwnerApi {
     return this.gw.connectors.revoke(ctx, { identityId });
   }
 
-  grantConnectorPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses }) {
+  grantConnectorPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses, account = null }) {
     this._require(ctx);
-    return this.gw.connectors.grantPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses });
+    return this.gw.connectors.grantPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses, account });
   }
 
   revokeConnectorPass(ctx, { passId }) {

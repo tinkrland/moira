@@ -171,3 +171,31 @@ also: .gitignore untracked from the repo (patterns kept locally in
 .git/info/exclude), and the docs/ folder added: about, explain,
 problemcase, solution, features, buildplan - the story for humans,
 separate from technobabble/ (the story for builders).
+
+## 2026-10-16 - the tree grows: reading, tech, academia, people, multi-account
+
+registry expanded per owner direction. the reading axis renamed publish ->
+reading ('read & write'): a substack or medium account can be pure
+consumption - subscriptions and reading history are the axis's main
+signal; writers ride the same job. new blocks, all registered planned (no
+phantom features): tech & dev (developer: github, gitlab, bitbucket;
+design: figma, kittl, canva, penpot, balsamiq) with an onboarding opt-in
+flag - onboarding asks whether the block is needed at all, because a
+developer persona wants it and an artistry persona may not; academia
+(research: zotero, mendeley, semantic scholar connected; arxiv ingest;
+google scholar via the export/webhook fallback for providers with no
+public api - rows arrive ingest-style, untrusted-tagged); and people
+(meetings: calendly, cal.com, z cal, granola, zoom, google meet; social
+media; networking) - block-level planned, activating with the people
+phase. provider lists are examples, not the universe; the tree grows by
+addition.
+
+the hub went multi-account: identities are keyed per (persona, connector,
+account) - one persona can hold work drive + personal drive on the same
+provider. re-authorizing an account replaces only that account; reads
+target an account explicitly or default to the first-authorized
+(deterministic: stable sort on createdAt, insertion order breaks
+same-millisecond ties - the first attempt used random ids as tiebreak
+and the tests caught the nondeterminism). connector passes can pin to
+one account. failing tests first; suite 172 tests, 160 pass, 12 gated.
+

@@ -6,7 +6,9 @@
 // security posture:
 //   - credentials seal under the persona key with the same envelope
 //     encryption as facts (never plaintext, never returned by any read)
-//   - an identity is per (persona, connector); it never crosses personas
+//   - an identity is per (persona, connector, ACCOUNT). one persona can
+//     hold several accounts on the same provider (work drive + personal
+//     drive); re-authorizing an account replaces only that account.
 //   - provider rows are tagged untrusted with source attribution at the
 //     boundary; nothing from a connector becomes a preference basis without
 //     owner confirmation (same as any proposal)
@@ -18,7 +20,8 @@ import { OUTCOME, PASS_DURATION, RECEIPT_OP } from '../model/constants.js';
 import { connectorDef, CONNECTOR_STATUS, CONNECTOR_KIND } from './registry.js';
 import { adapterFor } from './adapters.js';
 
-const SEAL_CTX = 'moira-connector-v1';
+const SEAL_CTX = 'moira-connector-v1'
+const DEFAULT_ACCOUNT = 'default'; // account key when the owner names none;
 
 export class ConnectorHub {
   constructor({ store, keys, receipts, agents, now = Date.now, io = {} }) {
@@ -34,7 +37,7 @@ export class ConnectorHub {
 
   // owner authorizes one provider account for one persona. credentials are
   // sealed immediately; the identity record holds only the sealed envelope.
-  authorize(ctx, { personaId, connectorId, credentials, label = null }) {
+  authorize(ctx, { personaId, connectorId, credentials, label = null, account = null }) {
     if (!ctx || ctx.kind !== 'owner_context' || typeof ctx.ownerRef !== 'string') {
       return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
     }
@@ -49,10 +52,12 @@ export class ConnectorHub {
     if (!credentials || typeof credentials !== 'object') {
       return { outcome: OUTCOME.DECLINED, reason: 'credentials_required' };
     }
-    // one live identity per (persona, connector): re-authorizing replaces
+    // one live identity per (persona, connector, account): re-authorizing an
+    // account replaces only that account; other accounts stay live.
+    const accountKey = account ?? DEFAULT_ACCOUNT;
     const existing = this.store.list('connectorIdentities',
-      (x) => x.personaId === personaId && x.connectorId === connectorId && !x.revoked,
-      { personaId, connectorId });
+      (x) => x.personaId === personaId && x.connectorId === connectorId && !x.revoked && x.account === accountKey,
+      { personaId, connectorId, account: accountKey });
     for (const x of existing) {
       this.store.update('connectorIdentities', x.id, (r) => ({ ...r, revoked: true }));
     }
@@ -60,6 +65,7 @@ export class ConnectorHub {
       id: randomId('cni'),
       personaId,
       connectorId,
+      account: accountKey,
       label,
       sealed: seal(this.keys.personaKey(personaId), JSON.stringify(credentials), `${SEAL_CTX}:${connectorId}`),
       createdAt: this.now(),
@@ -87,7 +93,7 @@ export class ConnectorHub {
 
   // connector pass grant: separate from memory passes by construction -
   // different collection, different verifier, different dimensions.
-  grantPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, uses = null }) {
+  grantPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, uses = null, account = null }) {
     if (!ctx || ctx.kind !== 'owner_context' || typeof ctx.ownerRef !== 'string') {
       return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
     }
@@ -101,6 +107,7 @@ export class ConnectorHub {
       id: randomId('cpass'),
       kind: 'connector_pass',
       clientId, personaId, connectorId, scope, purpose,
+      account, // optional: pins the pass to one account of the provider
       duration,
       usesLeft: duration === PASS_DURATION.ONE_TIME ? 1 : uses,
       createdAt: this.now(),
@@ -129,20 +136,22 @@ export class ConnectorHub {
   listForPersona(personaId) {
     const identities = this.store.list('connectorIdentities',
       (x) => x.personaId === personaId && !x.revoked, { personaId })
-      .map((x) => ({ identityId: x.id, connectorId: x.connectorId, label: x.label, createdAt: x.createdAt }));
+      .map((x) => ({ identityId: x.id, connectorId: x.connectorId, account: x.account, label: x.label, createdAt: x.createdAt }));
     return { outcome: OUTCOME.RESULTS, connectors: identities };
   }
 
   // the read gate: agent context (client, persona) + connector pass + active
   // identity. io goes through the adapter; results come back untrusted-tagged.
-  async read({ clientId, personaId }, { connectorId, operation, params = {}, purpose, scope }) {
+  async read({ clientId, personaId }, { connectorId, operation, params = {}, purpose, scope, account = null }) {
     const def = connectorDef(connectorId);
     if (!def || def.status !== CONNECTOR_STATUS.ACTIVE || def.kind !== CONNECTOR_KIND.CONNECTED) {
       return { outcome: OUTCOME.DECLINED, reason: 'connector_not_active' };
     }
-    const identity = this._identity(personaId, connectorId);
+    // account targeting: an explicit account reads exactly that account's
+    // identity; no account resolves the first-authorized (deterministic).
+    const identity = this._identity(personaId, connectorId, account);
     if (!identity) return { outcome: OUTCOME.DECLINED, reason: 'no_active_identity' };
-    const pass = this._pass(clientId, personaId, connectorId, scope, purpose);
+    const pass = this._pass(clientId, personaId, connectorId, scope, purpose, identity.account);
     if (!pass) return { outcome: OUTCOME.DECLINED, reason: 'no_connector_pass' };
 
     let creds;
@@ -187,18 +196,24 @@ export class ConnectorHub {
 
   // --- internals ---------------------------------------------------------------
 
-  _identity(personaId, connectorId) {
-    return this.store.list('connectorIdentities',
+  _identity(personaId, connectorId, account = null) {
+    const live = this.store.list('connectorIdentities',
       (x) => x.personaId === personaId && x.connectorId === connectorId && !x.revoked,
-      { personaId, connectorId })[0] ?? null;
+      { personaId, connectorId });
+    if (account != null) return live.find((x) => x.account === account) ?? null;
+    // no account given: deterministic default = first authorized. the sort
+    // is stable, so same-millisecond creations keep their insertion order
+    // (never the random id - that would make the default nondeterministic).
+    return [...live].sort((a, b) => a.createdAt - b.createdAt)[0] ?? null;
   }
 
-  _pass(clientId, personaId, connectorId, scope, purpose) {
+  _pass(clientId, personaId, connectorId, scope, purpose, account = null) {
     const now = this.now();
     return this.store.list('connectorPasses',
       (p) => p.clientId === clientId && p.personaId === personaId && p.connectorId === connectorId &&
         p.scope === scope && p.purpose === purpose && !p.revoked,
       { clientId, personaId, connectorId, scope, purpose })
-      .filter((p) => (p.expiresAt === null || p.expiresAt > now) && (p.usesLeft === null || p.usesLeft > 0))[0] ?? null;
+      .filter((p) => (p.account == null || p.account === account) &&
+        (p.expiresAt === null || p.expiresAt > now) && (p.usesLeft === null || p.usesLeft > 0))[0] ?? null;
   }
 }

@@ -334,7 +334,8 @@ export const MCP_TOOLS = [
         operation: { type: 'string', enum: ['list', 'read'] },
         params: { type: 'object', description: 'operation params, e.g. { folderId, fileId }' },
         scope: { type: 'string', enum: ['files.list', 'files.read'], description: 'pass scope required' },
-        purpose: { type: 'string', description: 'what this read is for; must match the pass purpose' }
+        purpose: { type: 'string', description: 'what this read is for; must match the pass purpose' },
+        account: { type: 'string', description: 'optional: which account of the provider to read (one persona can hold several); omitted = first-authorized' }
       },
       additionalProperties: false
     },

@@ -34,16 +34,22 @@ what actually shipped (with commits and bug hunts) is
    app is the next big work item. personas, passes, receipts, and the
    connector tree as visible, touchable things.
 3. **second connector wave.** the knowledge jobs (projects: linear,
-   craft, notion; time: google calendar, notion calendar; publish:
-   substack, medium) - each needs its oauth app registration and
-   adapter. mega last in its wave (encrypted rpc client).
+   craft, notion; time: google calendar, notion calendar; reading:
+   substack, medium - readers first-class) plus the tech & dev block
+   (github, gitlab, bitbucket; design: figma, kittl, canva, penpot,
+   balsamiq) and academia (zotero, mendeley, semantic scholar; api-less
+   sources via export/webhook) - each needs its oauth app registration
+   and adapter. mega last in its wave (encrypted rpc client).
 4. **live provider verification.** the files adapters are
    fixture-tested; live runs need each provider's oauth credentials
    registered. until then, honestly not verified.
-5. **people connections.** persona-to-persona bridges between two
-   owners - connect codes exist; the product surface around them
-   (accept/decline, per-persona relationship management) comes with
-   the browser surface.
+5. **people connections (the people phase).** the people block
+   (meetings: calendly, cal.com, z cal, granola, zoom, google meet;
+   social media; networking) activates here, alongside
+   persona-to-persona bridges between two owners - connect codes
+   exist; the product surface around them (accept/decline,
+   per-persona relationship management) comes with the browser
+   surface.
 6. **evie (separate branch, taste engine).** fuel line is registered;
    activates only when evie does. deliberately last among majors:
    taste without consent infrastructure is just another profiler.

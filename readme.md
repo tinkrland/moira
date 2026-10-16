@@ -42,7 +42,14 @@ knowledge          (what you know, make, and keep)
 |__ retrieve your files      google drive, onedrive, dropbox, mega   [live]
 |__ manage projects          linear, craft docs, notion
 |__ plan your time           google calendar, notion calendar
-|__ write & publish          substack, medium
+|__ read & write            substack, medium (readers count too - a
+|                             subscription history is this axis's main signal)
+|__ tech & dev               onboarding opt-in: github, gitlab, bitbucket;
+|                             design: figma, kittl, canva, penpot, balsamiq
+|__ academia                 zotero, mendeley, semantic scholar; api-less
+|                             sources join via export/webhook (ingest)
+|__ people (later phase)    meetings (calendly, cal.com, z cal, granola),
+|                             social media, networking
 
 ai tools           (what you build and how you work with machines)
 |__ talk to assistants       chatgpt, claude, gemini, perplexity

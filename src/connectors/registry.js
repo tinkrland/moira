@@ -18,6 +18,14 @@
 //     never returned by any read.
 //   ingest - the persona brings an export or paste; rows are ingested
 //     untrusted-tagged with source attribution. no live fetch ever happens.
+//     a provider with no public api can still join this way: the owner wires
+//     an export or a webhook (marked via: 'webhook' on the provider row) and
+//     rows arrive ingest-style, untrusted-tagged.
+//
+// provider lists are examples, not the whole universe: the tree says what
+// KINDS of sources matter per block, and grows by addition. a provider can
+// hold MULTIPLE accounts per persona (work drive + personal drive on the
+// same persona) - the hub keys identities by (persona, connector, account).
 //
 // the taste block is evie's fuel line and activates with her (v3, own
 // branch); it is registered here so identities can exist early, but its
@@ -112,9 +120,12 @@ const time = {
   ]
 };
 
-const publish = {
-  id: 'publish',
-  label: 'write & publish',
+// the reading axis is for readers first: a substack or medium account can
+// be pure consumption (subscriptions, saves, reading history). writers get
+// the same job; consuming is the axis's main signal either way.
+const reading = {
+  id: 'reading',
+  label: 'read & write',
   providers: [
     { id: 'substack', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'substack' },
     { id: 'medium', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'medium' }
@@ -239,8 +250,91 @@ const health = utility('health', 'health', [
   { id: 'health', label: 'health platforms' }
 ]);
 
+// tech: onboarding opt-in. developers select it; a persona living in
+// artistry may never need it - so onboarding asks instead of assuming.
+const connectedPlanned = (id, label) => ({ id, kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label });
+
+const developer = {
+  id: 'developer',
+  label: 'develop software',
+  providers: [
+    connectedPlanned('github', 'github'),
+    connectedPlanned('gitlab', 'gitlab'),
+    connectedPlanned('bitbucket', 'bitbucket')
+  ]
+};
+
+const design = {
+  id: 'design',
+  label: 'design & prototype',
+  providers: [
+    connectedPlanned('figma', 'figma'),
+    connectedPlanned('kittl', 'kittl'),
+    connectedPlanned('canva', 'canva'),
+    connectedPlanned('penpot', 'penpot'),
+    connectedPlanned('balsamiq', 'balsamiq')
+  ]
+};
+
+// academia: research libraries and reference managers. zotero/mendeley/
+// semantic scholar have apis (connected); google scholar does not, so it
+// joins via the export/webhook fallback (ingest).
+const research = {
+  id: 'research',
+  label: 'manage research',
+  providers: [
+    connectedPlanned('zotero', 'zotero'),
+    connectedPlanned('mendeley', 'mendeley'),
+    connectedPlanned('semantic_scholar', 'semantic scholar'),
+    { id: 'arxiv', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'arxiv' },
+    { id: 'google_scholar', kind: CONNECTOR_KIND.INGEST, status: CONNECTOR_STATUS.PLANNED, label: 'google scholar', via: 'webhook' }
+  ]
+};
+
+// people: the people phase (cresca-style person-to-person context sharing).
+// registered so the consent shapes exist; NOTHING here activates before
+// that phase - hence the block-level planned flag.
+const peoplePlanned = (id, label) => ({ id, kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label });
+
+const meetings = {
+  id: 'meetings',
+  label: 'meet & schedule',
+  providers: [
+    peoplePlanned('calendly', 'calendly'),
+    peoplePlanned('calcom', 'cal.com'),
+    peoplePlanned('zcal', 'z cal'),
+    peoplePlanned('granola', 'granola'),
+    peoplePlanned('zoom', 'zoom'),
+    peoplePlanned('gmeet', 'google meet')
+  ]
+};
+
+const social = {
+  id: 'social',
+  label: 'social media',
+  providers: [
+    peoplePlanned('instagram', 'instagram'),
+    peoplePlanned('x', 'x'),
+    peoplePlanned('threads', 'threads'),
+    peoplePlanned('bluesky', 'bluesky'),
+    peoplePlanned('tiktok', 'tiktok')
+  ]
+};
+
+const networking = {
+  id: 'networking',
+  label: 'networking',
+  providers: [
+    peoplePlanned('linkedin', 'linkedin'),
+    peoplePlanned('polywork', 'polywork')
+  ]
+};
+
 export const BLOCKS = [
-  { id: 'knowledge', label: 'knowledge', jobs: [files, projects, time, publish] },
+  { id: 'knowledge', label: 'knowledge', jobs: [files, projects, time, reading] },
+  { id: 'tech', label: 'tech & dev', onboarding: 'opt-in', jobs: [developer, design] },
+  { id: 'academia', label: 'academia', jobs: [research] },
+  { id: 'people', label: 'people', status: 'planned', jobs: [meetings, social, networking] },
   { id: 'ai-tools', label: 'ai tools', jobs: [assistants, appBuilders, agents, specs] },
   { id: 'taste', label: 'taste', jobs: [books, film, tv, music, stories, shares] },
   { id: 'lifestyle', label: 'lifestyle', jobs: [dressShop, logLife] },

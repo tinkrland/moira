@@ -72,12 +72,16 @@ test('registry: jobs are the consent unit - pass scopes live on the job node', (
   }
 });
 
-test('registry: knowledge jobs - projects, time, publish (planned, connected or ingest)', () => {
+// the reading axis is for READERS first: a substack or medium account can
+// be pure consumption - subscriptions, saves, reading history. writers get
+// the same job; consuming is the axis's main signal either way.
+test('registry: knowledge jobs - projects, time, reading (planned, connected or ingest)', () => {
   const projects = providersForJob('knowledge', 'projects');
   assert.deepEqual(projects.map((p) => p.id).sort(), ['craft_docs', 'linear', 'notion']);
   const time = providersForJob('knowledge', 'time');
   assert.deepEqual(time.map((p) => p.id).sort(), ['google_calendar', 'notion_calendar']);
-  const publish = providersForJob('knowledge', 'publish');
+  const publish = providersForJob('knowledge', 'reading');
+  assert.equal(jobOf('knowledge', 'reading').label, 'read & write');
   assert.deepEqual(publish.map((p) => p.id).sort(), ['medium', 'substack']);
   for (const p of [...projects, ...time, ...publish]) {
     assert.equal(p.status, CONNECTOR_STATUS.PLANNED);
@@ -103,6 +107,88 @@ test('registry: every flattened provider row references a real block+job', () =>
   for (const c of REGISTRY) {
     assert.ok(validPairs.has(`${c.block}/${c.job}`), `${c.id} points at unknown block/job ${c.block}/${c.job}`);
   }
+});
+
+// the provider lists are examples, not the whole universe - the tree says
+// what KINDS of sources matter per block, and grows by addition. new blocks
+// below are registered PLANNED: named so identities/consent shapes exist,
+// adapters land with their phase (no phantom features).
+
+test('registry: tech block is onboarding opt-in (developers yes, artistry maybe not)', () => {
+  const tech = BLOCKS.find((b) => b.id === 'tech');
+  assert.equal(tech.onboarding, 'opt-in', 'onboarding asks whether this block is needed at all');
+  const dev = providersForJob('tech', 'developer');
+  assert.deepEqual(dev.map((p) => p.id).sort(), ['bitbucket', 'github', 'gitlab']);
+  const design = providersForJob('tech', 'design');
+  assert.deepEqual(design.map((p) => p.id).sort(), ['balsamiq', 'canva', 'figma', 'kittl', 'penpot']);
+  for (const p of [...dev, ...design]) {
+    assert.equal(p.kind, CONNECTOR_KIND.CONNECTED);
+    assert.equal(p.status, CONNECTOR_STATUS.PLANNED);
+  }
+});
+
+test('registry: academia block - zotero et al; api-less providers join via webhook/export', () => {
+  const research = providersForJob('academia', 'research');
+  const ids = research.map((p) => p.id);
+  for (const expected of ['zotero', 'mendeley', 'semantic_scholar']) {
+    assert.ok(ids.includes(expected), `research job must include ${expected}`);
+  }
+  // no public api: the export/webhook fallback (owner wires an export or a
+  // webhook; rows arrive ingest-style, untrusted-tagged)
+  const scholar = research.find((p) => p.id === 'google_scholar');
+  assert.equal(scholar.kind, CONNECTOR_KIND.INGEST);
+  assert.equal(scholar.via, 'webhook');
+});
+
+test('registry: people block lands with the people phase (meetings, social, networking)', () => {
+  const people = BLOCKS.find((b) => b.id === 'people');
+  assert.equal(people.status, 'planned');
+  const meetings = providersForJob('people', 'meetings');
+  assert.ok(meetings.some((p) => p.id === 'calendly'));
+  assert.ok(meetings.some((p) => p.id === 'calcom'));
+  assert.ok(meetings.some((p) => p.id === 'granola'));
+  assert.ok(providersForJob('people', 'social').some((p) => p.id === 'instagram'));
+  assert.ok(providersForJob('people', 'networking').some((p) => p.id === 'linkedin'));
+  for (const j of ['meetings', 'social', 'networking']) {
+    for (const p of providersForJob('people', j)) {
+      assert.equal(p.status, CONNECTOR_STATUS.PLANNED, 'nothing in people activates before that phase');
+    }
+  }
+});
+
+// --- multi-account (one provider, several accounts, one persona) ---------------
+
+test('connectors: one connector holds multiple accounts per persona; re-authorize replaces only that account', () => {
+  const s = setup({ adapters: { drive: fakeAdapter() } });
+  const a = s.m.owner.connectConnector(s.ctx, { personaId: s.persona.id, connectorId: 'google_drive', credentials: { t: 'work' }, account: 'work' });
+  const b = s.m.owner.connectConnector(s.ctx, { personaId: s.persona.id, connectorId: 'google_drive', credentials: { t: 'personal' }, account: 'personal' });
+  assert.equal(a.outcome, 'results');
+  assert.equal(b.outcome, 'results');
+  let list = s.m.owner.listConnectors(s.ctx, { personaId: s.persona.id });
+  assert.equal(list.connectors.filter((x) => x.connectorId === 'google_drive').length, 2, 'both accounts live');
+  // re-authorizing the work account must not touch the personal one
+  const a2 = s.m.owner.connectConnector(s.ctx, { personaId: s.persona.id, connectorId: 'google_drive', credentials: { t: 'work2' }, account: 'work' });
+  assert.equal(a2.outcome, 'results');
+  list = s.m.owner.listConnectors(s.ctx, { personaId: s.persona.id });
+  assert.equal(list.connectors.filter((x) => x.connectorId === 'google_drive').length, 2, 'personal account survives');
+});
+
+test('connectors: connector_read targets a specific account; accountless read is deterministic', async () => {
+  const seen = [];
+  const s = setup({
+    adapters: { drive: { id: 'drive', async listFiles(creds) { seen.push(creds.t); return { rows: [{ id: 'f1' }] }; }, async readFile() { return { content: 'x', meta: {} }; } } }
+  });
+  s.m.owner.connectConnector(s.ctx, { personaId: s.persona.id, connectorId: 'google_drive', credentials: { t: 'work' }, account: 'work' });
+  s.m.owner.connectConnector(s.ctx, { personaId: s.persona.id, connectorId: 'google_drive', credentials: { t: 'personal' }, account: 'personal' });
+  s.m.owner.grantConnectorPass(s.ctx, { clientId: s.agentId, personaId: s.persona.id, connectorId: 'google_drive', scope: 'files.list', purpose: 'probe' });
+  // explicit account
+  const r1 = await s.m.agent.connector_read(s.sess.accessToken, { connectorId: 'google_drive', operation: 'list', scope: 'files.list', purpose: 'probe', account: 'personal' });
+  assert.equal(r1.outcome, 'results');
+  assert.deepEqual(seen, ['personal']);
+  // no account: deterministic default = first-authorized
+  const r2 = await s.m.agent.connector_read(s.sess.accessToken, { connectorId: 'google_drive', operation: 'list', scope: 'files.list', purpose: 'probe' });
+  assert.equal(r2.outcome, 'results');
+  assert.deepEqual(seen, ['personal', 'work'], 'default read resolves the first-authorized account');
 });
 
 // --- owner authorize / seal ------------------------------------------------------

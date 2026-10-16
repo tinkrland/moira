@@ -50,10 +50,18 @@ branch. nothing here pretends.
 
 - **live:** retrieve-your-files job - google drive, onedrive, dropbox
   adapters (fixture-tested; live runs wait on oauth app credentials);
-  hub: per-persona sealed identities, connector passes, gated reads,
+  hub: per-persona sealed identities (MULTIPLE accounts per provider per
+  persona - work drive + personal drive; re-authorize replaces only that
+  account; reads target an account or default to first-authorized),
+  connector passes (optionally pinned to one account), gated reads,
   untrusted tagging
-- **planned:** knowledge jobs (projects, time, publish), ai tools,
-  lifestyle, utility
+- **planned:** knowledge jobs (projects, time, reading), ai tools,
+  lifestyle, utility; tech & dev block (github, gitlab, bitbucket;
+  design: figma, kittl, canva, penpot, balsamiq) and academia (zotero,
+  mendeley, semantic scholar; api-less sources via export/webhook) -
+  tech is onboarding opt-in, not assumed; the people block (meetings:
+  calendly, cal.com, z cal, granola; social; networking) activates
+  with the people phase
 - **honestly missing:** mega (encrypted rpc protocol, its own work
   item; returns documented `not_implemented`)
 
