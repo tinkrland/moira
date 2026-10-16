@@ -353,6 +353,28 @@ export class AgentApi {
     return res;
   }
 
+  // --- connectors (14) -----------------------------------------------------------
+
+  // what THIS persona has connected. no credential material, ever.
+  connector_list(accessToken) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    return this.gw.connectors.listForPersona(ctx.persona.id);
+  }
+
+  // provider read through the gate: connector pass (separate from memory
+  // passes) + active identity. every returned row is untrusted-tagged with
+  // source attribution; the receipt is content-free.
+  async connector_read(accessToken, { connectorId, operation, params = {}, purpose, scope }) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    if (!connectorId || !purpose || !scope) return { outcome: OUTCOME.DECLINED, reason: 'connectorId_purpose_scope_required' };
+    return this.gw.connectors.read(
+      { clientId: ctx.clientId, personaId: ctx.persona.id },
+      { connectorId, operation, params, purpose, scope }
+    );
+  }
+
   // --- receipts (16) -----------------------------------------------------------------
 
   audit_receipts(accessToken, { since = null, op = null } = {}) {

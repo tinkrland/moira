@@ -32,6 +32,7 @@ import { AgentApi } from '../facades/agentapi.js';
 import { OwnerApi } from '../facades/ownerapi.js';
 import { OwnerContext, isValidOwnerSession } from '../facades/ownercontext.js';
 import { OUTCOME } from '../model/constants.js';
+import { ConnectorHub } from '../connectors/hub.js';
 
 function defaultStore() {
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -51,7 +52,7 @@ function loadInstanceKey() {
 }
 
 export class Moira {
-  constructor({ store = defaultStore(), now = () => this._nowMs(), instanceKey = loadInstanceKey() } = {}) {
+  constructor({ store = defaultStore(), now = () => this._nowMs(), instanceKey = loadInstanceKey(), io = {} } = {}) {
     // key safety: a persistent store without a stable instance key would wrap
     // every persona key under a key that changes per process, locking (or
     // silently re-keying) every vault after a restart. refuse to start.
@@ -80,6 +81,7 @@ export class Moira {
     this.handoffs = new HandoffService({ store, personas: this.personas, agents: this.agents, packs: this.packs, receipts: this.receipts, router: this.router, facts: this.facts, now });
 
     // the two facades (spec section 6). there is no third surface.
+    this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: () => this._nowMs(), io });
     this.agent = new AgentApi(this);
     this.owner = new OwnerApi(this);
   }

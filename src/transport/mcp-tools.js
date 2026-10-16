@@ -295,6 +295,29 @@ export const MCP_TOOLS = [
     method: 'audit_receipts'
   },
   {
+    name: 'connector_list',
+    description: 'list the context connectors this persona has connected. no credential material is ever returned.',
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    method: 'connector_list'
+  },
+  {
+    name: 'connector_read',
+    description: 'read through a connected context connector (files block first wave: google_drive, onedrive, dropbox, mega). requires a connector pass; every returned row is untrusted-tagged with source attribution.',
+    inputSchema: {
+      type: 'object',
+      required: ['connectorId', 'operation', 'scope', 'purpose'],
+      properties: {
+        connectorId: { type: 'string', description: 'registry id, e.g. google_drive' },
+        operation: { type: 'string', enum: ['list', 'read'] },
+        params: { type: 'object', description: 'operation params, e.g. { folderId, fileId }' },
+        scope: { type: 'string', enum: ['files.list', 'files.read'], description: 'pass scope required' },
+        purpose: { type: 'string', description: 'what this read is for; must match the pass purpose' }
+      },
+      additionalProperties: false
+    },
+    method: 'connector_read'
+  },
+  {
     name: 'request_disclosure',
     description: 'request one-time, owner-approved delivery of protected fields to one exact https destination.',
     inputSchema: {

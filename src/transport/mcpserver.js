@@ -249,7 +249,7 @@ export class McpServer {
     });
   }
 
-  _toolsCall(req, res, id, params) {
+  async _toolsCall(req, res, id, params) {
     let auth;
     try {
       auth = this._authenticate(req);
@@ -279,7 +279,7 @@ export class McpServer {
     // one receipt per call: the agentapi mints it via the policy path.
     let result;
     try {
-      result = this.moira.agent[tool.method](auth.token, args);
+      result = await this.moira.agent[tool.method](auth.token, args);
     } catch (e) {
       // a throw is a transport-level failure: report as tool error, never crash
       this._send(res, 200, undefined, {

@@ -406,3 +406,40 @@ hub rules (per spec section 14, unchanged by the block model):
   per spec section 18 the taste block registers with the hub in phase 3 but
   activates with the v3 taste engine - the fact schema already carries typed
   entity references and signal kinds, so v3 extends rather than rewrites.
+
+## phase 3a: the connector hub (shipped 2026-10-16)
+
+`src/connectors/` - registry, adapters, hub. zero dependencies.
+
+- **registry** (`registry.js`): the block catalog. files (google drive,
+  onedrive, dropbox, mega) are active connected connectors; the other blocks
+  are registered with their adapter kinds (ai tools connected, taste and
+  lifestyle ingest, knowledge mixed) and activate per the roadmap timing -
+  taste entries are evie-gated per spec section 18.
+- **adapters** (`adapters.js`): the files adapters speak drive/dropbox/
+  onedrive rest over an injectable `fetch` (fixtures in tests; live runs need
+  each provider's oauth app credentials, not yet registered). **mega is
+  honestly not implemented** - its protocol is encrypted rpc, not rest, and
+  building that client is its own work item.
+- **hub** (`hub.js`): per-persona identities with credentials sealed by the
+  persona key (same envelope encryption as facts - `listConnectors` never
+  returns credential material); connector passes as a separate pass kind from
+  memory passes (grant/revoke via the owner surface, five dimensions:
+  client, persona, connector, scope, purpose); `connector_read` checks
+  identity then pass, opens credentials only inside the adapter call,
+  tags every returned row `{ untrusted: true, source }`, and writes a
+  receipt. revoking an identity kills its passes. one-time passes are
+  consumed by the read.
+
+owner surface: `connectConnector`, `revokeConnector`, `grantConnectorPass`,
+`listConnectors`. agent surface: `connector_list`, `connector_read` (also
+exposed as mcp tools; tools/call is now async). schema:
+`moira_connector_identities` + `moira_connector_passes`
+(`supabase/migrations/20261016_02_connectors.sql`).
+
+**verified vs not (no phantom verification):** 16 connector tests green -
+sealing, gates, scope/purpose enforcement, untrusted tagging, pass
+consumption, adapter normalization against fixtures, and the mcp parity. the
+drive/dropbox/onedrive adapters are fixture-tested only; a live provider run
+waits on oauth app credentials. mega returns a documented
+`not_implemented` outcome.

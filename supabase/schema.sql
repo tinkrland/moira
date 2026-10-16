@@ -25,7 +25,8 @@ declare
     'personas', 'facts', 'agents', 'sessions', 'tokens', 'passes',
     'bridges', 'packs', 'handoffs', 'accounts', 'leases', 'receipts',
     'workspace', 'privacy_budgets', 'disclosures', 'connect_codes',
-    'pending_connects', 'keywraps', 'linkage_declarations'
+    'pending_connects', 'keywraps', 'linkage_declarations',
+    'connector_identities', 'connector_passes'
   ];
 begin
   foreach t in array tables loop
@@ -146,6 +147,10 @@ grant all on table public.moira_keywraps to service_role;
 revoke all on table public.moira_keywraps from public, anon, authenticated;
 grant all on table public.moira_linkage_declarations to service_role;
 revoke all on table public.moira_linkage_declarations from public, anon, authenticated;
+grant all on table public.moira_connector_identities to service_role;
+revoke all on table public.moira_connector_identities from public, anon, authenticated;
+grant all on table public.moira_connector_passes to service_role;
+revoke all on table public.moira_connector_passes from public, anon, authenticated;
 
 revoke all on function public.moira_cas_update(text, text, integer, jsonb) from public, anon, authenticated;
 grant execute on function public.moira_cas_update(text, text, integer, jsonb) to service_role;
@@ -159,7 +164,8 @@ declare
     'personas', 'facts', 'agents', 'sessions', 'tokens', 'passes',
     'bridges', 'packs', 'handoffs', 'accounts', 'leases', 'receipts',
     'workspace', 'privacy_budgets', 'disclosures', 'connect_codes',
-    'pending_connects', 'keywraps', 'linkage_declarations'
+    'pending_connects', 'keywraps', 'linkage_declarations',
+    'connector_identities', 'connector_passes'
   ];
 begin
   foreach t in array tables loop

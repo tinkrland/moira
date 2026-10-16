@@ -137,6 +137,33 @@ export class OwnerApi {
     return created;
   }
 
+  // --- connectors (section 14) ------------------------------------------------
+
+  connectConnector(ctx, { personaId, connectorId, credentials, label = null }) {
+    this._require(ctx);
+    return this.gw.connectors.authorize(ctx, { personaId, connectorId, credentials, label });
+  }
+
+  revokeConnector(ctx, { identityId }) {
+    this._require(ctx);
+    return this.gw.connectors.revoke(ctx, { identityId });
+  }
+
+  grantConnectorPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses }) {
+    this._require(ctx);
+    return this.gw.connectors.grantPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses });
+  }
+
+  revokeConnectorPass(ctx, { passId }) {
+    this._require(ctx);
+    return this.gw.connectors.revokePass(ctx, { passId });
+  }
+
+  listConnectors(ctx, { personaId }) {
+    this._require(ctx);
+    return this.gw.connectors.listForPersona(personaId);
+  }
+
   // device flow (rfc 8628): the owner sees the user_code (on the device
   // verification screen), chooses which persona the device may bind to, and
   // approves or denies. the auth server's token endpoint completes the grant.

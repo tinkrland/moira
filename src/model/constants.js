@@ -85,7 +85,8 @@ export const RECEIPT_OP = {
   LEASE: 'lease',
   SPEND: 'spend',
   DISCLOSURE: 'disclosure',
-  DELETE: 'delete'
+  DELETE: 'delete',
+  CONNECTOR: 'connector'
 };
 
 export const RESHARE = {
