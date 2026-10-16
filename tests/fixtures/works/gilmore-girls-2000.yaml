@@ -1,0 +1,87 @@
+id: gilmore-girls-2000
+title: gilmore girls
+medium: tv
+unit: series
+first_release: 2000
+origin:
+- us
+language: english
+creators:
+- amy sherman-palladino
+external_ids: null
+status: draft
+tag_version: 1
+tagged_by: model
+date: '2026-10-16'
+genre_tradition:
+- drama
+- comedy
+setting_geo: us
+lead_performers:
+- lauren graham
+- alexis bledel
+tags:
+  tone:
+  - value: cozy
+    role: primary
+    evidence: small-town warmth, coffee, community rituals
+  - value: warm-comedic
+    role: secondary
+    evidence: rapid witty dialogue carries every scene
+  authority_stance:
+  - value: unknown
+    role: primary
+    evidence: no meaningful institutional power relationship drives the show
+  protagonist_gift:
+  - value: people-reading
+    role: primary
+    evidence: lorelai navigates parents, town and inn guests by reading people
+  - value: charm
+    role: secondary
+    evidence: her humor wins over almost everyone
+  ensemble_shape:
+  - value: literal-family
+    role: primary
+    evidence: mother-daughter pair at the center with extended family
+  fantasy:
+  - value: belonging
+    role: primary
+    evidence: the town, the inn and the family hold the characters
+  - value: comfort
+    role: secondary
+    evidence: recurring rituals make the world feel safe
+  structure:
+  - value: hybrid-arc
+    role: primary
+    evidence: episodic town stories with long personal arcs
+  resolution:
+  - value: mostly-closed
+    role: primary
+    evidence: storylines resolve; the relationships never end
+  stakes:
+  - value: low
+    role: primary
+    evidence: conflicts are relational, not life-threatening
+  world:
+  - value: realist
+    role: primary
+    evidence: present-day connecticut small town
+  tech_mediation:
+  - value: low
+    role: primary
+    evidence: technology never mediates the drama
+  lead_gender:
+  - value: female
+    role: primary
+    evidence: lorelai and rory, two women, lead the show
+  lead_manner:
+  - value: charming
+    role: primary
+    evidence: lorelai's banter defines her
+  - value: eccentric
+    role: secondary
+    evidence: her habits and bits are town legend
+  lead_flaw_treatment:
+  - value: flaw-tolerated
+    role: primary
+    evidence: lorelai's avoidance and defiance are never demanded to be fixed

@@ -1,0 +1,92 @@
+id: psych-2006
+title: psych
+medium: tv
+unit: series
+first_release: 2006
+origin:
+- us
+language: english
+creators:
+- steve franks
+external_ids: null
+status: draft
+tag_version: 1
+tagged_by: model
+date: '2026-10-16'
+genre_tradition:
+- crime
+- comedy
+setting_geo: us
+lead_performers:
+- james roday rodriguez
+- dule hill
+crime_module:
+  crime_relation: solving
+  mystery_mechanism:
+  - whodunit
+  lens:
+  - consultant
+  detecting_subject:
+  - murder
+tags:
+  tone:
+  - value: warm-comedic
+    role: primary
+    evidence: case-of-the-week plots built around running jokes and banter
+  authority_stance:
+  - value: outsider-underestimated
+    role: primary
+    evidence: protagonist is dismissed by police until results prove him right
+  protagonist_gift:
+  - value: puzzle-intellect
+    role: primary
+    evidence: his fake psychic act is observational detail work on cases
+  - value: people-reading
+    role: secondary
+    evidence: reads suspects and witnesses quickly to steer interviews
+  ensemble_shape:
+  - value: odd-couple
+    role: primary
+    evidence: shawn and gus friendship anchors every episode
+  fantasy:
+  - value: underdog-vindication
+    role: primary
+    evidence: the doubted outsider is proven right at the end of most episodes
+  - value: belonging
+    role: secondary
+    evidence: central friendship anchors every episode
+  structure:
+  - value: episodic-closed
+    role: primary
+    evidence: each episode solves its case within the hour
+  resolution:
+  - value: always-closed
+    role: primary
+    evidence: every case is resolved by the episode's end
+  stakes:
+  - value: medium
+    role: primary
+    evidence: murder investigations played for laughs, no ongoing threat
+  world:
+  - value: realist
+    role: primary
+    evidence: the psychic premise is a cover story, no supernatural elements
+  tech_mediation:
+  - value: low
+    role: primary
+    evidence: cases solved by observation, not forensic technology
+  lead_gender:
+  - value: male
+    role: primary
+    evidence: shawn spencer is the lead
+  lead_manner:
+  - value: eccentric
+    role: primary
+    evidence: performs a fake psychic persona constantly
+  - value: charming
+    role: secondary
+    evidence: disarms people with jokes
+  lead_flaw_treatment:
+  - value: flaw-tolerated
+    role: primary
+    evidence: his immaturity is never demanded to be fixed; the show rewards it

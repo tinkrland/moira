@@ -1,0 +1,87 @@
+id: the-rookie-2018
+title: the rookie
+medium: tv
+unit: series
+first_release: 2018
+origin:
+- us
+language: english
+creators:
+- alexi hawley
+external_ids: null
+status: draft
+tag_version: 1
+tagged_by: model
+date: '2026-10-16'
+genre_tradition:
+- crime
+- drama
+setting_geo: us
+lead_performers:
+- nathan fillion
+crime_module:
+  crime_relation: solving
+  lens:
+  - cop
+  detecting_subject:
+  - murder
+  - organized-crime
+tags:
+  tone:
+  - value: earnest
+    role: primary
+    evidence: sincere portrayal of police work and personal growth
+  authority_stance:
+  - value: institution-believer
+    role: primary
+    evidence: the lead joins the lapd because he believes in the badge; the system works
+  protagonist_gift:
+  - value: procedural-craft
+    role: primary
+    evidence: midlife rookie learning the craft, praised for solid procedure
+  - value: people-reading
+    role: secondary
+    evidence: his life experience helps him connect with civilians and suspects
+  ensemble_shape:
+  - value: workplace-team
+    role: primary
+    evidence: training officers and fellow rookies form the core unit
+  fantasy:
+  - value: competence
+    role: primary
+    evidence: the arc is earning mastery of a demanding job
+  - value: belonging
+    role: secondary
+    evidence: the station becomes a second family
+  structure:
+  - value: hybrid-arc
+    role: primary
+    evidence: case of the week with season-long character arcs
+  resolution:
+  - value: mostly-closed
+    role: primary
+    evidence: cases close each episode; personal arcs stay open
+  stakes:
+  - value: high
+    role: primary
+    evidence: officers face life-threatening situations regularly
+  world:
+  - value: realist
+    role: primary
+    evidence: grounded present-day los angeles policing
+  tech_mediation:
+  - value: medium
+    role: primary
+    evidence: modern forensics and dispatch tech appear without driving the cases
+  lead_gender:
+  - value: male
+    role: primary
+    evidence: john nolan is the lead
+  lead_manner:
+  - value: earnest
+    role: primary
+    evidence: openly commits to doing the job right
+  lead_flaw_treatment:
+  - value: flaw-corrected
+    role: primary
+    evidence: rookie mistakes are corrected through training arcs

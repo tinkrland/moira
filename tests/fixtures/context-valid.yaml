@@ -1,0 +1,34 @@
+taste_context_version: 1
+liked:
+- work: psych-2006
+  strength: loved
+- work: the-rookie-2018
+  strength: liked
+incidental:
+- work: gilmore-girls-2000
+  trait:
+    axis: tone
+    value: cozy
+- work: null
+  trait:
+    axis: world
+    value: period
+affinities:
+- id: allowed-to-stay-abrasive
+  all_of:
+  - axis: lead_manner
+    value: abrasive
+  - axis: lead_gender
+    value: female
+  - axis: lead_flaw_treatment
+    value: flaw-tolerated
+priority:
+- affinity: allowed-to-stay-abrasive
+- axis: authority_stance
+  value: outsider-underestimated
+avoid:
+- all_of:
+  - axis: lead_manner
+    value: abrasive
+  - axis: lead_gender
+    value: male
