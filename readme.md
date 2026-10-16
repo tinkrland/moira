@@ -362,9 +362,9 @@ interface.
 | --- | --- | --- |
 | files | google drive, onedrive, dropbox, mega | documents and notes a persona wants remembered |
 | ai tools | subdivided by how they work, because they hold different context: assistants (chatgpt, claude, gemini, perplexity - conversation and learned preferences) - app builders (lovable, base44, bolt, v0 - what you're building and how) - vibecoding (cursor, windsurf, claude code, copilot - your coding patterns) - spec-driven (kiro, ibm bob - bob.ibm.com, agentic dev partner - specs, tasks, guardrails before code) |
-| taste | books: goodreads, storygraph, fable, pagebound, wattpad - film: letterboxd - tv: serializd, tvtime, repov - music: last.fm, stats.fm, musicboard, superfan - stories: ao3 (import), wattpad - shares: pi.fyi | ratings, reviews, consumption history: deliberate acts of taste as v3 taste-graph signals |
-| lifestyle | depop, ltk, pinterest, whering | fashion and shopping discovery: what a persona wears, buys, saves - taste signals, but about how you present, not what you consume |
-| knowledge | notion, google calendar, slack | work products, schedules, references |
+| taste | books: goodreads, storygraph, fable, pagebound, wattpad - film: letterboxd - tv: serializd, tvtime, repov - music: last.fm, stats.fm, musicboard, superfan - stories: ao3 (import), wattpad - shares: pi.fyi, tastify (rooms of favourite things, taste archived over time) | ratings, reviews, consumption history: deliberate acts of taste as v3 taste-graph signals |
+| lifestyle | depop, ltk, pinterest, whering - retro (weekly photo journals, group albums) - anylog (custom life log: coffees, routines) | how a persona presents and lives: fashion, shopping discovery, photo memories, daily life signals - taste-adjacent, not consumption ratings |
+| knowledge | notion, google calendar, slack - substack, medium | work products, schedules, references - and the reading/writing axis: essays and papers a persona reads and writes. deliberately NOT entertainment taste: this context shapes what you think, not what you consume |
 | utility | youtube, maps, health | media consumption, places, bookings |
 
 hub rules (per spec section 14, unchanged by the block model):
