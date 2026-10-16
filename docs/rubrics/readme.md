@@ -7,6 +7,8 @@ status:
 - fantasy: draft (awaiting owner review)
 - authority_stance: draft (awaiting owner review)
 - lead_flaw_treatment: draft (awaiting owner review)
+- romantic_arc: draft (awaiting owner review)
+- romance_dynamic: draft (awaiting owner review)
 - all other axes: not written yet
 
 these three were written first per buildplan.md: they carry the most

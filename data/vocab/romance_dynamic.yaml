@@ -1,0 +1,11 @@
+# optional: tagged only when a romance exists (romantic_arc other than none).
+axis: romance_dynamic
+layer: 2
+select: multi
+values:
+- partners-to-lovers
+- friends-to-lovers
+- enemies-to-lovers
+- forbidden
+- reunion
+- second-chance

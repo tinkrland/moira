@@ -61,6 +61,7 @@ these drive similarity.
 | lead_gender | single | female, male, nonbinary, mixed-ensemble, unknown |
 | lead_manner | multi | abrasive, eccentric, charming, earnest, deadpan, overzealous, reserved |
 | lead_flaw_treatment | single | flaw-corrected, flaw-tolerated, flaw-celebrated, no-flaw-focus |
+| romantic_arc | single | none, slow-burn, on-off-cycle, early-resolved, central-premise |
 | motifs | multi | controlled free-ish tags, added by reviewed proposal only |
 
 notes:
@@ -68,6 +69,13 @@ notes:
 - `fantasy` is the most important and the hardest axis. write its rubric first.
 - `lead_flaw_treatment` records what the narrative does with the lead's flaws, not whether flaws exist. this is what separates a surface trait (abrasive lead) from a meaningful affinity (an abrasive lead the story never demands be fixed). it must be defined by observable narrative behavior in the rubric.
 - `lead_gender` and `lead_manner` are factual protagonist fields. they exist so compound affinities and avoid rules can be expressed.
+- `romantic_arc` is core (every work carries it, `none` included). the optional
+  axis `romance_dynamic` (partners-to-lovers, friends-to-lovers, enemies-to-lovers,
+  forbidden, reunion, second-chance) is tagged only when a romance exists. degree
+  nuance ("eight seasons of will-they-wont-they") is not more values: it lives in
+  wrangled motifs (see docs/motifs-wrangling.md).
+- motifs are governed ao3-style: canonical values with aliases, alias provenance
+  preserved, reviewed proposals only, nothing auto-applied (see docs/motifs-wrangling.md).
 - `authority_stance` is where the rookie and psych separate. it is about the protagonist's relationship to power, not their job title.
 
 ## layer 1 classification fields (filter and label only)

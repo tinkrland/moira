@@ -85,3 +85,11 @@ tags:
   - value: flaw-tolerated
     role: primary
     evidence: lorelai's avoidance and defiance are never demanded to be fixed
+  romantic_arc:
+  - value: slow-burn
+    role: primary
+    evidence: luke and lorelai circle each other across most of the series
+  romance_dynamic:
+  - value: friends-to-lovers
+    role: primary
+    evidence: years of friendship and coffee before the relationship

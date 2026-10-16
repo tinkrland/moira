@@ -84,3 +84,11 @@ tags:
   - value: flaw-tolerated
     role: primary
     evidence: her cruelty and grief are never demanded fixed; the show sits with her
+  romantic_arc:
+  - value: central-premise
+    role: primary
+    evidence: each season's emotional core is a romance the show is about
+  romance_dynamic:
+  - value: forbidden
+    role: primary
+    evidence: season two's priest romance is forbidden by his vocation

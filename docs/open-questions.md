@@ -34,8 +34,13 @@ unresolved decisions. agents must not resolve these on their own. add new ones h
     needs owner decision before any tagging relies on it.
 
 23. (2026-10-16, owner concept notes) romantic tension as its own signal
-    (slow burn will-they-won't-they, resolved early) rather than only
+    (slow burn will-they-won't-thy vs resolved early) rather than only
     implicit in ensemble_shape. candidate for a sub-axis or a new axis.
+    RESOLVED same day per owner request: became the core axis romantic_arc
+    (none, slow-burn, on-off-cycle, early-resolved, central-premise) plus
+    the optional axis romance_dynamic (partners-to-lovers, friends-to-lovers,
+    enemies-to-lovers, forbidden, reunion, second-chance). rubrics drafted;
+    degree nuance lives in wrangled motifs (docs/motifs-wrangling.md).
 
 24. (2026-10-16, owner concept notes) mystery_mechanism refinement:
     fair-play clueing (audience can solve ahead) vs reveal-driven (clues

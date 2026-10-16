@@ -90,3 +90,7 @@ tags:
   - value: flaw-tolerated
     role: primary
     evidence: her oddness is never treated as a problem to fix
+  romantic_arc:
+  - value: none
+    role: primary
+    evidence: no romantic through-line for the lead; the cases are the whole show

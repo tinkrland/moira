@@ -85,3 +85,11 @@ tags:
   - value: flaw-corrected
     role: primary
     evidence: rookie mistakes are corrected through training arcs
+  romantic_arc:
+  - value: slow-burn
+    role: primary
+    evidence: 'chenford: two officers take seasons of partnered proximity to admit it'
+  romance_dynamic:
+  - value: partners-to-lovers
+    role: primary
+    evidence: tim and lucy are literal patrol partners first

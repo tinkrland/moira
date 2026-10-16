@@ -90,3 +90,7 @@ tags:
   - value: flaw-corrected
     role: primary
     evidence: her arc forces her grief and denial into the open and she changes
+  romantic_arc:
+  - value: none
+    role: primary
+    evidence: a brief fling enters and exits; no romantic through-line

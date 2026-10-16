@@ -92,3 +92,7 @@ tags:
   - value: flaw-tolerated
     role: primary
     evidence: his condition is the tool and the joke, never a problem the story demands he fix
+  romantic_arc:
+  - value: none
+    role: primary
+    evidence: trudy's absence is the romantic story; no ongoing romance

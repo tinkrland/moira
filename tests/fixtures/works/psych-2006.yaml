@@ -90,3 +90,11 @@ tags:
   - value: flaw-tolerated
     role: primary
     evidence: his immaturity is never demanded to be fixed; the show rewards it
+  romantic_arc:
+  - value: slow-burn
+    role: primary
+    evidence: shawn and jules orbit each other for the majority of the run before finally landing
+  romance_dynamic:
+  - value: partners-to-lovers
+    role: primary
+    evidence: the romantic pair are also the case-solving partners

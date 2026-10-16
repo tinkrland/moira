@@ -102,6 +102,7 @@ def core_tags(**overrides):
         "lead_gender": [t("lead_gender", "female")],
         "lead_manner": [t("lead_manner", "charming")],
         "lead_flaw_treatment": [t("lead_flaw_treatment", "no-flaw-focus")],
+        "romantic_arc": [t("romantic_arc", "none")],
     }
     for axis, entries in overrides.items():
         tags[axis] = entries

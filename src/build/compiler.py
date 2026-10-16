@@ -128,7 +128,12 @@ def compile_db(works, vocab, db_path):
                     "insert or ignore into work_links (from_work, to_work, kind) values (?, ?, ?)",
                     (doc["id"], link["work"], link["kind"]),
                 )
-            for axis in axis_order:
+            # core axes first (axis order), then any optional axes present,
+            # alphabetically, so authored files round-trip byte-identically.
+            tag_axes = list(doc.get("tags", {}))
+            ordered_axes = [a for a in axis_order if a in tag_axes]
+            ordered_axes += sorted(set(tag_axes) - set(axis_order))
+            for axis in ordered_axes:
                 for n, tag in enumerate(doc.get("tags", {}).get(axis, [])):
                     con.execute(
                         "insert into work_traits (work_id, axis, value, role, evidence, ord)"

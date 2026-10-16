@@ -52,7 +52,8 @@ def test_database_tables_and_counts(db):
         # every layer 2 tag landed as an edge with evidence
         n_works = len({p.stem for p in works_dir.glob("*.yaml")})
         rows = con.execute("select count(*) from work_traits").fetchone()[0]
-        assert rows >= n_works * 13  # every work carries all 13 core axes
+        from src.build.works import core_axes
+        assert rows >= n_works * len(core_axes)  # every work carries every core axis
     finally:
         con.close()
 
