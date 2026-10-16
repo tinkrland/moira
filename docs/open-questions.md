@@ -28,3 +28,21 @@ unresolved decisions. agents must not resolve these on their own. add new ones h
     optional `links` list on a work file, entries `{work: <slug>, kind:
     adaptation_of|sequel_of|same_universe|remake_of}`, validated at compile
     time against the catalog. needs owner confirmation.
+
+22. (2026-10-16, owner concept notes) pacing as a candidate layer 2 axis:
+    slow burn, momentum-driven, episodic rhythm. not in the current vocab.
+    needs owner decision before any tagging relies on it.
+
+23. (2026-10-16, owner concept notes) romantic tension as its own signal
+    (slow burn will-they-won't-they, resolved early) rather than only
+    implicit in ensemble_shape. candidate for a sub-axis or a new axis.
+
+24. (2026-10-16, owner concept notes) mystery_mechanism refinement:
+    fair-play clueing (audience can solve ahead) vs reveal-driven (clues
+    withheld). cuts across whodunit/howdunnit. candidate vocabulary split.
+
+25. (2026-10-16, phase 3) recommend normalization interpretations, need
+    owner confirmation: normalized_support(t) divides by the max support
+    across tags; candidate scores normalize by the best candidate's raw
+    sum; compound affinity contribution uses the mean axis weight of its
+    all_of traits.
