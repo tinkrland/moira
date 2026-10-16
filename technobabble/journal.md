@@ -222,13 +222,3 @@ absent from your personal life. crucially: no persona is the real you
 with the others playing roles - they are all the real you. written into
 the registry comment, features, buildplan, readme.
 
-## 2026-10-16 - readme rewritten in the keeberia voice
-
-owner pointed at github.com/kqrla/keeberia as the style target: personal
-narrative ("basically me being tired of..."), the annoyance walked
-through step by step, so... why not?, the flows reframed as VIEWS of one
-object (personas/facts/passes/bridges/connectors), dense honest
-under-the-hood paragraphs, and a "what i want it to feel like" ending.
-facts unchanged - personas, passes, bridges, taint, the tree, honest
-[live] status, modality folded into the ending. nothing else moved.
-
