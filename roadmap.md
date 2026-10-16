@@ -16,7 +16,12 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 2.5 - owner session auth**: proposal made (passkeys + recovery
   code, recommended, vs supabase auth). awaiting the call. /authorize stays
   401 until it lands.
-- [ ] **phase 3 - connector hub**: the block model in the readme. build
+- [~] **phase 3 - connector hub**: the block model in the readme. **phase 3a
+  shipped (2026-10-16, commit d99bca8)**: hub, files block (drive/dropbox/
+  onedrive fixture-verified; mega honestly not built; live runs need oauth
+  app credentials), connector passes, sealed identities, untrusted tagging -
+  143-test suite green. still ahead: ingest skeleton (taste/lifestyle),
+  onedrive/drive/dropbox live verification, mega client. build
   order suggested: hub + files block (connected), taste ingest skeleton;
   ai-tools sub-blocks next; lifestyle/knowledge/utility after.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
