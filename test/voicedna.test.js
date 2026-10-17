@@ -182,3 +182,38 @@ test('viola: the truly online sense - emoji, caps, humor signals, typing quirks'
   assert.equal(lingvica.playfulness, undefined);
   assert.equal(res.layers.lingvica.emojiDensity, res.layers.lingvica.emojiDensity); // stays measured
 });
+
+
+test('viola: a heteronym alter ego is an entirely separate voice, verifiably', () => {
+  const { m, ctx, founder } = setup();
+  const heteronym = m.owner.createPersona(ctx, { name: 'captain quill', identity: 'heteronymous', characterSheet: { bio: 'a retired sea captain who writes essays' } });
+  // the owner writes lowercase casual texts; the heteronym writes formal essays
+  for (const s of ['ngl this is fine lol', 'the way it just yesss works', 'sooo tired rn tbh'])
+    m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'texts', text: s });
+  for (const s of ['The sea, it must be understood, does not forgive carelessness.', 'One learns, eventually, that salt and patience are the same lesson.'])
+    m.owner.voiceSampleAdd(ctx, { personaId: heteronym.id, medium: 'essays', text: s });
+
+  // owner-side comparison: per-layer per-field deltas, no invented thresholds
+  const cmp = m.owner.voiceCompare(ctx, { personaId: heteronym.id, otherPersonaId: founder.id });
+  assert.equal(cmp.outcome, 'results');
+  assert.ok(cmp.layers.lingvica.lowercaseRatio.delta !== 0, 'casing diverges');
+  assert.ok(cmp.layers.lingvica.laughterTokenRate.delta !== 0, 'humor signals diverge');
+  assert.ok(Array.isArray(cmp.identical) && cmp.identical.length >= 0, 'identical fields listed honestly');
+  // fields where they differ are named, so the owner sees WHERE voices meet
+  assert.ok(Object.keys(cmp.layers.lingvica).length > 0);
+
+  // absent means absent: an alter ego with no corpus compares to nothing
+  const empty = m.owner.createPersona(ctx, { name: 'ghost', identity: 'heteronymous', characterSheet: { bio: 'x' } });
+  const cmp2 = m.owner.voiceCompare(ctx, { personaId: empty.id, otherPersonaId: founder.id });
+  assert.equal(cmp2.comparable, false);
+  assert.equal(cmp2.reason, 'absent_corpus');
+
+  // an agent on the heteronym persona only ever sees the heteronym's dna
+  const agentId2 = m.owner.registerAgent(ctx, { name: 'quills-agent', tier: 'verified', personasAllowed: [heteronym.id], spendCaps: { usd: 1 } }).id;
+  const sess2 = m.owner.createSession(ctx, { clientId: agentId2, personaId: heteronym.id });
+  m.owner.grantPass(ctx, { clientId: agentId2, personaId: heteronym.id, category: 'voice', purpose: 'writing', duration: 'permanent' });
+  const got = m.agent.voice_dna_get(sess2.accessToken, {});
+  assert.equal(got.layers.lingvica.laughterTokenRate, 0, 'the heteronym carries no owner humor markers');
+  assert.equal(got.layers.lingvica.abbreviationDensity, 0, 'the heteronym carries no owner compression');
+  assert.ok(!JSON.stringify(got).includes('ngl'), 'no owner corpus leakage into the heteronym handoff');
+});

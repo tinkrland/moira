@@ -439,3 +439,13 @@ all counted, never scored. the contract now states the rule plainly:
 humor is a vibe; its countable shadow is what gets measured, and no
 field named after a vibe ever ships.
 
+## 2026-10-17 - viola: heteronym separation is verifiable
+
+owner mapped the online-sense decomposition into the heteronym case: a
+whole different alter ego means an entirely separate voice. separation
+was already structural (per-persona sealed corpus); now the owner can
+verify it: voiceCompare reports per-layer per-field deltas between two
+personas' dna, lists identical fields honestly, refuses to compare when
+a corpus is absent, and invents no thresholds. suite: 211 tests, 199
+pass, 12 gated.
+

@@ -69,6 +69,25 @@ never scored: viola will never emit a field called "funny" or
 "playfulness", and any future field must point at a thing stylometry or
 this online-marker set already treats as countable.
 
+## heteronyms: entirely separate, verifiably
+
+this is where viola maps into moira's heteronymous personas. an alter ego
+that is a whole different person must have a whole different voice, and in
+viola that separation is structural: every persona's corpus is sealed
+under its own key, so a heteronym's dna is measured only from the
+heteronym's own writing. the owner's lowercase texts never touch the sea
+captain's essays, at rest or in measurement.
+
+structure alone is trust; the owner can also VERIFY it: voiceCompare
+(owner-side) runs both personas' measurements side by side and reports
+per-layer, per-field deltas: which fields are identical (emoji density
+zero on both, for instance) and which diverge (laughter tokens,
+casing). deltas only, no invented thresholds: viola reports where two
+voices meet, it never rules whether they are "distinct enough". an alter
+ego with no corpus compares to nothing (absent means absent, no
+fallback to the owner's voice). an agent holding a voice pass for the
+heteronym receives only the heteronym's layers.
+
 ## what the yaptele research wing changes here (critique, stylometry, platform-shift)
 
 the owner's reference docs land three rules on viola, after dropping the

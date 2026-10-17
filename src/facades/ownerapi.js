@@ -166,6 +166,16 @@ export class OwnerApi {
     return this.gw.voicedna.quirkList(personaId);
   }
 
+  // owner-side heteronym separation check: per-layer deltas between two
+  // personas' voice dna. absent corpora compare to nothing (no fallback).
+  voiceCompare(ctx, { personaId, otherPersonaId }) {
+    this._require(ctx);
+    if (!personaId || !otherPersonaId) return { outcome: OUTCOME.DECLINED, reason: 'two_personas_required' };
+    const res = this.gw.voicedna.compare(personaId, otherPersonaId);
+    if (res.outcome === OUTCOME.RESULTS) this.gw.receipts.write({ actor: 'owner', personaId, op: 'read', reason: 'voice_compared' });
+    return res;
+  }
+
   voiceMeasure(ctx, { personaId, mediums }) {
     this._require(ctx);
     const res = this.gw.voicedna.measure(personaId, { mediums });

@@ -147,6 +147,37 @@ export class VoiceDNAService {
     return { outcome: OUTCOME.RESULTS, removed: hit.quirk };
   }
 
+  // heteronym separation (owner direction): an alter ego's voice is an
+  // entirely separate corpus by construction; compare makes the separation
+  // VERIFIABLE per layer instead of assumed. owner-side only, deltas only:
+  // viola reports where two voices meet, it never rules on "distinct enough".
+  compare(personaId, otherPersonaId) {
+    const a = this.measure(personaId);
+    const b = this.measure(otherPersonaId);
+    if (a.outcome !== OUTCOME.RESULTS) return a;
+    if (b.outcome !== OUTCOME.RESULTS) return b;
+    if (!a.present || !b.present) {
+      return { outcome: OUTCOME.RESULTS, comparable: false, reason: 'absent_corpus' }; // absent means absent
+    }
+    const layers = {};
+    const identical = [];
+    for (const layer of Object.keys(a.layers)) {
+      layers[layer] = {};
+      for (const field of Object.keys(a.layers[layer])) {
+        const va = a.layers[layer][field];
+        const vb = b.layers[layer][field];
+        if (typeof va === 'number' && typeof vb === 'number') {
+          const delta = round3(vb - va);
+          layers[layer][field] = { a: va, b: vb, delta };
+          if (delta === 0) identical.push(`${layer}.${field}`);
+        } else {
+          layers[layer][field] = { a: va, b: vb };
+        }
+      }
+    }
+    return { outcome: OUTCOME.RESULTS, comparable: true, layers, identical, digests: { a: a.digest, b: b.digest } };
+  }
+
   quirkList(personaId) {
     const quirks = this.store.list('voiceQuirks', (e) => e.personaId === personaId)
       .map((e) => e.quirk).sort((a, b) => a.localeCompare(b));
