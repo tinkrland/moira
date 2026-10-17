@@ -5,6 +5,16 @@ lives on hers: a decoupled component with its own line of development,
 until it starts. evie is opinionated about what you like; viola is
 opinionated about how you sound.
 
+## decoupled, all three ways
+
+main, evie, and viola are mutually decoupled lines: main never imports
+evie or viola, evie never imports viola, and no branch merges into
+another without the owner's call. main knows viola only as a pointer
+(roadmap + journal); this branch's history is its own; contract docs may
+reference the other lines for contrast, but nothing in one line ever
+depends on code in another. if viola ever starts, it merges into main
+the way the owner directs, not by drift.
+
 ## the question viola answers
 
 what makes the unique dna of a persona's voice in a cyber context: speech
