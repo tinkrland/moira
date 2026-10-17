@@ -406,3 +406,11 @@ registers/guidelines/aiTells/redLines stand; a v1 layer-aware profile
 schema (lingvist/lexica/lingvica + delta-audited owner edits) is the
 natural next build if the owner wants it.
 
+## 2026-10-17 - viola branch started
+
+voice work moved to its own branch, `viola`, mirroring evie's shape: the
+deterministic vault surface (sealed corpus, measurement, quirks,
+pass-gated handoff) is committed there with its contract
+(technobabble/viola.md). main keeps voiceProfile v0 and the voice design
+doc; viola carries the engine until it starts.
+

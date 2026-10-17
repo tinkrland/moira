@@ -46,6 +46,16 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## viola
+
+the voice engine is **viola** - and like evie it is deliberately decoupled
+and lives on its own branch (`viola`) until it starts. its question is the
+unique dna of a persona's voice in a cyber context (style, cadence,
+prosody's measurable shadow, typing quirks), and its answer is agent
+CONTEXT, not training: sealed corpus, deterministic three-layer
+measurement, owner-declared quirks, pass-gated handoff. contract:
+technobabble/viola.md on the branch.
+
 ## evie
 
 the taste engine is **evie** - and it is deliberately decoupled. the policy
