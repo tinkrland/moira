@@ -157,3 +157,28 @@ test('viola: per-medium measurement keeps the shift visible instead of averaging
   assert.equal(thin.perMedium.twitter.lowSample, true, 'a thin corpus is marked lowSample');
   assert.equal(thin.perMedium.linkedin.lowSample, undefined, 'a full corpus is not');
 });
+
+
+test('viola: the truly online sense - emoji, caps, humor signals, typing quirks', () => {
+  const { m, ctx, founder } = setup();
+  const online = [
+    "not me restarting the server at 3am AGAIN 💀",
+    "tbh the deploy went SO BAD lmaooo i am crying",
+    "the way it just... yesss. sooo good. asdfghjkl ngl",
+    "ngl this is fine. ok maybe it is not fine lol"
+  ];
+  for (const s of online) m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'texts', text: s });
+  const res = m.owner.voiceMeasure(ctx, { personaId: founder.id });
+  assert.equal(res.outcome, 'results');
+  const lingvica = res.layers.lingvica;
+  // humor is a vibe; its countable shadow is laughter tokens and reaction emoji
+  assert.ok(lingvica.laughterTokenRate > 0, 'laughter tokens counted');
+  assert.ok(lingvica.capsEmphasisRate > 0, 'caps emphasis counted');
+  assert.ok(lingvica.abbreviationDensity > 0, 'compression (tbh/ngl) counted');
+  assert.ok(lingvica.doubledLetterRate > 0, 'typing quirks (sooo, yesss) counted');
+  assert.ok(lingvica.keysmashes >= 1, 'keysmashes counted');
+  // viola counts markers, it never assigns vibe scores
+  assert.equal(lingvica.humor, undefined);
+  assert.equal(lingvica.playfulness, undefined);
+  assert.equal(res.layers.lingvica.emojiDensity, res.layers.lingvica.emojiDensity); // stays measured
+});

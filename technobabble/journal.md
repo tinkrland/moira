@@ -430,3 +430,12 @@ hands agents per-medium profiles so a channel agent holds its channel's
 register. contract updated with the three rules + honest limits. suite:
 209 tests, 197 pass, 12 gated.
 
+## 2026-10-17 - viola: the truly online sense
+
+owner's framing landed: viola decomposes a voice in the online sense
+(emoji, caps, humor, quirks). lingvica gained capsEmphasisRate,
+laughterTokenRate, abbreviationDensity, doubledLetterRate, keysmashes -
+all counted, never scored. the contract now states the rule plainly:
+humor is a vibe; its countable shadow is what gets measured, and no
+field named after a vibe ever ships.
+

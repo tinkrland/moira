@@ -54,6 +54,21 @@ from.
 5. **sealed corpus, open profile.** raw samples live in the vault; layers
    and quirks are the shareable shape.
 
+## the truly online sense
+
+what a "voice" means online is emoji use, capitalisation, humor, typing
+quirks, compression: the register people actually recognise as *you* in a
+chat window. viola decomposes exactly that. but humor is a vibe word, and
+vibes are not measurable: what is measurable is humor's countable shadow,
+so that is what viola records. lingvica now counts: caps emphasis (fully
+capitalised words), laughter tokens (lol, lmao, 💀, crying, per word),
+abbreviation density (tbh, ngl, rn: compression as register), doubled
+letters (sooo, yesss: typing quirks), keysmashes, on top of emoji density,
+punctuation-as-tone rates, lowercase ratio and cadence spread. counted,
+never scored: viola will never emit a field called "funny" or
+"playfulness", and any future field must point at a thing stylometry or
+this online-marker set already treats as countable.
+
 ## what the yaptele research wing changes here (critique, stylometry, platform-shift)
 
 the owner's reference docs land three rules on viola, after dropping the

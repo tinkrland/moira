@@ -23,6 +23,13 @@ const FILLERS = ['like', 'um', 'uh', 'you know', 'i mean', 'tbh', 'kind of', 'so
 // classic style signal - carrying grammar, not topic. counted, not judged.
 const FUNCTION_WORDS = new Set(['the','a','an','and','or','but','if','of','at','by','for','with','to','in','on','is','was','are','were','be','been','that','this','these','those','it','as','from','has','have','had','not','no','so','we','you','they','he','she','i','my','your','their','our','his','her','its','will','would','can','could','do','does','did','than','then','there','when','which','while','who','whom','whose','what','how','why','all','any','both','each','few','more','most','other','some','such','only','own','same','too','very','just','because','until','about','against','between','into','through','during','before','after','above','below','up','down','out','off','over','under','again','further']);
 const HEDGES = ['maybe', 'probably', 'i think', 'might', 'seems', 'i guess'];
+// the truly online sense (owner direction 2026-10-17): emoji use, caps,
+// humor signals, compression, typing quirks. all COUNTED, never scored:
+// viola never says "funny", it counts what humor leaves behind.
+const LAUGHTER = ['lol', 'lmao', 'lmfaooo', 'lmfao', 'haha', 'hehe', 'kek', 'rofl', 'i am crying', "i'm crying", 'crying', 'dead', '💀', '😭'];
+const ABBREVIATIONS = ['tbh', 'ngl', 'fr', 'rn', 'imo', 'idk', 'bc', 'pls', 'u', 'ur', 'thru', 'tho', 'omg', 'wtf', 'stfu', 'brb', 'btw', 'smh', 'af'];
+const KEYSMASH = /^[a-z]([a-z])\1?\1?[hjklasdf]{2,}[a-z]*$/i;
+
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F02F}]/gu;
 const SCRIPTS = {
   latin: /[A-Za-z]/,
@@ -270,7 +277,13 @@ export class VoiceDNAService {
       questionRate: round3(question / Math.max(sentences.length, 1)),
       ellipsisRate: round3(ellipsis / Math.max(sentences.length, 1)),
       lowercaseRatio: round3(letters.length ? (letters.length - upper.length) / letters.length : 1),
-      emojiDensity: round3(emojiCount / Math.max(ws.length, 1))
+      emojiDensity: round3(emojiCount / Math.max(ws.length, 1)),
+      // the online markers (per 100 words unless noted)
+      capsEmphasisRate: round3(ws.filter((w) => /^[A-Z]{2,}$/.test(w.replace(/[^A-Za-z]/g, '')) && w !== 'I').length / Math.max(ws.length, 1) * 100 / 100),
+      laughterTokenRate: round3(ws.filter((w) => LAUGHTER.includes(w.toLowerCase().replace(/[^\p{L}\p{Emoji_Presentation}]/gu, '')) || LAUGHTER.includes(w)).length / Math.max(ws.length, 1)),
+      abbreviationDensity: round3(ws.filter((w) => ABBREVIATIONS.includes(w.toLowerCase().replace(/[^a-z]/g, ''))).length / Math.max(ws.length, 1)),
+      doubledLetterRate: round3(ws.filter((w) => /(.)\1{2,}/i.test(w)).length / Math.max(ws.length, 1)),
+      keysmashes: ws.filter((w) => KEYSMASH.test(w)).length
     };
     return { lingvist, lexica, lingvica };
   }
