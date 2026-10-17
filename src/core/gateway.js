@@ -27,6 +27,7 @@ import { HandoffService } from './handoffs.js';
 import { LedgerService } from './ledger.js';
 import { RouterService } from './router.js';
 import { LinkageService } from './linkage.js';
+import { VoiceDNAService } from './voicedna.js';
 import { StackService } from './stack.js';
 import { AIToolsService } from './aitools.js';
 import { SetsService } from './sets.js';
@@ -88,6 +89,7 @@ export class Moira {
     this.packs = new PackService({ store, personas: this.personas, facts: this.facts, receipts: this.receipts, keys: this.keys, now });
     this.ledger = new LedgerService({ store, personas: this.personas, keys: this.keys, receipts: this.receipts, now });
     this.linkage = new LinkageService({ store, personas: this.personas, ledger: this.ledger, keys: this.keys, now });
+    this.voicedna = new VoiceDNAService({ store, personas: this.personas, keys: this.keys, receipts: this.receipts, now });
     this.stack = new StackService({ store, personas: this.personas, receipts: this.receipts, now });
     this.aitools = new AIToolsService({ store, personas: this.personas, receipts: this.receipts, now });
     this.sets = new SetsService({ store, personas: this.personas });

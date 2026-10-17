@@ -101,6 +101,7 @@ export const RECEIPT_OP = {
   PROMOTE: 'promote',
   DEMOTE: 'demote',
   LINKAGE: 'linkage',
+  VOICE_SAMPLE_ADDED: 'voice_sample_added',
   PERSONA_FREEZE: 'persona_freeze',
   PERSONA_THAW: 'persona_thaw'
 };

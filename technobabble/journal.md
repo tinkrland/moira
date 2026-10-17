@@ -406,3 +406,15 @@ registers/guidelines/aiTells/redLines stand; a v1 layer-aware profile
 schema (lingvist/lexica/lingvica + delta-audited owner edits) is the
 natural next build if the owner wants it.
 
+## 2026-10-17 - viola: the voice branch
+
+the voice engine is viola, on its own branch the way evie is: decoupled,
+with a contract (technobabble/viola.md). owner's direction settled the
+model question mid-build: NOT training, but defining the context for the
+agent. what shipped on this branch: sealed per-persona corpus
+(voiceSamples), deterministic three-layer measurement (lingvist/lexica/
+lingvica, counted fields per regent's glossary, sha256 digest), owner-
+declared quirks, pass-gated voice_dna_get handing agents layers + quirks
+and never the corpus. absent means absent. suite: 208 tests, 196 pass,
+12 gated.
+

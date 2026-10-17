@@ -333,6 +333,25 @@ export class AgentApi {
     return { outcome: OUTCOME.RESULTS, jobs };
   }
 
+  // the measured voice profile as agent CONTEXT (owner direction: not a
+  // training set). layers + quirks only: the corpus never leaves the vault.
+  voice_dna_get(accessToken, {}) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    const pass = this.gw.passes.verify({ clientId: ctx.clientId, personaId: ctx.persona.id, category: VOICE_CATEGORY, purpose: 'writing' });
+    if (!pass) return { outcome: OUTCOME.APPROVAL_REQUIRED, reason: 'no_voice_pass' };
+    const res = this.gw.voicedna.measure(ctx.persona.id);
+    if (res.outcome !== OUTCOME.RESULTS) return res;
+    return {
+      outcome: OUTCOME.RESULTS,
+      present: res.present,
+      layers: res.layers,
+      quirks: res.quirks,
+      digest: res.digest,
+      registerByMedium: res.registerByMedium
+    };
+  }
+
   // --- voice tools (7.5) ----------------------------------------------------------
 
   voice_get(accessToken, { register = null }) {

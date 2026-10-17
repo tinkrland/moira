@@ -138,6 +138,43 @@ export class OwnerApi {
     return this.gw.ledger.add(personaId, accountSpec);
   }
 
+  // voice DNA (owner direction 2026-10-17): the persona's unique voice as
+  // agent CONTEXT, not a training set. corpus sealed, measurements
+  // deterministic, quirks owner-declared.
+  voiceSampleAdd(ctx, { personaId, medium, text, source, note }) {
+    this._require(ctx);
+    return this.gw.voicedna.sampleAdd(personaId, { medium, text, source, note });
+  }
+
+  voiceSampleList(ctx, { personaId }) {
+    this._require(ctx);
+    return this.gw.voicedna.sampleList(personaId);
+  }
+
+  voiceQuirkAdd(ctx, { personaId, quirk }) {
+    this._require(ctx);
+    return this.gw.voicedna.quirkAdd(personaId, { quirk });
+  }
+
+  voiceQuirkRemove(ctx, { personaId, quirk }) {
+    this._require(ctx);
+    return this.gw.voicedna.quirkRemove(personaId, { quirk });
+  }
+
+  voiceQuirkList(ctx, { personaId }) {
+    this._require(ctx);
+    return this.gw.voicedna.quirkList(personaId);
+  }
+
+  voiceMeasure(ctx, { personaId, mediums }) {
+    this._require(ctx);
+    const res = this.gw.voicedna.measure(personaId, { mediums });
+    if (res.outcome === OUTCOME.RESULTS) {
+      this.gw.receipts.write({ actor: 'owner', personaId, op: 'read', reason: 'voice_measured' });
+    }
+    return res;
+  }
+
   killSwitch(ctx, personaId) {
     this._require(ctx);
     const frozen = this.gw.router.killSwitch(personaId);
