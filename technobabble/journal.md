@@ -418,3 +418,15 @@ declared quirks, pass-gated voice_dna_get handing agents layers + quirks
 and never the corpus. absent means absent. suite: 208 tests, 196 pass,
 12 gated.
 
+## 2026-10-17 - viola: per-medium measurement, stylometry-validated fields
+
+owner's reference docs (yaptele critique1, stylometry, platform-shift)
+landed after the spoken/audio half was set aside. shipped: measure() now
+returns perMedium (independent layers per tagged medium, lowSample flag
+under three samples) and crossMedium (pairwise per-field deltas between
+mediums, the shift as signal not noise), lexica gains functionWordRate
+(stylometry's workhorse, style orthogonal to topic), and voice_dna_get
+hands agents per-medium profiles so a channel agent holds its channel's
+register. contract updated with the three rules + honest limits. suite:
+209 tests, 197 pass, 12 gated.
+

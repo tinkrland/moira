@@ -54,6 +54,37 @@ from.
 5. **sealed corpus, open profile.** raw samples live in the vault; layers
    and quirks are the shareable shape.
 
+## what the yaptele research wing changes here (critique, stylometry, platform-shift)
+
+the owner's reference docs land three rules on viola, after dropping the
+spoken/audio half (acoustic cloning is not moira's problem; text is):
+
+- **a voice is not one static thing** (critique): viola measures per
+  medium and reports the shift between mediums as first-class signal,
+  never averaged into one flattened profile. a texting register, a slack
+  register and a twitter register for the same persona are separate
+  measurements. a tuning that cannot move one parameter without dragging
+  others is not controllable, so every delta is per field.
+- **stylometry is the feature checklist** (stylometry.md): function words
+  are the field's workhorse (grammar, not topic: style stays orthogonal
+  to topic and viola never claims topics), sentence-length distribution
+  and punctuation habits are precedented, and code-switch rate is a
+  validated stylometric feature in published authorship work, not a
+  novelty. a proposed viola field maps to something stylometry already
+  measures or it does not ship.
+- **fragmentation is signal** (platform-shift): each medium-persona
+  combination is its own sample set. thin corpora (fewer than three
+  samples) are flagged lowSample rather than silently confident, absent
+  mediums stay absent, and the open question (how many medium-persona
+  combos are worth tracking) is answered operationally: mediums are free
+  tags, measurement follows the tags, nothing is pre-merged.
+
+honest limits, stated rather than papered over: no prosody ground truth
+exists for text (lingvica measures typing rhythm's shadow: punctuation,
+cadence spread, casing, emoji), no channel-shift correction, and no
+authorship-attribution claims. viola's measurements define context for
+agents; they do not certify identity.
+
 ## later, deliberately not built yet
 
 - connector-fed corpus: scraping a persona's own public feed is a connector
