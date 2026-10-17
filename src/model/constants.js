@@ -163,6 +163,7 @@ export const STYLOMETRY_ORDER = ['high', 'low', 'none'];
 
 export const VOICE_CATEGORY = 'voice';
 export const STACK_CATEGORY = 'stack';
+export const AI_CATEGORY = 'ai';
 export const WORKSPACE_CATEGORY = 'workspace';
 export const PREFERENCE_CATEGORIES = ['preferences', 'taste'];
 

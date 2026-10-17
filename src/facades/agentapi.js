@@ -6,7 +6,7 @@
 // if a future tool needs owner authority it does not belong in this class.
 
 import {
-  OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, PASS_DURATION, PERSONA_STATUS, STACK_CATEGORY
+  OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, PASS_DURATION, PERSONA_STATUS, STACK_CATEGORY, AI_CATEGORY
 } from '../model/constants.js';
 import { nameToRank } from '../core/policy.js';
 import { randomId } from '../util/crypto.js';
@@ -311,6 +311,20 @@ export class AgentApi {
     if (res.outcome !== OUTCOME.RESULTS) return res;
     this.gw.receipts.write({ actor: ctx.clientId, personaId: ctx.persona.id, op: 'read', reason: 'stack' });
     return { outcome: OUTCOME.RESULTS, entries: res.entries };
+  }
+
+  // the persona's declared ai tools, pass-gated: job -> tools, structured
+  // on purpose - agents get exactly what the owner stated, never a guess
+  // about which scraper or model the hat actually uses.
+  ai_get(accessToken, {}) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    const pass = this.gw.passes.verify({ clientId: ctx.clientId, personaId: ctx.persona.id, category: AI_CATEGORY, purpose: 'context' });
+    if (!pass) return { outcome: OUTCOME.APPROVAL_REQUIRED, reason: 'no_ai_tools_pass' };
+    const res = this.gw.aitools.list(ctx.persona.id);
+    if (res.outcome !== OUTCOME.RESULTS) return res;
+    this.gw.receipts.write({ actor: ctx.clientId, personaId: ctx.persona.id, op: 'read', reason: 'ai_tools' });
+    return { outcome: OUTCOME.RESULTS, jobs: res.jobs };
   }
 
   // --- voice tools (7.5) ----------------------------------------------------------

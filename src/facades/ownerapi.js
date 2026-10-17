@@ -7,7 +7,7 @@
 // way to reach these methods.
 
 import { OwnerContext } from './ownercontext.js';
-import { OUTCOME, VOICE_CATEGORY, STACK_CATEGORY } from '../model/constants.js';
+import { OUTCOME, VOICE_CATEGORY, STACK_CATEGORY, AI_CATEGORY } from '../model/constants.js';
 import { randomId } from '../util/crypto.js';
 
 export class OwnerApi {
@@ -413,6 +413,25 @@ export class OwnerApi {
   stackList(ctx, { personaId }) {
     this._require(ctx);
     return this.gw.stack.list(personaId);
+  }
+
+  // ai tool declarations (anti-hallucination, job-first): which tools this
+  // persona uses for which job (for scraping firecrawl and querit, for
+  // search tavily). per-persona, owner-stated, structured; the job is
+  // required, competing providers accumulate under one job.
+  aiAdd(ctx, { personaId, job, tool, uses, tools }) {
+    this._require(ctx);
+    return this.gw.aitools.add(personaId, { job, tool, uses, tools });
+  }
+
+  aiRemove(ctx, { personaId, job, tool = null, uses = null }) {
+    this._require(ctx);
+    return this.gw.aitools.remove(personaId, { job, tool, uses });
+  }
+
+  aiList(ctx, { personaId }) {
+    this._require(ctx);
+    return this.gw.aitools.list(personaId);
   }
 
   // v1 decoupling monitor (section 22.4): pure owner-side function over keyed

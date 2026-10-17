@@ -31,6 +31,7 @@ const HELP = `moira cli - owner surface
   persona create --name <n> --identity <linked|pseudonymous|heteronymous> [--sheet <json>]
   persona freeze --id <personaId>   (put on ice instead of deleting; thaw brings it back)
   stack add --persona <id> --tool <supabase> --uses <auth,postgres,storage>   (stack context: tool + its uses)
+  ai add --persona <id> --job <scraping> --tools <firecrawl,querit,tavily>   (ai tools by job)
   fact add --persona <personaId> --content <text> --category <c>
   core list [--category <c>]
   fact promote --id <factId>
@@ -129,6 +130,19 @@ function run() {
       else if (sub === 'remove') res = m.owner.stackRemove(ctx, { personaId: flags.persona, tool: flags.tool, uses: flags.uses ? String(flags.uses).split(',').filter(Boolean) : null });
       else if (sub === 'list') res = m.owner.stackList(ctx, { personaId: flags.persona });
       else return fail('unknown stack subcommand');
+      break;
+    }
+    case 'ai': {
+      if (sub === 'add') {
+        const spec = { personaId: flags.persona, job: flags.job, tool: flags.tool, uses: String(flags.uses ?? '').split(',').filter(Boolean) };
+        if (flags.tools) {
+          spec.tools = String(flags.tools).split(',').filter(Boolean).map((tool) => ({ tool }));
+          delete spec.tool; delete spec.uses;
+        }
+        res = m.owner.aiAdd(ctx, spec);
+      } else if (sub === 'remove') res = m.owner.aiRemove(ctx, { personaId: flags.persona, job: flags.job, tool: flags.tool ?? null, uses: flags.uses ? String(flags.uses).split(',').filter(Boolean) : null });
+      else if (sub === 'list') res = m.owner.aiList(ctx, { personaId: flags.persona });
+      else return fail('unknown ai subcommand');
       break;
     }
     case 'core': {

@@ -215,6 +215,10 @@ auth and postgres without implying storage), or category by category
 a pass and get exactly the structured declaration, never an inference and
 never another persona's stack.
 
+ai tools get the same treatment, job-first: for scraping you may use
+firecrawl, brightdata, querit, tavily, and an agent should never guess
+which. declared per persona, read through a pass.
+
 ## modality
 
 moira is designed to be reached the way you actually live:

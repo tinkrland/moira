@@ -354,3 +354,17 @@ matches: uses may be empty (a declared tool with no uses yet implies
 nothing), and an empty re-add is a quiet no-op that never wipes existing
 uses. suite: 190 tests, 178 pass, 12 gated.
 
+## 2026-10-17 - ai tool declarations (job-first, like the stack)
+
+owner: build the same anti-hallucination surface for ai tools, job-first.
+src/core/aitools.js: per-persona ai tool declarations where the JOB is the
+required primary axis (mirroring the connector registry's job shape):
+{ job, tools: [{ tool, uses }] } batches (all-or-nothing) or single
+{ job, tool, uses } adds. competing providers under one job accumulate
+(firecrawl/brightdata/querit/tavily is a valid full house), uses union on
+re-declare, the same tool may serve several jobs (tavily under scraping
+and search), removal takes a use, a tool, or a whole job. agents read via
+ai_get pass-gated (new category 'ai'), structured { job, tools }
+grouping, receipted, per-persona isolation. frozen personas decline.
+cli: ai add/remove/list. suite: 198 tests, 186 pass, 12 gated.
+

@@ -26,6 +26,12 @@ branch. nothing here pretends.
   wipe) or category-first (define `frontend` with its corresponding
   tools in one all-or-nothing call; the recorded category is never
   dropped by a later add through either flow)
+- ai tool declarations, the same treatment job-first: which tools a
+  persona uses for which job (for scraping firecrawl, brightdata,
+  querit and tavily can all accumulate under one job). job is required,
+  competing providers coexist, uses union, batches are all-or-nothing,
+  agents read via `ai_get` pass-gated (category `ai`), structured and
+  receipted
 - moment-of-risk linkage warnings (spec 22.4 v1 hook): adding an
   account whose payer would link decoupled personas returns the
   finding BEFORE the account exists; declared pairs (permanent) and
