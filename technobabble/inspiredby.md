@@ -3,6 +3,18 @@
 nothing here is built in a vacuum. this is what moira draws from, and what
 it deliberately does differently.
 
+## the measured voice
+
+the answer to "what is a voice" comes from the yaptel ecosystem
+(yaptele, the measurement side; regent, the delivery side): a voice is
+three independently-measured layers (languages, words, delivery), not a
+paragraph of adjectives, with per-medium registers, delta-scoped tuning,
+absent-not-invented for unsampled media, and a mid-conversation disclosure
+rule. moira's divergence: yaptele measures public figures' speech as
+research; moira's profiles are the owner's own hats, sealed per persona,
+pass-gated, and the cross-contamination detector exists to keep hats from
+sounding like each other, not to clone anyone. see voice.md.
+
 ## the connector-block pattern
 
 the idea of organizing a personal agent's world into blocks of connected

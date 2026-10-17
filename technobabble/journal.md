@@ -385,3 +385,24 @@ actions; removal untags, entries survive. batch ai adds take
 batch-level sets, per-entry sets, or both. cli: sets list/remove, --sets
 flag on stack/ai add. suite: 204 tests, 192 pass, 12 gated.
 
+## 2026-10-17 - voice: the open question answered (yaptel + regent)
+
+owner pointed at yaptel/yaptel and kqrla/regent as the reference for what
+constitutes a persona's "voice" and how it stays separate. written into
+technobabble/voice.md: three independently-measured layers (lingvist:
+languages and code-switching; lexica: vocabulary, fillers, hedges, slang;
+lingvica: per-medium formality, scored warmth/sarcasm/playfulness/
+confidence, punctuation-tone, emoji density), the delta rule (tuning moves
+one layer and reports which, or it is guessing), absent-not-invented for
+unsampled media, and the honesty rule (disclosure mid-conversation, which
+moira already enforces structurally via red lines and heteronym disclosure
+modes). isolation becomes measurable per layer: pseudonymous
+deliberatelyDistinct turns into a per-layer distance from the owner, and
+the heteronym cross-contamination detector can say WHICH layer leaked
+("vocabulary drifted toward the owner; canon and tone are clean").
+regent supplies the delivery half: a profile is a handoff object and a
+persona must not forget itself between channels. no code changes: v0
+registers/guidelines/aiTells/redLines stand; a v1 layer-aware profile
+schema (lingvist/lexica/lingvica + delta-audited owner edits) is the
+natural next build if the owner wants it.
+
