@@ -368,3 +368,20 @@ ai_get pass-gated (new category 'ai'), structured { job, tools }
 grouping, receipted, per-persona isolation. frozen personas decline.
 cli: ai add/remove/list. suite: 198 tests, 186 pass, 12 gated.
 
+## 2026-10-17 - context sets: connection-time set choice
+
+owner clarification: declarations are context broadly, not
+project-specific, organized in named SETS; one persona has several, and
+at connection time the owner picks which set to share with which agent.
+src/core/sets.js: sets are implicit (a set exists because entries
+reference it; first declaration creates it), names normalize (trim,
+case-insensitive match, first-seen display form), and one set spans
+stack and ai entries (work = supabase + firecrawl). entries carry
+sets[] that unions across adds; grantPass gained a sets scope; the
+stack_get/ai_get read paths filter entries by the PASS's sets (a
+scoped pass exposes exactly its sets, setless entries excluded; an
+unscoped pass keeps the whole persona context). setList/setRemove owner
+actions; removal untags, entries survive. batch ai adds take
+batch-level sets, per-entry sets, or both. cli: sets list/remove, --sets
+flag on stack/ai add. suite: 204 tests, 192 pass, 12 gated.
+

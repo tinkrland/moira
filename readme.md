@@ -219,6 +219,12 @@ ai tools get the same treatment, job-first: for scraping you may use
 firecrawl, brightdata, querit, tavily, and an agent should never guess
 which. declared per persona, read through a pass.
 
+and declarations are context broadly, not project files: a persona
+groups them into named sets (work, side projects, consulting), and at
+connection time you choose which set this particular agent gets. a
+set-scoped pass exposes exactly that slice; an unscoped one still means
+the whole hat.
+
 ## modality
 
 moira is designed to be reached the way you actually live:

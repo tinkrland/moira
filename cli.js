@@ -32,6 +32,7 @@ const HELP = `moira cli - owner surface
   persona freeze --id <personaId>   (put on ice instead of deleting; thaw brings it back)
   stack add --persona <id> --tool <supabase> --uses <auth,postgres,storage>   (stack context: tool + its uses)
   ai add --persona <id> --job <scraping> --tools <firecrawl,querit,tavily>   (ai tools by job)
+  sets list --persona <id> | sets remove --persona <id> --name <work>   (context sets; --sets flag on stack/ai add)
   fact add --persona <personaId> --content <text> --category <c>
   core list [--category <c>]
   fact promote --id <factId>
@@ -118,7 +119,7 @@ function run() {
     }
     case 'stack': {
       if (sub === 'add') {
-        const spec = { personaId: flags.persona, tool: flags.tool, uses: String(flags.uses ?? '').split(',').filter(Boolean) };
+        const spec = { personaId: flags.persona, tool: flags.tool, uses: String(flags.uses ?? '').split(',').filter(Boolean), sets: flags.sets ? String(flags.sets).split(',').filter(Boolean) : undefined };
         if (flags.category) {
           // category-first: --category frontend --tools react,tailwindcss
           spec.category = flags.category;
@@ -134,7 +135,7 @@ function run() {
     }
     case 'ai': {
       if (sub === 'add') {
-        const spec = { personaId: flags.persona, job: flags.job, tool: flags.tool, uses: String(flags.uses ?? '').split(',').filter(Boolean) };
+        const spec = { personaId: flags.persona, job: flags.job, tool: flags.tool, uses: String(flags.uses ?? '').split(',').filter(Boolean), sets: flags.sets ? String(flags.sets).split(',').filter(Boolean) : undefined };
         if (flags.tools) {
           spec.tools = String(flags.tools).split(',').filter(Boolean).map((tool) => ({ tool }));
           delete spec.tool; delete spec.uses;
@@ -143,6 +144,12 @@ function run() {
       } else if (sub === 'remove') res = m.owner.aiRemove(ctx, { personaId: flags.persona, job: flags.job, tool: flags.tool ?? null, uses: flags.uses ? String(flags.uses).split(',').filter(Boolean) : null });
       else if (sub === 'list') res = m.owner.aiList(ctx, { personaId: flags.persona });
       else return fail('unknown ai subcommand');
+      break;
+    }
+    case 'sets': {
+      if (sub === 'list') res = m.owner.setList(ctx, { personaId: flags.persona });
+      else if (sub === 'remove') res = m.owner.setRemove(ctx, { personaId: flags.persona, name: flags.name });
+      else return fail('unknown sets subcommand');
       break;
     }
     case 'core': {

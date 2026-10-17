@@ -8,6 +8,7 @@
 import {
   OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, PASS_DURATION, PERSONA_STATUS, STACK_CATEGORY, AI_CATEGORY
 } from '../model/constants.js';
+import { entriesForPass } from '../core/sets.js';
 import { nameToRank } from '../core/policy.js';
 import { randomId } from '../util/crypto.js';
 
@@ -309,8 +310,9 @@ export class AgentApi {
     if (!pass) return { outcome: OUTCOME.APPROVAL_REQUIRED, reason: 'no_stack_pass' };
     const res = this.gw.stack.list(ctx.persona.id);
     if (res.outcome !== OUTCOME.RESULTS) return res;
+    const entries = entriesForPass(res.entries, pass); // connection-time set choice
     this.gw.receipts.write({ actor: ctx.clientId, personaId: ctx.persona.id, op: 'read', reason: 'stack' });
-    return { outcome: OUTCOME.RESULTS, entries: res.entries };
+    return { outcome: OUTCOME.RESULTS, entries };
   }
 
   // the persona's declared ai tools, pass-gated: job -> tools, structured
@@ -323,8 +325,12 @@ export class AgentApi {
     if (!pass) return { outcome: OUTCOME.APPROVAL_REQUIRED, reason: 'no_ai_tools_pass' };
     const res = this.gw.aitools.list(ctx.persona.id);
     if (res.outcome !== OUTCOME.RESULTS) return res;
+    // the set choice is on the pass: filter tools inside each job
+    const jobs = res.jobs
+      .map((j) => ({ ...j, tools: entriesForPass(j.tools, pass) }))
+      .filter((j) => j.tools.length > 0);
     this.gw.receipts.write({ actor: ctx.clientId, personaId: ctx.persona.id, op: 'read', reason: 'ai_tools' });
-    return { outcome: OUTCOME.RESULTS, jobs: res.jobs };
+    return { outcome: OUTCOME.RESULTS, jobs };
   }
 
   // --- voice tools (7.5) ----------------------------------------------------------

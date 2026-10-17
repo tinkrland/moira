@@ -60,25 +60,29 @@ export class StackService {
       if (gate) return gate;
       const results = [];
       for (const e of spec.tools) {
-        const res = this._upsert(personaId, { tool: e.tool, uses: e.uses, category: spec.category.trim() });
+        const res = this._upsert(personaId, { tool: e.tool, uses: e.uses, category: spec.category.trim(), sets: e.sets });
         if (res.outcome !== OUTCOME.RESULTS) return res;
         results.push(res.entry);
       }
       return { outcome: OUTCOME.RESULTS, entries: results };
     }
-    const res = this._upsert(personaId, { tool: spec.tool, uses: spec.uses, category: spec.category ?? null });
+    const res = this._upsert(personaId, { tool: spec.tool, uses: spec.uses, category: spec.category ?? null, sets: spec.sets });
     if (res.outcome === OUTCOME.RESULTS && Array.isArray(res.entry)) {
       return { outcome: OUTCOME.RESULTS, entry: res.entry }; // shape parity
     }
     return res;
   }
 
-  _upsert(personaId, { tool, uses, category = null }) {
+  _upsert(personaId, { tool, uses, category = null, sets = null }) {
     const gate = this._usable(personaId);
     if (gate) return gate;
     const t = typeof tool === 'string' ? tool.trim() : '';
     if (!t) return { outcome: OUTCOME.DECLINED, reason: 'tool_required' };
     const cat = typeof category === 'string' && category.trim() !== '' ? category.trim() : null;
+    if (sets !== undefined && sets !== null && (!Array.isArray(sets) || !sets.every((x) => typeof x === 'string' && x.trim() !== ''))) {
+      return { outcome: OUTCOME.DECLINED, reason: 'sets_invalid' };
+    }
+    const setList = Array.isArray(sets) ? [...new Set(sets.map((x) => x.trim()))].filter(Boolean).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())) : [];
     if (uses !== undefined && uses !== null && (!Array.isArray(uses) || !uses.every((u) => typeof u === 'string' && u.trim() !== ''))) {
       return { outcome: OUTCOME.DECLINED, reason: 'uses_required' };
     }
@@ -104,16 +108,19 @@ export class StackService {
     const existing = this._list(personaId).find((e) => e.tool.toLowerCase() === t.toLowerCase());
     if (existing) {
       const merged = [...new Set([...existing.uses, ...normalized])].sort();
-      // the category already recorded is never dropped by a later add
+      // the category already recorded is never dropped by a later add;
+      // set membership unions the same way
       const keepCat = existing.category ?? cat;
-      this.store.update('stackEntries', existing.id, (e) => ({ ...e, uses: merged, category: keepCat, updatedAt: this.now() }));
-      return { outcome: OUTCOME.RESULTS, entry: { ...existing, uses: merged, category: keepCat } };
+      const keepSets = [...new Set([...(existing.sets ?? []), ...setList])].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+      this.store.update('stackEntries', existing.id, (e) => ({ ...e, uses: merged, category: keepCat, sets: keepSets, updatedAt: this.now() }));
+      return { outcome: OUTCOME.RESULTS, entry: { ...existing, uses: merged, category: keepCat, sets: keepSets } };
     }
     const entry = {
       id: randomId('stack'),
       personaId,
       tool: t,
       category: cat,
+      sets: setList,
       uses: normalized,
       basis: 'stated', // owner-stated, never inferred
       createdAt: this.now(),
@@ -151,7 +158,7 @@ export class StackService {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
     const entries = this._list(personaId)
-      .map((e) => ({ tool: e.tool, category: e.category ?? null, uses: e.uses }))
+      .map((e) => ({ tool: e.tool, category: e.category ?? null, sets: e.sets ?? [], uses: e.uses }))
       .sort((a, b) => a.tool.localeCompare(b.tool));
     return { outcome: OUTCOME.RESULTS, entries };
   }

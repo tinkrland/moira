@@ -55,38 +55,47 @@ export class AIToolsService {
       }
       const results = [];
       for (const e of spec.tools) {
-        const res = this._upsert(personaId, job, { tool: e.tool, uses: e.uses });
+        // sets can be declared at the batch level (whole job in 'work') or
+        // per entry; both land
+        const eSets = [...(Array.isArray(spec.sets) ? spec.sets : []), ...(Array.isArray(e.sets) ? e.sets : [])];
+        const res = this._upsert(personaId, job, { tool: e.tool, uses: e.uses, sets: eSets.length ? eSets : null });
         if (res.outcome !== OUTCOME.RESULTS) return res; // all-or-nothing
         results.push(res.entry);
       }
       this.receipts.write({ actor: 'owner', personaId, op: 'read', reason: 'ai_tools_declared' });
       return { outcome: OUTCOME.RESULTS, entries: results };
     }
-    const res = this._upsert(personaId, job, { tool: spec.tool, uses: spec.uses });
+    const res = this._upsert(personaId, job, { tool: spec.tool, uses: spec.uses, sets: spec.sets });
     if (res.outcome === OUTCOME.RESULTS) {
       this.receipts.write({ actor: 'owner', personaId, op: 'read', reason: 'ai_tools_declared' });
     }
     return res;
   }
 
-  _upsert(personaId, job, { tool, uses }) {
+  _upsert(personaId, job, { tool, uses, sets = null }) {
     const t = typeof tool === 'string' ? tool.trim() : '';
     if (!t) return { outcome: OUTCOME.DECLINED, reason: 'tool_required' };
     if (uses !== undefined && uses !== null && (!Array.isArray(uses) || !uses.every((u) => typeof u === 'string' && u.trim() !== ''))) {
       return { outcome: OUTCOME.DECLINED, reason: 'uses_required' };
     }
+    if (sets !== undefined && sets !== null && (!Array.isArray(sets) || !sets.every((x) => typeof x === 'string' && x.trim() !== ''))) {
+      return { outcome: OUTCOME.DECLINED, reason: 'sets_invalid' };
+    }
     const given = Array.isArray(uses) ? uses : [];
+    const setList = Array.isArray(sets) ? [...new Set(sets.map((x) => x.trim()))].filter(Boolean).sort((x, y) => x.toLowerCase().localeCompare(y.toLowerCase())) : [];
     const existing = this._list(personaId).find((e) => e.job === job && e.tool.toLowerCase() === t.toLowerCase());
     if (existing) {
       const merged = [...new Set([...existing.uses, ...given.map((u) => u.trim())])].sort();
-      this.store.update('aiToolEntries', existing.id, (e) => ({ ...e, uses: merged, updatedAt: this.now() }));
-      return { outcome: OUTCOME.RESULTS, entry: { ...existing, uses: merged } };
+      const keepSets = [...new Set([...(existing.sets ?? []), ...setList])].sort((x, y) => x.toLowerCase().localeCompare(y.toLowerCase()));
+      this.store.update('aiToolEntries', existing.id, (e) => ({ ...e, uses: merged, sets: keepSets, updatedAt: this.now() }));
+      return { outcome: OUTCOME.RESULTS, entry: { ...existing, uses: merged, sets: keepSets } };
     }
     const entry = {
       id: randomId('aitool'),
       personaId,
       job,
       tool: t,
+      sets: setList,
       uses: [...new Set(given.map((u) => u.trim()))].sort(),
       basis: 'stated', // owner-stated, never inferred
       createdAt: this.now(),
@@ -138,7 +147,7 @@ export class AIToolsService {
     const byJob = new Map();
     for (const e of this._list(personaId)) {
       if (!byJob.has(e.job)) byJob.set(e.job, []);
-      byJob.get(e.job).push({ tool: e.tool, uses: e.uses });
+      byJob.get(e.job).push({ tool: e.tool, sets: e.sets ?? [], uses: e.uses });
     }
     const jobs = [...byJob.entries()]
       .map(([job, tools]) => ({ job, tools: tools.sort((a, b) => a.tool.localeCompare(b.tool)) }))

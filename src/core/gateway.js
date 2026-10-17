@@ -29,6 +29,7 @@ import { RouterService } from './router.js';
 import { LinkageService } from './linkage.js';
 import { StackService } from './stack.js';
 import { AIToolsService } from './aitools.js';
+import { SetsService } from './sets.js';
 import { randomId } from '../util/crypto.js';
 import { SupabaseStore } from '../supabasestore.js';
 import { InsForgeStore } from '../insforgestore.js';
@@ -89,6 +90,7 @@ export class Moira {
     this.linkage = new LinkageService({ store, personas: this.personas, ledger: this.ledger, keys: this.keys, now });
     this.stack = new StackService({ store, personas: this.personas, receipts: this.receipts, now });
     this.aitools = new AIToolsService({ store, personas: this.personas, receipts: this.receipts, now });
+    this.sets = new SetsService({ store, personas: this.personas });
     this.router = new RouterService({ store, ledger: this.ledger, agents: this.agents, personas: this.personas, receipts: this.receipts, linkage: this.linkage, now });
     this.handoffs = new HandoffService({ store, personas: this.personas, agents: this.agents, packs: this.packs, receipts: this.receipts, router: this.router, facts: this.facts, now });
 

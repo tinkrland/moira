@@ -32,6 +32,11 @@ branch. nothing here pretends.
   competing providers coexist, uses union, batches are all-or-nothing,
   agents read via `ai_get` pass-gated (category `ai`), structured and
   receipted
+- context sets: declarations are context broadly, grouped in named
+  sets per persona (implicit, name-normalized, one set spans stack and
+  ai entries). at connection time the owner picks which sets the pass
+  shares: a set-scoped pass exposes exactly those sets, an unscoped
+  pass keeps the whole persona context. set removal untags entries
 - moment-of-risk linkage warnings (spec 22.4 v1 hook): adding an
   account whose payer would link decoupled personas returns the
   finding BEFORE the account exists; declared pairs (permanent) and

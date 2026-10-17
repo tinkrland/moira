@@ -40,6 +40,9 @@ export class OwnerApi {
 
   grantPass(ctx, spec) {
     this._require(ctx);
+    if (spec.sets !== undefined && spec.sets !== null && (!Array.isArray(spec.sets) || !spec.sets.every((s) => typeof s === 'string' && s.trim() !== ''))) {
+      return { outcome: OUTCOME.DECLINED, reason: 'sets_invalid' };
+    }
     const agent = this.gw.agents.get(spec.clientId);
     const res = this.gw.passes.grant(spec);
     // tier gating (7.1): unverified agents cannot be offered sensitive categories.
@@ -400,9 +403,9 @@ export class OwnerApi {
   // stack context declarations: the owner states the stack (tool + the
   // specific uses of it) so agents stop hallucinating it. per-persona,
   // owner-stated (basis 'stated'), structured - never inferred.
-  stackAdd(ctx, { personaId, tool, uses, category, tools }) {
+  stackAdd(ctx, { personaId, tool, uses, category, tools, sets }) {
     this._require(ctx);
-    return this.gw.stack.add(personaId, { tool, uses, category, tools });
+    return this.gw.stack.add(personaId, { tool, uses, category, tools, sets });
   }
 
   stackRemove(ctx, { personaId, tool, uses = null }) {
@@ -419,9 +422,20 @@ export class OwnerApi {
   // persona uses for which job (for scraping firecrawl and querit, for
   // search tavily). per-persona, owner-stated, structured; the job is
   // required, competing providers accumulate under one job.
-  aiAdd(ctx, { personaId, job, tool, uses, tools }) {
+  aiAdd(ctx, { personaId, job, tool, uses, tools, sets }) {
     this._require(ctx);
-    return this.gw.aitools.add(personaId, { job, tool, uses, tools });
+    return this.gw.aitools.add(personaId, { job, tool, uses, tools, sets });
+  }
+
+  // context sets: implicit, per-persona, spanning stack and ai declarations.
+  setList(ctx, { personaId }) {
+    this._require(ctx);
+    return this.gw.sets.list(personaId);
+  }
+
+  setRemove(ctx, { personaId, name }) {
+    this._require(ctx);
+    return this.gw.sets.remove(personaId, name);
   }
 
   aiRemove(ctx, { personaId, job, tool = null, uses = null }) {

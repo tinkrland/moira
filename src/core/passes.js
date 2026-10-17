@@ -20,7 +20,7 @@ export class PassService {
 
   // owner grants. connect codes and consent screens call into this after
   // owner authentication; agents can never reach it directly.
-  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = 3, uses = null }) {
+  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = 3, uses = null, sets = null }) {
     const agent = this.agents.get(clientId);
     if (!agent) return { outcome: OUTCOME.UNAVAILABLE, reason: 'unknown_agent' };
 
@@ -35,7 +35,12 @@ export class PassService {
       usesLeft: duration === PASS_DURATION.ONE_TIME ? 1 : uses,
       createdAt: this.now(),
       expiresAt: duration === PASS_DURATION.PERMANENT ? null : this.now() + (ttlMs ?? 60 * 60 * 1000),
-      revoked: false
+      revoked: false,
+      // context sets shared at connection time (null = whole persona
+      // context). normalized names; the read path filters entries by these.
+      sets: Array.isArray(sets) && sets.length > 0
+        ? [...new Set(sets.map((s) => String(s).trim()).filter(Boolean))]
+        : null
     };
     this.store.put('passes', pass.id, pass);
     this.receipts.write({ actor: 'owner', personaId, op: 'pass_grant', categories: [category], reason: purpose });
