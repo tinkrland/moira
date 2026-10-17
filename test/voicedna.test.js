@@ -120,3 +120,40 @@ test('voice dna: frozen personas decline writes; invalid input declines', () => 
   assert.equal(m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'texts', text: lowChat }).reason, 'persona_frozen');
   assert.equal(m.owner.voiceQuirkAdd(ctx, { personaId: founder.id, quirk: 'x' }).reason, 'persona_frozen');
 });
+
+test('viola: per-medium measurement keeps the shift visible instead of averaging it', () => {
+  const { m, ctx, founder } = setup();
+  m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'texts', text: 'lol ok so the deploy went fine\nkinda wild tbh\nanyway gn' });
+  m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'texts', text: 'omg wait\nno way\nlmaooo ok fine' });
+  m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'texts', text: 'brb\nk done\nsheesh ok' });
+  m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'linkedin', text: 'Thrilled to announce our Q3 results. The team delivered exceptional work across all verticals. Grateful for every collaborator on this journey.' });
+  m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'linkedin', text: 'Honored to share that we shipped the platform rewrite ahead of schedule. Thank you to everyone who reviewed the draft specification.' });
+  m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'linkedin', text: 'Pleased to report strong adoption metrics this quarter. Grateful as always for the community feedback that shaped this release.' });
+
+  const agg = m.owner.voiceMeasure(ctx, { personaId: founder.id });
+  assert.equal(agg.outcome, 'results');
+  // every tagged medium is measured independently, none merged away
+  assert.deepEqual(Object.keys(agg.perMedium).sort(), ['linkedin', 'texts'], 'one profile per medium');
+  const texts = agg.perMedium.texts;
+  const li = agg.perMedium.linkedin;
+  assert.ok(texts.layers.lingvica.lowercaseRatio > li.layers.lingvica.lowercaseRatio, 'texts are lowercase-dominant');
+  assert.ok(li.layers.lexica.functionWordRate > texts.layers.lexica.functionWordRate, 'formal writing carries more function words');
+  // the shift itself is reported, not averaged: fields diverge per medium
+  assert.ok(agg.crossMedium.length >= 1, 'divergence between mediums is computed');
+  const div = agg.crossMedium[0];
+  assert.deepEqual(div.between.sort(), ['linkedin', 'texts'], 'the pair is named');
+  assert.ok(div.fields.lingvica.lowercaseRatio, 'numeric deltas are reported per field');
+  assert.ok(div.fields.lingvica.lowercaseRatio.delta > 0, 'and the delta is a real number');
+  // stylometry convention: style is orthogonal to topic, so samples carry no topic inference
+  assert.equal(agg.perMedium.texts.topics, undefined, 'no topic claim is invented');
+
+  // determinism: measure twice, identical bytes
+  const again = m.owner.voiceMeasure(ctx, { personaId: founder.id });
+  assert.equal(JSON.stringify(again), JSON.stringify(agg), 'same corpus, same measurement');
+
+  // thin mediums are flagged, not silently confident
+  m.owner.voiceSampleAdd(ctx, { personaId: founder.id, medium: 'twitter', text: 'one tweet only' });
+  const thin = m.owner.voiceMeasure(ctx, { personaId: founder.id });
+  assert.equal(thin.perMedium.twitter.lowSample, true, 'a thin corpus is marked lowSample');
+  assert.equal(thin.perMedium.linkedin.lowSample, undefined, 'a full corpus is not');
+});

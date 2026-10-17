@@ -19,6 +19,9 @@ import { randomId } from '../util/crypto.js';
 import { OUTCOME, PERSONA_STATUS, VOICE_CATEGORY } from '../model/constants.js';
 
 const FILLERS = ['like', 'um', 'uh', 'you know', 'i mean', 'tbh', 'kind of', 'sort of'];
+// stylometry reference (yaptele stylometry.md): function words are the
+// classic style signal - carrying grammar, not topic. counted, not judged.
+const FUNCTION_WORDS = new Set(['the','a','an','and','or','but','if','of','at','by','for','with','to','in','on','is','was','are','were','be','been','that','this','these','those','it','as','from','has','have','had','not','no','so','we','you','they','he','she','i','my','your','their','our','his','her','its','will','would','can','could','do','does','did','than','then','there','when','which','while','who','whom','whose','what','how','why','all','any','both','each','few','more','most','other','some','such','only','own','same','too','very','just','because','until','about','against','between','into','through','during','before','after','above','below','up','down','out','off','over','under','again','further']);
 const HEDGES = ['maybe', 'probably', 'i think', 'might', 'seems', 'i guess'];
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F02F}]/gu;
 const SCRIPTS = {
@@ -174,7 +177,53 @@ export class VoiceDNAService {
       return { outcome: OUTCOME.RESULTS, present: false, layers: null, registerByMedium, quirks: this.quirkList(personaId).quirks, digest: null };
     }
 
-    const all = corpus.map((s) => s.text).join('\n');
+    const layers = this._layersOf(corpus.map((s) => s.text).join('\n'));
+    const digest = createHash('sha256').update(JSON.stringify(layers)).digest('hex').slice(0, 16);
+
+    // platform-shift: written voice fragments by medium, and the
+    // fragmentation is signal, not noise to average away. every tagged
+    // medium is measured independently; a thin corpus is flagged, never
+    // silently confident.
+    const perMedium = {};
+    for (const [med, texts] of byMedium.entries()) {
+      const m = { samples: texts.length };
+      if (texts.length < 3) m.lowSample = true;
+      m.layers = this._layersOf(texts.join('\n'));
+      perMedium[med] = m;
+    }
+
+    // the shift itself: pairwise divergence between mediums, per numeric
+    // field, with real deltas. no single collapsed "sounds like" score.
+    const names = [...byMedium.keys()].sort();
+    const crossMedium = [];
+    for (let i = 0; i < names.length; i++) {
+      for (let j = i + 1; j < names.length; j++) {
+        const a = names[i];
+        const b = names[j];
+        const la = perMedium[a].layers;
+        const lb = perMedium[b].layers;
+        const fields = {};
+        for (const layerName of ['lingvist', 'lexica', 'lingvica']) {
+          const layerFields = {};
+          for (const [k, v] of Object.entries(lb[layerName] ?? {})) {
+            if (typeof v !== 'number') continue;
+            const av = la[layerName]?.[k];
+            if (typeof av !== 'number') continue;
+            layerFields[k] = { a: av, b: v, delta: round3(v - av) };
+          }
+          if (Object.keys(layerFields).length) fields[layerName] = layerFields;
+        }
+        crossMedium.push({ between: [a, b], fields });
+      }
+    }
+
+    return { outcome: OUTCOME.RESULTS, present: true, layers, perMedium, crossMedium, registerByMedium, quirks: this.quirkList(personaId).quirks, digest };
+  }
+
+  // pure measurement over one text body: same text, same layers. all fields
+  // are counts and ratios (stylometry's discipline: style orthogonal to
+  // topic), so no topic claim is ever invented.
+  _layersOf(all) {
     const ws = words(all);
     const sentences = splitSentences(all);
     const letters = all.match(/\p{L}/gu) ?? [];
@@ -197,10 +246,13 @@ export class VoiceDNAService {
       }).length
     };
 
-    // lexica: counted vocabulary markers, never described ones
+    // lexica: counted vocabulary markers, never described ones. function
+    // word rate is the stylometry-validated workhorse.
+    const tokens = ws.map((w) => w.toLowerCase());
     const lexica = {
       fillers: countPhrases(all.toLowerCase(), FILLERS),
       hedges: countPhrases(all.toLowerCase(), HEDGES),
+      functionWordRate: round3(tokens.filter((w) => FUNCTION_WORDS.has(w)).length / Math.max(tokens.length, 1)),
       signaturePhrases: signaturePhrases(all)
     };
 
@@ -220,9 +272,6 @@ export class VoiceDNAService {
       lowercaseRatio: round3(letters.length ? (letters.length - upper.length) / letters.length : 1),
       emojiDensity: round3(emojiCount / Math.max(ws.length, 1))
     };
-
-    const layers = { lingvist, lexica, lingvica };
-    const digest = createHash('sha256').update(JSON.stringify(layers)).digest('hex').slice(0, 16);
-    return { outcome: OUTCOME.RESULTS, present: true, layers, registerByMedium, quirks: this.quirkList(personaId).quirks, digest };
+    return { lingvist, lexica, lingvica };
   }
 }

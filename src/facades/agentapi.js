@@ -346,6 +346,10 @@ export class AgentApi {
       outcome: OUTCOME.RESULTS,
       present: res.present,
       layers: res.layers,
+      // per-medium profiles + the shift between them: an agent operating on
+      // slack can hold the slack register, not an average (platform-shift)
+      perMedium: res.perMedium ?? null,
+      crossMedium: res.crossMedium ?? [],
       quirks: res.quirks,
       digest: res.digest,
       registerByMedium: res.registerByMedium
