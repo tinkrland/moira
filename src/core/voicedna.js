@@ -4,7 +4,7 @@
 // 1. corpus: owner-added writing samples, sealed under the persona's voice
 //    category key (vault rules: plaintext never rests in the store).
 // 2. measurement: pure functions over the corpus. same corpus, same layers,
-//    same digest, every time (the anti-evie-training rule generalized:
+//    same digest, every time (the no-training principle the whole
 //    nothing is inferred, everything is counted). vocabulary follows
 //    regent's glossary: lingvist (language substrate), lexica (vocabulary),
 //    lingvica (delivery, punctuation-as-tone, cadence).

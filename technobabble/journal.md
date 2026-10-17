@@ -449,3 +449,12 @@ personas' dna, lists identical fields honestly, refuses to compare when
 a corpus is absent, and invents no thresholds. suite: 211 tests, 199
 pass, 12 gated.
 
+## 2026-10-17 - three-way decoupling made explicit
+
+owner's standing rule now written into viola's contract: main, evie,
+and viola are mutually decoupled lines. main never imports either, evie
+never imports viola, no branch merges into another without the owner's
+call, and main knows the other two only as pointers. viola's code
+comments no longer phrase the no-training rule as inherited from evie;
+it is a principle the whole ecosystem shares.
+
