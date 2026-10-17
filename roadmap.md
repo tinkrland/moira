@@ -46,6 +46,14 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## branch topology: three decoupled lines
+
+main, evie, and viola are mutually decoupled: main never imports either
+engine, evie never imports viola, and no branch merges into another
+without the owner's call. main knows the other two only as pointers
+below. if either engine starts, it merges in the way the owner directs,
+not by drift.
+
 ## viola
 
 the voice engine is **viola** - and like evie it is deliberately decoupled
