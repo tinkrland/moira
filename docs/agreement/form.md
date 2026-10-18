@@ -31,6 +31,10 @@ helps when we reconcile disagreements.
 - setting_scale (pick 1): rural / small-town / suburban / urban /
   metropolis
   - your pick:
+- mystery_mechanism (pick 1-2, use "none" if there is no puzzle):
+  whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
+  none
+  - your pick:
 ## the mentalist (2008)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -57,6 +61,10 @@ helps when we reconcile disagreements.
   - your pick:
 - setting_scale (pick 1): rural / small-town / suburban / urban /
   metropolis
+  - your pick:
+- mystery_mechanism (pick 1-2, use "none" if there is no puzzle):
+  whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
+  none
   - your pick:
 ## high potential (2024)
 
@@ -85,6 +93,10 @@ helps when we reconcile disagreements.
 - setting_scale (pick 1): rural / small-town / suburban / urban /
   metropolis
   - your pick:
+- mystery_mechanism (pick 1-2, use "none" if there is no puzzle):
+  whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
+  none
+  - your pick:
 ## ncis (2003)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -112,6 +124,10 @@ helps when we reconcile disagreements.
 - setting_scale (pick 1): rural / small-town / suburban / urban /
   metropolis
   - your pick:
+- mystery_mechanism (pick 1-2, use "none" if there is no puzzle):
+  whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
+  none
+  - your pick:
 ## blue bloods (2010)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -138,4 +154,8 @@ helps when we reconcile disagreements.
   - your pick:
 - setting_scale (pick 1): rural / small-town / suburban / urban /
   metropolis
+  - your pick:
+- mystery_mechanism (pick 1-2, use "none" if there is no puzzle):
+  whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
+  none
   - your pick:

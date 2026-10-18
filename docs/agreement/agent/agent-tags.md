@@ -22,6 +22,9 @@ rubric evidence rule. do not reconcile before both sets exist.
 - lens: consulting-detective (a civilian puzzle-setter
   impersonating a detective chief inspector; no rank of his own)
 - setting_scale: urban (cambridge: a city with a city department)
+- mystery_mechanism: whodunit (assembling the who from
+  coded puzzles across the run)
+
 ## the mentalist (2008)
 
 - fantasy: competence (the mentalism is flaunted in nearly every
@@ -40,6 +43,9 @@ rubric evidence rule. do not reconcile before both sets exist.
   consultant to cbi with no rank)
 - setting_scale: unknown (case-of-the-week travels across california;
   no fixed community)
+- mystery_mechanism: whodunit (each episode hides a
+  culprit patrick unmasks)
+
 ## high potential (2024)
 
 - fantasy: competence (a cleaner sees what the detectives miss; the
@@ -57,6 +63,9 @@ rubric evidence rule. do not reconcile before both sets exist.
 - lens: consulting-detective (a civilian
   cleaner consulting for lapd)
 - setting_scale: metropolis (los angeles drives the texture)
+- mystery_mechanism: whodunit (she cracks what the
+  detectives cannot)
+
 ## ncis (2003)
 
 - fantasy: belonging (the team is a found family; the show's spine
@@ -76,6 +85,9 @@ rubric evidence rule. do not reconcile before both sets exist.
   own dual-lens example)
 - setting_scale: metropolis (washington dc headquarters, though cases
   travel)
+- mystery_mechanism: whodunit (most episodes investigate a
+  hidden culprit through to the reveal)
+
 ## blue bloods (2010)
 
 - fantasy: belonging (the sunday dinner is the show's spine; the
@@ -91,6 +103,9 @@ rubric evidence rule. do not reconcile before both sets exist.
 
 - lens: cop (three generations of nypd)
 - setting_scale: metropolis (new york is a character)
+- mystery_mechanism: none (the spine is the job and
+  the family, not viewer-side deduction; the owner's canonical
+  cop-show-without-whodunit example)
 
 note: lens and setting_scale sections were added 2026-10-18 after the
 owner's taxonomy feedback, before the owner form was submitted. still

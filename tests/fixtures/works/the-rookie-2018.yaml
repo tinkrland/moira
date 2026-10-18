@@ -27,6 +27,8 @@ crime_module:
   detecting_subject:
   - murder
   - organized-crime
+  mystery_mechanism:
+  - none
 tags:
   tone:
   - value: earnest

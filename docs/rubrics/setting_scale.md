@@ -13,9 +13,21 @@ evidence, or as motifs, not as extra values.
 - counterexample: a village center where the whole cast walks to each
   other's houses. that is small-town.
 
+### island
+- definition: a water-bound community where geography shapes the
+  story: ferries, storms, everyone knows the boat schedule, newcomers
+  stand out, nobody quietly leaves. death in paradise, shetland.
+- boundary: islandy is not the same as cozy small-town. death in
+  paradise is island, not small-town; brokenwood mysteries is
+  small-town, not island. when the water is part of the cast, tag
+  island. when the community is the cast and it happens to sit on the
+  mainland, tag small-town.
+- counterexample: a coastal mainland town. coastlines are not islands:
+  tag the community, not the scenery.
+
 ### small-town
 - definition: a small community where the cast recurs: the cafe, the
-  pub, the mayor, the neighbors. stars hollow, death in paradise,
+  pub, the mayor, the neighbors. stars hollow, brokenwood mysteries,
   easttown.
 - how to observe: location shooting aside, the town itself has a
   recurring named cast.

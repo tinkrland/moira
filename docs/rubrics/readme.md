@@ -11,6 +11,7 @@ status:
 - romance_dynamic: draft (awaiting owner review)
 - lens: draft (awaiting owner review; the owner's taxonomy drives the value set)
 - setting_scale: draft (awaiting owner review)
+- mystery_mechanism: draft (awaiting owner review)
 - all other axes: not written yet
 
 these three were written first per buildplan.md: they carry the most
