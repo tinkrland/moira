@@ -21,17 +21,21 @@ in scoring, so tag it carefully and from evidence.
 ## values
 
 ### competence
-- definition: the pleasure of watching mastery. the wish: "i could be
-  that good at something."
-- how to observe: the narrative lingers on displays of skill; the lead's
-  craft wins the day repeatedly; the audience is invited to admire the
-  execution, not the outcome alone.
-- boundary: competence is about the process being shown, not winning.
-  a lead who succeeds without the work showing how does not sell this.
-- counterexample: a lead who fails upward or whose success comes from
-  luck or others' work. skilled in passing, but mastery is not the
-  product.
-
+- definition: the pleasure of watching mastery: the work lingers on
+  displays of skill and rewards expertise.
+- how to observe: the camera dwells on the protagonist doing the thing
+  brilliantly; the payoff is the demonstration.
+- owner example: the spy lens is full of competence porn, but slow horses
+  is the opposite: the joy is the rejects muddling through and turning
+  out to be right. tag the fantasy the work sells, not the one its genre
+  is famous for. slow horses is spy-lens with competence absent; what it
+  sells is underdog-vindication and belonging.
+- boundary: a competent lead is not competence fantasy. nolan in the
+  rookie is competent; the show sells growth and belonging, not
+  demonstrations of mastery. the fantasy axis asks what the work
+  invites you to enjoy.
+- counterexample: slow horses (spy lens, competence fantasy absent:
+  the pleasure is the failure's vindication, not the master's display).
 ### justice
 - definition: the wish that wrongs are righted and consequences arrive.
 - how to observe: the guilty pay, restitution is the climax, the story

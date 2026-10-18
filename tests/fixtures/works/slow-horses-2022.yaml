@@ -1,0 +1,106 @@
+id: slow-horses-2022
+title: slow horses
+medium: tv
+unit: series
+first_release: 2022
+origin:
+- uk
+language: english
+creators:
+- mick herron
+- graham yost
+external_ids: null
+status: reviewed
+tag_version: 1
+tagged_by: model
+date: '2026-10-18'
+genre_tradition:
+- spy
+- thriller
+- drama
+setting_geo: uk
+lead_performers:
+- gary oldman
+setting_scale: metropolis
+crime_module:
+  crime_relation: solving
+  mystery_mechanism:
+  - whodunit
+  lens:
+  - spy
+  - intelligence
+  detecting_subject:
+  - espionage
+tags:
+  tone:
+  - value: dry-satirical
+    role: primary
+    evidence: lamb's insults and the show's love of institutional humiliation
+  - value: paranoid-tense
+    role: secondary
+    evidence: no one can be trusted and everyone is being played
+  authority_stance:
+  - value: institution-cynic
+    role: primary
+    evidence: lamb despises the service and the show agrees with him
+  protagonist_gift:
+  - value: procedural-craft
+    role: primary
+    evidence: old-school tradecraft under the slobbishness
+  - value: people-reading
+    role: secondary
+    evidence: reads people and situations a beat before anyone else
+  ensemble_shape:
+  - value: found-family
+    role: primary
+    evidence: the rejects of slough house are the family nobody chose
+  fantasy:
+  - value: underdog-vindication
+    role: primary
+    evidence: the failures turn out to be the ones who saw it coming
+  - value: belonging
+    role: secondary
+    evidence: the stable bonds over shared disgrace
+  structure:
+  - value: serialized
+    role: primary
+    evidence: each season is one long conspiracy arc
+  resolution:
+  - value: mostly-closed
+    role: primary
+    evidence: seasons resolve with threads deliberately left alive
+  stakes:
+  - value: high
+    role: primary
+    evidence: people die and the conspiracies reach national scale
+  world:
+  - value: realist
+    role: primary
+    evidence: modern london, no heightened rules
+  tech_mediation:
+  - value: medium
+    role: primary
+    evidence: hackers at the park, but tradecraft decides things
+  lead_gender:
+  - value: male
+    role: primary
+    evidence: lamb is the gravitational center
+  lead_manner:
+  - value: abrasive
+    role: primary
+    evidence: flatulence, insults, and contempt as management style
+  - value: deadpan
+    role: secondary
+    evidence: delivered entirely without effort
+  lead_flaw_treatment:
+  - value: flaw-celebrated
+    role: primary
+    evidence: his awfulness is the charm and always vindicated
+  romantic_arc:
+  - value: none
+    role: primary
+    evidence: no romantic through-line for lamb
+  gift_origin:
+  - value: nurture
+    role: primary
+    evidence: his edge is forty years of learned tradecraft, no endowment
