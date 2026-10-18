@@ -1,0 +1,9 @@
+# optional: tagged only when the lead has a gift and must manage how it
+# reads to others. the masquerade is a taste signal, not trivia.
+axis: gift_cover
+layer: 2
+select: single
+values:
+- none
+- skill-as-supernatural
+- supernatural-as-mundane

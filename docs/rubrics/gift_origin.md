@@ -50,6 +50,15 @@ three different flavors of the same surface trait.
 
 ### both
 - definition: an innate endowment deliberately trained into mastery.
+
+### acquired
+- definition: the edge arrived later, from an event: infection,
+  experiment, artifact, accident. not birth, not training.
+- evidence exemplar: izombie. the visions came with the zombie
+  infection; liv before the boat party had none of this.
+- counterexample: a latent gift that an event merely unlocked. if the
+  story frames it as always having been there, dormant, that is
+  nature; the evidence line should say which the story claims.
 - owner example: shawn spencer in psych, born with eidetic recall and
   drilled through childhood by henry.
 - counterexample: a naturally gifted lead who wastes the gift. if the

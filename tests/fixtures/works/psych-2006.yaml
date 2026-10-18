@@ -100,6 +100,10 @@ tags:
   - value: both
     role: primary
     evidence: born with eidetic recall AND drilled by his detective father
+  gift_cover:
+  - value: skill-as-supernatural
+    role: primary
+    evidence: 'the entire premise: real hyper-observation sold to the police as psychic visions'
   gift_kind:
   - value: eidetic-memory
     role: primary

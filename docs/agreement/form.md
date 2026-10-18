@@ -40,6 +40,9 @@ helps when we reconcile disagreements.
 - gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
   / hyperthymesia / high-iq / hyper-observation / supernatural-gift
   - your pick:
+- gift_cover (pick 1, only if there is a gift): none /
+  skill-as-supernatural / supernatural-as-mundane
+  - your pick:
 ## the mentalist (2008)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -75,6 +78,9 @@ helps when we reconcile disagreements.
   - your pick:
 - gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
   / hyperthymesia / high-iq / hyper-observation / supernatural-gift
+  - your pick:
+- gift_cover (pick 1, only if there is a gift): none /
+  skill-as-supernatural / supernatural-as-mundane
   - your pick:
 ## high potential (2024)
 
@@ -112,6 +118,9 @@ helps when we reconcile disagreements.
 - gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
   / hyperthymesia / high-iq / hyper-observation / supernatural-gift
   - your pick:
+- gift_cover (pick 1, only if there is a gift): none /
+  skill-as-supernatural / supernatural-as-mundane
+  - your pick:
 ## ncis (2003)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -148,6 +157,9 @@ helps when we reconcile disagreements.
 - gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
   / hyperthymesia / high-iq / hyper-observation / supernatural-gift
   - your pick:
+- gift_cover (pick 1, only if there is a gift): none /
+  skill-as-supernatural / supernatural-as-mundane
+  - your pick:
 ## blue bloods (2010)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -183,4 +195,7 @@ helps when we reconcile disagreements.
   - your pick:
 - gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
   / hyperthymesia / high-iq / hyper-observation / supernatural-gift
+  - your pick:
+- gift_cover (pick 1, only if there is a gift): none /
+  skill-as-supernatural / supernatural-as-mundane
   - your pick:

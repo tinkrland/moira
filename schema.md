@@ -95,8 +95,9 @@ lead_performers  multi   names (never part of dna_score; enables 'watched for th
 ```
 crime_relation     single  solving | committing | defending | combination
 
-gift_origin        single  none | nature | nurture | both      (core layer 2)
+gift_origin        single  none | nature | nurture | both | acquired      (core layer 2)
 gift_kind          multi   eidetic-memory | hyperthymesia | high-iq | hyper-observation | supernatural-gift  (optional: tagged when an endowment exists)
+gift_cover         single  none | skill-as-supernatural | supernatural-as-mundane  (optional: tagged when a gift is masked)
 mystery_mechanism  multi   whodunit | howdunnit | whydunnit | proving-it | inverted | caper | none
 lens               multi   cop | sheriff | fed | intelligence | spy | private-eye | consulting-detective | criminal-consultant | forensic-scientist | forensic-support | amateur | journalist | military | firefighter | legal
 detecting_subject  multi   murder | financial | disappearance | fraud | cybercrime | organized-crime | cold-case | espionage | other

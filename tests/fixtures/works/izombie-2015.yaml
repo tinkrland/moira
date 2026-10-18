@@ -1,0 +1,110 @@
+id: izombie-2015
+title: izombie
+medium: tv
+unit: series
+first_release: 2015
+origin:
+- us
+- ca
+language: english
+creators:
+- rob thomas
+- diane ruggiero-wright
+external_ids: null
+status: reviewed
+tag_version: 1
+tagged_by: model
+date: '2026-10-18'
+genre_tradition:
+- crime
+- comedy
+setting_geo: us
+lead_performers:
+- rose mciver
+setting_scale: metropolis
+crime_module:
+  crime_relation: solving
+  mystery_mechanism:
+  - whodunit
+  lens:
+  - forensic-scientist
+  detecting_subject:
+  - murder
+tags:
+  tone:
+  - value: absurdist
+    role: primary
+    evidence: zombie condition and brain-eating played for wry comedy
+  - value: warm-comedic
+    role: secondary
+    evidence: the morgue banter keeps the taboo warm
+  authority_stance:
+  - value: adjacent-consultant
+    role: primary
+    evidence: medical examiner feeding visions to a detective who does not know the source
+  protagonist_gift:
+  - value: puzzle-intellect
+    role: primary
+    evidence: visions hand her fragments she assembles into the case
+  ensemble_shape:
+  - value: workplace-team
+    role: primary
+    evidence: morgue plus detective plus ravi as the knowing friend
+  fantasy:
+  - value: puzzle
+    role: primary
+    evidence: case-of-the-week assembled from vision clues
+  - value: transgression
+    role: secondary
+    evidence: eating brains, framed as comedy not horror
+  structure:
+  - value: episodic-closed
+    role: primary
+    evidence: a case closes every episode
+  resolution:
+  - value: always-closed
+    role: primary
+    evidence: the killer is caught each week
+  stakes:
+  - value: medium
+    role: primary
+    evidence: real murders, contained danger
+  world:
+  - value: supernatural-overlay
+    role: primary
+    evidence: zombies exist; the city does not know
+  tech_mediation:
+  - value: low
+    role: primary
+    evidence: clues are personal, not forensic machines
+  lead_gender:
+  - value: female
+    role: primary
+    evidence: liv is the lead
+  lead_manner:
+  - value: eccentric
+    role: primary
+    evidence: her personality shifts with the brains she eats
+  - value: deadpan
+    role: secondary
+    evidence: wry voiceover about her condition
+  lead_flaw_treatment:
+  - value: flaw-tolerated
+    role: primary
+    evidence: the hunger is managed, never demanded fixed
+  romantic_arc:
+  - value: on-off-cycle
+    role: primary
+    evidence: major and others cycle in and out
+  gift_origin:
+  - value: acquired
+    role: primary
+    evidence: the visions came with the zombie infection, not birth or training
+  gift_cover:
+  - value: supernatural-as-mundane
+    role: primary
+    evidence: real visions dressed up to the detective as forensic hunches and psychic vibes, post hoc
+  gift_kind:
+  - value: supernatural-gift
+    role: primary
+    evidence: psychometric visions from eating the dead's brains

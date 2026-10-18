@@ -26,6 +26,8 @@ rubric evidence rule. do not reconcile before both sets exist.
   coded puzzles across the run)
 - gift_origin: nature (his puzzle-mind is innate, not trained)
 - gift_kind: high-iq (the puzzle-setter's mind is the show's premise)
+- gift_cover: none (his puzzles are open; the
+  masquerade is his brother's identity, not his skill)
 
 ## the mentalist (2008)
 
@@ -50,6 +52,9 @@ rubric evidence rule. do not reconcile before both sets exist.
 - gift_origin: nurture (learned mentalism from his fake-psychic con
   years; no innate endowment)
 - gift_kind: untagged (nothing to name)
+- gift_cover: none (patrick no longer sells
+  the psychic act; the fake-psychic past is backstory, not a current
+  cover)
 
 ## high potential (2024)
 
@@ -72,6 +77,8 @@ rubric evidence rule. do not reconcile before both sets exist.
   detectives cannot)
 - gift_origin: nature (iq 160, stated as born, never trained)
 - gift_kind: high-iq (the canonical owner example)
+- gift_cover: none (morgan's gifts are known
+  for what they are)
 
 ## ncis (2003)
 
@@ -96,6 +103,7 @@ rubric evidence rule. do not reconcile before both sets exist.
   hidden culprit through to the reveal)
 - gift_origin: none (an ensemble of competent professionals)
 - gift_kind: untagged
+- gift_cover: none (no gift to mask)
 
 ## blue bloods (2010)
 
@@ -117,6 +125,7 @@ rubric evidence rule. do not reconcile before both sets exist.
   cop-show-without-whodunit example)
 - gift_origin: none (competence built the normal way)
 - gift_kind: untagged
+- gift_cover: none (no gift to mask)
 
 note: lens and setting_scale sections were added 2026-10-18 after the
 owner's taxonomy feedback, before the owner form was submitted. still

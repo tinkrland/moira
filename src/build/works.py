@@ -42,7 +42,7 @@ core_axes = (
     "gift_origin",
 )
 # optional axes exist in the vocab but are required only when applicable
-optional_axes = ("romance_dynamic", "gift_kind")
+optional_axes = ("romance_dynamic", "gift_kind", "gift_cover")
 axis_order = core_axes + ("motifs",)
 crime_fields = ("crime_relation", "mystery_mechanism", "lens", "detecting_subject", "legal_role")
 

@@ -23,6 +23,7 @@ axis_weights:
   romance_dynamic: 1.0
   gift_origin: 1.0
   gift_kind: 1.0
+  gift_cover: 1.0
   motifs: 1.0
   # layer 1, recommend path only
   genre_tradition: 0.5
