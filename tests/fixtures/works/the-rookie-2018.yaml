@@ -19,6 +19,7 @@ genre_tradition:
 setting_geo: us
 lead_performers:
 - nathan fillion
+setting_scale: metropolis
 crime_module:
   crime_relation: solving
   lens:

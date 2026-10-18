@@ -20,12 +20,13 @@ genre_tradition:
 setting_geo: us
 lead_performers:
 - carrie preston
+setting_scale: metropolis
 crime_module:
   crime_relation: solving
   mystery_mechanism:
   - howdunnit
   lens:
-  - consultant
+  - consulting-detective
   detecting_subject:
   - murder
 tags:

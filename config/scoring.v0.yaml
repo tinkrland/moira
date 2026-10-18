@@ -24,6 +24,7 @@ axis_weights:
   motifs: 1.0
   # layer 1, recommend path only
   genre_tradition: 0.5
+  setting_scale: 0.5
   crime_relation: 0.5
   mystery_mechanism: 0.5
   lens: 0.5

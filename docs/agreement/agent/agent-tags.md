@@ -19,6 +19,9 @@ rubric evidence rule. do not reconcile before both sets exist.
   through-line drives the lead)
 - romance_dynamic: skipped (arc is none)
 
+- lens: consulting-detective (a civilian puzzle-setter
+  impersonating a detective chief inspector; no rank of his own)
+- setting_scale: urban (cambridge: a city with a city department)
 ## the mentalist (2008)
 
 - fantasy: competence (the mentalism is flaunted in nearly every
@@ -33,6 +36,10 @@ rubric evidence rule. do not reconcile before both sets exist.
 - romance_dynamic: partners-to-lovers (the romantic pair are the
   case-solving pair)
 
+- lens: consulting-detective (a civilian
+  consultant to cbi with no rank)
+- setting_scale: unknown (case-of-the-week travels across california;
+  no fixed community)
 ## high potential (2024)
 
 - fantasy: competence (a cleaner sees what the detectives miss; the
@@ -47,6 +54,9 @@ rubric evidence rule. do not reconcile before both sets exist.
 - romance_dynamic: partners-to-lovers (she is attached to the
   detective's cases as his unofficial partner)
 
+- lens: consulting-detective (a civilian
+  cleaner consulting for lapd)
+- setting_scale: metropolis (los angeles drives the texture)
 ## ncis (2003)
 
 - fantasy: belonging (the team is a found family; the show's spine
@@ -61,6 +71,11 @@ rubric evidence rule. do not reconcile before both sets exist.
 - romance_dynamic: partners-to-lovers (same team, same cases,
   seasons of proximity)
 
+- lens: fed + military (naval criminal
+  investigative service: federal agents inside the navy; the owner's
+  own dual-lens example)
+- setting_scale: metropolis (washington dc headquarters, though cases
+  travel)
 ## blue bloods (2010)
 
 - fantasy: belonging (the sunday dinner is the show's spine; the
@@ -73,3 +88,10 @@ rubric evidence rule. do not reconcile before both sets exist.
 - romantic_arc: none (the leads' romances are settled or peripheral;
   no romantic through-line drives the series)
 - romance_dynamic: skipped (arc is none)
+
+- lens: cop (three generations of nypd)
+- setting_scale: metropolis (new york is a character)
+
+note: lens and setting_scale sections were added 2026-10-18 after the
+owner's taxonomy feedback, before the owner form was submitted. still
+sealed.

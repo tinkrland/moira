@@ -8,6 +8,12 @@ from .vocab import catalog_error
 from .works import axis_order, layer1_fields, work_fields, validate_work, load_yaml
 
 schema_sql = """
+-- the compiled database is derived data: dropped and rebuilt each run
+drop table if exists works;
+drop table if exists work_links;
+drop table if exists trait_values;
+drop table if exists work_traits;
+
 create table if not exists works (
   id text primary key,
   title text not null,
@@ -26,6 +32,7 @@ create table if not exists works (
   setting_geo text,
   setting_era text,
   lead_performers text,
+  setting_scale text,
   crime_module text
 );
 
@@ -107,8 +114,8 @@ def compile_db(works, vocab, db_path):
             con.execute(
                 "insert into works (id, title, medium, unit, first_release, origin, language,"
                 " creators, external_ids, status, tag_version, tagged_by, date,"
-                " genre_tradition, setting_geo, setting_era, lead_performers, crime_module)"
-                " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                " genre_tradition, setting_geo, setting_era, lead_performers, setting_scale, crime_module)"
+                " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     doc["id"], doc["title"], doc["medium"], doc["unit"], doc["first_release"],
                     json.dumps(doc["origin"]), doc["language"],
@@ -120,6 +127,7 @@ def compile_db(works, vocab, db_path):
                     doc.get("setting_geo"),
                     json.dumps(doc["setting_era"]) if doc.get("setting_era") is not None else None,
                     json.dumps(doc["lead_performers"]) if doc.get("lead_performers") is not None else None,
+                    doc.get("setting_scale"),
                     json.dumps(doc["crime_module"]) if doc.get("crime_module") else None,
                 ),
             )

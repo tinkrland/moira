@@ -84,6 +84,7 @@ notes:
 ```
 genre_tradition  multi   crime, noir, cozy-mystery, legal, thriller, spy, fantasy, sci-fi, romance, horror, drama, comedy ...
 setting_geo      single  country or region of the story world
+setting_scale    single  rural | small-town | suburban | urban | metropolis
 setting_era      range   years the story is set in
 creators         multi   names (never part of dna_score)
 lead_performers  multi   names (never part of dna_score; enables 'watched for the actor' cases)
@@ -94,13 +95,15 @@ lead_performers  multi   names (never part of dna_score; enables 'watched for th
 ```
 crime_relation     single  solving | committing | defending | combination
 mystery_mechanism  multi   whodunit | howdunnit | whydunnit | proving-it | inverted | caper
-lens               multi   cop | fed | forensic | intelligence | spy | private-eye | consultant | amateur | journalist | military | firefighter | legal
+lens               multi   cop | sheriff | fed | intelligence | spy | private-eye | consulting-detective | criminal-consultant | forensic-scientist | forensic-support | amateur | journalist | military | firefighter | legal
 detecting_subject  multi   murder | financial | disappearance | fraud | cybercrime | organized-crime | cold-case | espionage | other
 legal_role         multi   (only if crime_relation includes defending) prosecution | public-defense | criminal-defense | civil | white-collar-legal
 ```
 
 notes:
-- `lens` is the job or vantage point. `authority_stance` is the relationship to power. keep them separate: a consultant lens can pair with several stances.
+- `lens` is the job or vantage point. `authority_stance` is the relationship to power. keep them separate: a consulting-detective lens can pair with several stances. lens is multi-select: psych is private-eye and consulting-detective at once.
+- the consultant value is split: `criminal-consultant` is a criminal consulting for law enforcement (white collar); `consulting-detective` is a civilian detective (sherlock, ludwig, monk). `sheriff` covers rural county law enforcement, which is a different institution than an urban precinct. forensic splits the same way: `forensic-scientist` is the protagonist focus (bones); `forensic-support` is the accompanying csi-style role inside law enforcement.
+- `setting_scale` matters because the community changes the show: rural means sheriffs and spread-out jurisdictions, metropolis means precincts, and small-town means a recurring community cast (stars hollow, death in paradise).
 - `proving-it` marks the later, evidence-and-courtroom phase of the case rather than the discovery phase.
 - `combination` is for works that mix solving, committing or defending in the same run.
 
@@ -161,7 +164,7 @@ tags:
       evidence: central friendship anchors every episode
 crime_module:
   crime_relation: solving
-  lens: [consultant]
+  lens: [consulting-detective, private-eye]
 ```
 
 ## recommendation scoring (taste context)

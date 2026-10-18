@@ -23,7 +23,14 @@ helps when we reconcile disagreements.
   partners-to-lovers / friends-to-lovers / enemies-to-lovers / forbidden
   / reunion / second-chance
   - your pick:
-
+- lens (pick 1-3): cop / sheriff / fed / intelligence / spy /
+  private-eye / consulting-detective / criminal-consultant /
+  forensic-scientist / forensic-support / amateur / journalist /
+  military / firefighter / legal / politician
+  - your pick:
+- setting_scale (pick 1): rural / small-town / suburban / urban /
+  metropolis
+  - your pick:
 ## the mentalist (2008)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -43,7 +50,14 @@ helps when we reconcile disagreements.
   partners-to-lovers / friends-to-lovers / enemies-to-lovers / forbidden
   / reunion / second-chance
   - your pick:
-
+- lens (pick 1-3): cop / sheriff / fed / intelligence / spy /
+  private-eye / consulting-detective / criminal-consultant /
+  forensic-scientist / forensic-support / amateur / journalist /
+  military / firefighter / legal / politician
+  - your pick:
+- setting_scale (pick 1): rural / small-town / suburban / urban /
+  metropolis
+  - your pick:
 ## high potential (2024)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -63,7 +77,14 @@ helps when we reconcile disagreements.
   partners-to-lovers / friends-to-lovers / enemies-to-lovers / forbidden
   / reunion / second-chance
   - your pick:
-
+- lens (pick 1-3): cop / sheriff / fed / intelligence / spy /
+  private-eye / consulting-detective / criminal-consultant /
+  forensic-scientist / forensic-support / amateur / journalist /
+  military / firefighter / legal / politician
+  - your pick:
+- setting_scale (pick 1): rural / small-town / suburban / urban /
+  metropolis
+  - your pick:
 ## ncis (2003)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -83,7 +104,14 @@ helps when we reconcile disagreements.
   partners-to-lovers / friends-to-lovers / enemies-to-lovers / forbidden
   / reunion / second-chance
   - your pick:
-
+- lens (pick 1-3): cop / sheriff / fed / intelligence / spy /
+  private-eye / consulting-detective / criminal-consultant /
+  forensic-scientist / forensic-support / amateur / journalist /
+  military / firefighter / legal / politician
+  - your pick:
+- setting_scale (pick 1): rural / small-town / suburban / urban /
+  metropolis
+  - your pick:
 ## blue bloods (2010)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -102,4 +130,12 @@ helps when we reconcile disagreements.
 - romance_dynamic (pick 0-2, skip if arc is none):
   partners-to-lovers / friends-to-lovers / enemies-to-lovers / forbidden
   / reunion / second-chance
+  - your pick:
+- lens (pick 1-3): cop / sheriff / fed / intelligence / spy /
+  private-eye / consulting-detective / criminal-consultant /
+  forensic-scientist / forensic-support / amateur / journalist /
+  military / firefighter / legal / politician
+  - your pick:
+- setting_scale (pick 1): rural / small-town / suburban / urban /
+  metropolis
   - your pick:

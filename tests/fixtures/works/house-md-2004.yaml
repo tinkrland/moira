@@ -18,6 +18,7 @@ genre_tradition:
 setting_geo: us
 lead_performers:
 - hugh laurie
+setting_scale: urban
 tags:
   tone:
   - value: dry-satirical

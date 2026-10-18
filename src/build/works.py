@@ -32,6 +32,7 @@ work_fields = (
 )
 layer1_fields = (
     "genre_tradition", "setting_geo", "setting_era", "lead_performers",
+    "setting_scale",
 )
 # every work gets these layer 2 axes (schema.md). motifs is proposal-only.
 core_axes = (
@@ -133,6 +134,11 @@ def validate_work(doc, vocab, filename="work"):
     for opt in ("setting_geo", "setting_era", "lead_performers"):
         if opt in doc and doc[opt] is not None and not isinstance(doc[opt], (str, list)):
             e(f"{filename}: {opt} must be a string, a list or null")
+    scale = doc.get("setting_scale")
+    if scale is not None:
+        err = check_trait_ref(vocab, "setting_scale", scale)
+        if err:
+            e(f"{filename}: {err}")
 
     # crime module: only active for crime-family genres
     crime = doc.get("crime_module")

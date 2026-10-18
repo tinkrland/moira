@@ -19,12 +19,13 @@ genre_tradition:
 setting_geo: us
 lead_performers:
 - tony shalhoub
+setting_scale: urban
 crime_module:
   crime_relation: solving
   mystery_mechanism:
   - whodunit
   lens:
-  - consultant
+  - consulting-detective
   detecting_subject:
   - murder
 tags:

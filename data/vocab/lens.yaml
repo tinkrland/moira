@@ -1,16 +1,22 @@
+# lens is the job or vantage point. multi-select: a work can carry
+# several lenses (psych is private-eye and consulting-detective).
 axis: lens
 layer: 1
 select: multi
 values:
 - cop
+- sheriff
 - fed
-- forensic
 - intelligence
 - spy
 - private-eye
-- consultant
+- consulting-detective
+- criminal-consultant
+- forensic-scientist
+- forensic-support
 - amateur
 - journalist
 - military
 - firefighter
 - legal
+- politician

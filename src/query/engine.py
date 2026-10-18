@@ -35,6 +35,8 @@ def _work_trait_list(doc):
             out.append((axis, entry["value"], entry["role"]))
     for g in doc.get("genre_tradition") or []:
         out.append(("genre_tradition", g, "primary"))
+    if doc.get("setting_scale"):
+        out.append(("setting_scale", doc["setting_scale"], "primary"))
     crime = doc.get("crime_module") or {}
     relation = crime.get("crime_relation")
     if relation:
