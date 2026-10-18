@@ -21,6 +21,8 @@ axis_weights:
   lead_flaw_treatment: 1.0
   romantic_arc: 1.0
   romance_dynamic: 1.0
+  gift_origin: 1.0
+  gift_kind: 1.0
   motifs: 1.0
   # layer 1, recommend path only
   genre_tradition: 0.5

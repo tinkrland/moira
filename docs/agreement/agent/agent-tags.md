@@ -24,6 +24,8 @@ rubric evidence rule. do not reconcile before both sets exist.
 - setting_scale: urban (cambridge: a city with a city department)
 - mystery_mechanism: whodunit (assembling the who from
   coded puzzles across the run)
+- gift_origin: nature (his puzzle-mind is innate, not trained)
+- gift_kind: high-iq (the puzzle-setter's mind is the show's premise)
 
 ## the mentalist (2008)
 
@@ -45,6 +47,9 @@ rubric evidence rule. do not reconcile before both sets exist.
   no fixed community)
 - mystery_mechanism: whodunit (each episode hides a
   culprit patrick unmasks)
+- gift_origin: nurture (learned mentalism from his fake-psychic con
+  years; no innate endowment)
+- gift_kind: untagged (nothing to name)
 
 ## high potential (2024)
 
@@ -65,6 +70,8 @@ rubric evidence rule. do not reconcile before both sets exist.
 - setting_scale: metropolis (los angeles drives the texture)
 - mystery_mechanism: whodunit (she cracks what the
   detectives cannot)
+- gift_origin: nature (iq 160, stated as born, never trained)
+- gift_kind: high-iq (the canonical owner example)
 
 ## ncis (2003)
 
@@ -87,6 +94,8 @@ rubric evidence rule. do not reconcile before both sets exist.
   travel)
 - mystery_mechanism: whodunit (most episodes investigate a
   hidden culprit through to the reveal)
+- gift_origin: none (an ensemble of competent professionals)
+- gift_kind: untagged
 
 ## blue bloods (2010)
 
@@ -106,6 +115,8 @@ rubric evidence rule. do not reconcile before both sets exist.
 - mystery_mechanism: none (the spine is the job and
   the family, not viewer-side deduction; the owner's canonical
   cop-show-without-whodunit example)
+- gift_origin: none (competence built the normal way)
+- gift_kind: untagged
 
 note: lens and setting_scale sections were added 2026-10-18 after the
 owner's taxonomy feedback, before the owner form was submitted. still

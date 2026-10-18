@@ -95,3 +95,11 @@ tags:
   - value: none
     role: primary
     evidence: no romantic through-line for the lead; the cases are the whole show
+  gift_origin:
+  - value: nature
+    role: primary
+    evidence: innate pattern-spotting, never trained
+  gift_kind:
+  - value: hyper-observation
+    role: primary
+    evidence: she sees what the room misses

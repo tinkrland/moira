@@ -97,3 +97,11 @@ tags:
   - value: none
     role: primary
     evidence: trudy's absence is the romantic story; no ongoing romance
+  gift_origin:
+  - value: nature
+    role: primary
+    evidence: his observation is innate, inseparable from who he is
+  gift_kind:
+  - value: hyper-observation
+    role: primary
+    evidence: notices what others miss, inseparable from his condition

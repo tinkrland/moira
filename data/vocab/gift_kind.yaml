@@ -1,0 +1,11 @@
+# optional: tagged only when the lead has a specific endowment.
+# gift_origin is the required core axis; this is the finer grain.
+axis: gift_kind
+layer: 2
+select: multi
+values:
+- eidetic-memory
+- hyperthymesia
+- high-iq
+- hyper-observation
+- supernatural-gift

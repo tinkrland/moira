@@ -96,6 +96,14 @@ tags:
   - value: slow-burn
     role: primary
     evidence: shawn and jules orbit each other for the majority of the run before finally landing
+  gift_origin:
+  - value: both
+    role: primary
+    evidence: born with eidetic recall AND drilled by his detective father
+  gift_kind:
+  - value: eidetic-memory
+    role: primary
+    evidence: 'eidetic recall since childhood plus henry''s training: nature and nurture both'
   romance_dynamic:
   - value: partners-to-lovers
     role: primary

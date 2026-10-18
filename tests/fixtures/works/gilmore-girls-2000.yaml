@@ -90,6 +90,10 @@ tags:
   - value: slow-burn
     role: primary
     evidence: luke and lorelai circle each other across most of the series
+  gift_origin:
+  - value: none
+    role: primary
+    evidence: no special edge; wit is not an endowment
   romance_dynamic:
   - value: friends-to-lovers
     role: primary

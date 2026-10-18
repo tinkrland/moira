@@ -1,0 +1,8 @@
+axis: gift_origin
+layer: 2
+select: single
+values:
+- none
+- nature
+- nurture
+- both

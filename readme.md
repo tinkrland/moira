@@ -96,7 +96,7 @@ config always produce the same answer, byte for byte.
 
 ## how it works, briefly
 
-- **vocab**: 22 axes in `data/vocab/`. 14 core layer 2 axes every work
+- **vocab**: 25 axes in `data/vocab/`. 15 core layer 2 axes every work
   carries (tone, fantasy, authority_stance, romantic arc and friends),
   one proposal-only axis (motifs, wrangled ao3-style with alias
   provenance), and layer 1 classification (genre tradition, the crime

@@ -39,9 +39,10 @@ core_axes = (
     "tone", "authority_stance", "protagonist_gift", "ensemble_shape", "fantasy",
     "structure", "resolution", "stakes", "world", "tech_mediation",
     "lead_gender", "lead_manner", "lead_flaw_treatment", "romantic_arc",
+    "gift_origin",
 )
 # optional axes exist in the vocab but are required only when applicable
-optional_axes = ("romance_dynamic",)
+optional_axes = ("romance_dynamic", "gift_kind")
 axis_order = core_axes + ("motifs",)
 crime_fields = ("crime_relation", "mystery_mechanism", "lens", "detecting_subject", "legal_role")
 

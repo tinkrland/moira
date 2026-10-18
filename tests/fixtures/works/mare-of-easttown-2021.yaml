@@ -95,3 +95,7 @@ tags:
   - value: none
     role: primary
     evidence: a brief fling enters and exits; no romantic through-line
+  gift_origin:
+  - value: none
+    role: primary
+    evidence: ordinary craft, built by experience

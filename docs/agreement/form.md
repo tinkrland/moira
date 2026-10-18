@@ -35,6 +35,11 @@ helps when we reconcile disagreements.
   whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
   none
   - your pick:
+- gift_origin (pick 1): none / nature / nurture / both
+  - your pick:
+- gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
+  / hyperthymesia / high-iq / hyper-observation / supernatural-gift
+  - your pick:
 ## the mentalist (2008)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -65,6 +70,11 @@ helps when we reconcile disagreements.
 - mystery_mechanism (pick 1-2, use "none" if there is no puzzle):
   whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
   none
+  - your pick:
+- gift_origin (pick 1): none / nature / nurture / both
+  - your pick:
+- gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
+  / hyperthymesia / high-iq / hyper-observation / supernatural-gift
   - your pick:
 ## high potential (2024)
 
@@ -97,6 +107,11 @@ helps when we reconcile disagreements.
   whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
   none
   - your pick:
+- gift_origin (pick 1): none / nature / nurture / both
+  - your pick:
+- gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
+  / hyperthymesia / high-iq / hyper-observation / supernatural-gift
+  - your pick:
 ## ncis (2003)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -128,6 +143,11 @@ helps when we reconcile disagreements.
   whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
   none
   - your pick:
+- gift_origin (pick 1): none / nature / nurture / both
+  - your pick:
+- gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
+  / hyperthymesia / high-iq / hyper-observation / supernatural-gift
+  - your pick:
 ## blue bloods (2010)
 
 - fantasy (pick 1-2): competence / justice / puzzle / belonging /
@@ -158,4 +178,9 @@ helps when we reconcile disagreements.
 - mystery_mechanism (pick 1-2, use "none" if there is no puzzle):
   whodunit / howdunnit / whydunnit / proving-it / inverted / caper /
   none
+  - your pick:
+- gift_origin (pick 1): none / nature / nurture / both
+  - your pick:
+- gift_kind (pick 0-2, only if there is an endowment): eidetic-memory
+  / hyperthymesia / high-iq / hyper-observation / supernatural-gift
   - your pick:

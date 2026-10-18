@@ -1,0 +1,101 @@
+id: white-collar-2009
+title: white collar
+medium: tv
+unit: series
+first_release: 2009
+origin:
+- us
+language: english
+creators:
+- jeff eastin
+external_ids: null
+status: reviewed
+tag_version: 1
+tagged_by: model
+date: '2026-10-18'
+genre_tradition:
+- crime
+- drama
+setting_geo: us
+lead_performers:
+- matt bomer
+- tim dekay
+setting_scale: metropolis
+crime_module:
+  crime_relation: combination
+  mystery_mechanism:
+  - caper
+  lens:
+  - criminal-consultant
+  detecting_subject:
+  - fraud
+tags:
+  tone:
+  - value: warm-comedic
+    role: primary
+    evidence: the con-man aesthetic is played with wit and style
+  authority_stance:
+  - value: adjacent-consultant
+    role: primary
+    evidence: works with the fbi under anklet constraint, neither inside nor against it
+  protagonist_gift:
+  - value: social-manipulation
+    role: primary
+    evidence: cons and forgeries run on his social engineering
+  - value: charm
+    role: secondary
+    evidence: everyone in the story bends to it
+  ensemble_shape:
+  - value: odd-couple
+    role: primary
+    evidence: the con artist and his fbi handler anchor the show
+  fantasy:
+  - value: competence
+    role: primary
+    evidence: the show exists to display mastery of forgery, cons and craft
+  - value: transgression
+    role: secondary
+    evidence: we root for the crimes
+  structure:
+  - value: episodic-closed
+    role: primary
+    evidence: case-of-the-week with a tracker arc
+  resolution:
+  - value: mostly-closed
+    role: primary
+    evidence: cases close, the arc stays open
+  stakes:
+  - value: medium
+    role: primary
+    evidence: 'real consequences: prison, anklet, kate'
+  world:
+  - value: realist
+    role: primary
+    evidence: no bent rules
+  tech_mediation:
+  - value: medium
+    role: primary
+    evidence: tracking anklet and forensic tooling matter to plots
+  lead_gender:
+  - value: male
+    role: primary
+    evidence: neal is the lead
+  lead_manner:
+  - value: charming
+    role: primary
+    evidence: tailored, fluent, disarming
+  - value: deadpan
+    role: secondary
+    evidence: banter with peter
+  lead_flaw_treatment:
+  - value: flaw-celebrated
+    role: primary
+    evidence: his cons are rewarded by the narrative and the audience's affection
+  romantic_arc:
+  - value: none
+    role: primary
+    evidence: romances serve plots rather than a sustained through-line
+  gift_origin:
+  - value: nurture
+    role: primary
+    evidence: 'his edge is learned craft: forgeries, languages, cons; no innate endowment'

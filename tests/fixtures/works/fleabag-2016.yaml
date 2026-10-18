@@ -89,6 +89,10 @@ tags:
   - value: central-premise
     role: primary
     evidence: each season's emotional core is a romance the show is about
+  gift_origin:
+  - value: none
+    role: primary
+    evidence: no special edge
   romance_dynamic:
   - value: forbidden
     role: primary

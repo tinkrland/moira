@@ -85,3 +85,11 @@ tags:
   - value: on-off-cycle
     role: primary
     evidence: house and cuddy cycle between together and apart across seasons
+  gift_origin:
+  - value: nature
+    role: primary
+    evidence: intuitive genius, not a learned method
+  gift_kind:
+  - value: high-iq
+    role: primary
+    evidence: diagnostic leaps no one else can make

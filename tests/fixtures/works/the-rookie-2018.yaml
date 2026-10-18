@@ -92,6 +92,10 @@ tags:
   - value: slow-burn
     role: primary
     evidence: 'chenford: two officers take seasons of partnered proximity to admit it'
+  gift_origin:
+  - value: none
+    role: primary
+    evidence: competent and hardworking, no special endowment
   romance_dynamic:
   - value: partners-to-lovers
     role: primary
