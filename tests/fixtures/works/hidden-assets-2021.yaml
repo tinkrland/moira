@@ -1,0 +1,95 @@
+id: hidden-assets-2021
+title: hidden assets
+medium: tv
+unit: series
+first_release: 2021
+origin:
+- ie
+- be
+- ca
+language: english
+creators:
+- peter mckenna
+external_ids: null
+status: draft
+tag_version: 1
+tagged_by: model
+date: '2026-10-18'
+genre_tradition:
+- crime
+- thriller
+setting_geo: ie
+lead_performers:
+- angeline ball
+setting_scale: small-town
+crime_module:
+  crime_relation: solving
+  mystery_mechanism:
+  - whodunit
+  lens:
+  - cop
+  detecting_subject:
+  - white-collar
+  - drug-trade
+  - organized-crime
+tags:
+  tone:
+  - value: grounded-gritty
+    role: primary
+    evidence: explosions, murders and conspiracy in a follow-the-money drama
+  authority_stance:
+  - value: institution-believer
+    role: primary
+    evidence: the bureau's mission, seize the assets of crime, is the protagonist's creed
+  protagonist_gift:
+  - value: procedural-craft
+    role: primary
+    evidence: methodical cross-border casework from ledgers to raids
+  ensemble_shape:
+  - value: workplace-team
+    role: primary
+    evidence: the cab squad working jointly with antwerp police
+  fantasy:
+  - value: justice
+    role: primary
+    evidence: the payoff is the trail followed and the assets seized
+  structure:
+  - value: serialized
+    role: primary
+    evidence: each season is one long conspiracy from case to cartel
+  resolution:
+  - value: unknown
+    role: primary
+    evidence: not observed; left unknown rather than guessed
+  stakes:
+  - value: high
+    role: primary
+    evidence: bombings and murders escalate through the season
+  world:
+  - value: realist
+    role: primary
+    evidence: no overlay beyond ordinary crime
+  tech_mediation:
+  - value: low
+    role: primary
+    evidence: 'traditional casework: ledgers, interviews, raids'
+  lead_gender:
+  - value: female
+    role: primary
+    evidence: detective sergeant emer berry
+  lead_manner:
+  - value: unknown
+    role: primary
+    evidence: not observed; left unknown rather than guessed
+  lead_flaw_treatment:
+  - value: unknown
+    role: primary
+    evidence: not observed; left unknown rather than guessed
+  romantic_arc:
+  - value: unknown
+    role: primary
+    evidence: not observed; left unknown rather than guessed
+  gift_origin:
+  - value: none
+    role: primary
+    evidence: professional competence without an endowment

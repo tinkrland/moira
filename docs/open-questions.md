@@ -51,3 +51,10 @@ unresolved decisions. agents must not resolve these on their own. add new ones h
     across tags; candidate scores normalize by the best candidate's raw
     sum; compound affinity contribution uses the mean axis weight of its
     all_of traits.
+
+26. (2026-10-18, surfaced by hidden assets) setting_geo is single-select
+    per schema, but cross-border shows have two real settings (shannon
+    and antwerp; the tunnel; the bridge). options: keep single and tag
+    the protagonist's base country, or make it multi. owner decision
+    needed. for now hidden assets is tagged ie with the antwerp thread
+    recorded here.
