@@ -31,6 +31,7 @@ crime_module:
   - intelligence
   detecting_subject:
   - espionage
+  - corruption
 tags:
   tone:
   - value: dry-satirical
