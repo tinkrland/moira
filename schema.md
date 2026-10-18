@@ -109,7 +109,7 @@ notes:
 - the consultant value is split: `criminal-consultant` is a criminal consulting for law enforcement (white collar); `consulting-detective` is a civilian detective (sherlock, ludwig, monk). `sheriff` covers rural county law enforcement, which is a different institution than an urban precinct. forensic splits the same way: `forensic-scientist` is the protagonist focus (bones); `forensic-support` is the accompanying csi-style role inside law enforcement.
 - `setting_scale` matters because the community changes the show: rural means sheriffs and spread-out jurisdictions, metropolis means precincts, and small-town means a recurring community cast (stars hollow, brokenwood mysteries), and island is its own texture: a water-bound community where geography shapes everything (death in paradise, shetland).
 - `proving-it` marks the later, evidence-and-courtroom phase of the case rather than the discovery phase.
-- `combination` is for works that mix solving, committing or defending in the same run.
+- `combination` is for works that mix solving, committing or defending in the same run. white collar is the canonical case (neal consults for the fbi and keeps committing); wild cards is the second (max cons under a plea agreement while solving cases with the service).
 
 ## modules planned later
 

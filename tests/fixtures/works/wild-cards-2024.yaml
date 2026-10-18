@@ -1,0 +1,94 @@
+id: wild-cards-2024
+title: wild cards
+medium: tv
+unit: series
+first_release: 2024
+origin:
+- ca
+language: english
+creators: null
+external_ids: null
+status: draft
+tag_version: 1
+tagged_by: model
+date: '2026-10-18'
+genre_tradition:
+- crime
+- comedy
+setting_geo: ca
+lead_performers:
+- vanessa morgan
+- giacomo gianniotti
+crime_module:
+  crime_relation: combination
+  lens:
+  - criminal-consultant
+  - cop
+tags:
+  tone:
+  - value: warm-comedic
+    role: primary
+    evidence: 'cbc''s own billing: a blue sky procedural with a comedic twist, a breezy crime romp'
+  authority_stance:
+  - value: adjacent-consultant
+    role: primary
+    evidence: max works cases from outside the service under a fragile plea agreement
+  protagonist_gift:
+  - value: charm
+    role: primary
+    evidence: the con woman's grift is the show's engine
+  - value: people-reading
+    role: secondary
+    evidence: world-smart scam artist who reads her marks
+  ensemble_shape:
+  - value: odd-couple
+    role: primary
+    evidence: 'the unlikely duo is the premise: con woman and by-the-book cop'
+  fantasy:
+  - value: competence
+    role: primary
+    evidence: the weekly pleasure is watching the grift land and the case crack
+  structure:
+  - value: episodic-closed
+    role: primary
+    evidence: case-of-the-week procedural
+  resolution:
+  - value: unknown
+    role: primary
+    evidence: not observed; untagged rather than guessed
+  stakes:
+  - value: low
+    role: primary
+    evidence: 'blue sky procedural: contained weekly stakes'
+  world:
+  - value: realist
+    role: primary
+    evidence: no supernatural overlay in the billing or premise
+  tech_mediation:
+  - value: unknown
+    role: primary
+    evidence: not observed; untagged rather than guessed
+  lead_gender:
+  - value: female
+    role: primary
+    evidence: max mitchell is the lead
+  lead_manner:
+  - value: charming
+    role: primary
+    evidence: spirited, clever con woman per the show's own description
+  lead_flaw_treatment:
+  - value: unknown
+    role: primary
+    evidence: not observed; untagged rather than guessed
+  romantic_arc:
+  - value: unknown
+    role: primary
+    evidence: not observed; untagged rather than guessed
+  gift_origin:
+  - value: nurture
+    role: primary
+    evidence: con artistry is learned craft, neal caffrey's parallel
+  gift_cover:
+  - value: none
+    role: primary
+    evidence: no masquerade about the gift itself; the con is the job
