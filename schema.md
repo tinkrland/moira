@@ -100,7 +100,7 @@ gift_kind          multi   eidetic-memory | hyperthymesia | high-iq | hyper-obse
 gift_cover         single  none | skill-as-supernatural | supernatural-as-mundane  (optional: tagged when a gift is masked)
 mystery_mechanism  multi   whodunit | howdunnit | whydunnit | proving-it | inverted | caper | none
 lens               multi   cop | sheriff | fed | intelligence | spy | private-eye | consulting-detective | criminal-consultant | forensic-scientist | forensic-support | amateur | journalist | military | firefighter | legal
-detecting_subject  multi   murder | financial | disappearance | fraud | cybercrime | organized-crime | cold-case | espionage | other
+detecting_subject  multi   murder | financial | disappearance | fraud | cybercrime | white-collar | corruption | organized-crime | drug-trade | trafficking | cold-case | espionage | other
 legal_role         multi   (only if crime_relation includes defending) prosecution | public-defense | criminal-defense | civil | white-collar-legal
 ```
 
