@@ -28,6 +28,14 @@ recurring, but not the spine).
   bought officials, rot from inside.
 - examples: line of duty, hidden assets, the wire's hamsterdam and
   city hall threads.
+- boundary: institutional rot vs one bad apple. ask whether the rot
+  is the subject or the exception. slow horses is the canonical
+  institutional case: not just taverner scheming, but ingrid in
+  season three, and whelan too blackmailing a politician over his
+  turkish father. they are all half corrupt, the show's thesis is
+  that the rot goes all the way up, and it is never meaningfully
+  punished. that is corruption as subject. a single corrupt
+  colleague treated as a stain on a trusted institution is not.
 - counterexample: one bad apple caught in an otherwise trusted
   institution. tag corruption only when the rot is the subject, not
   when a single villain wears a badge.
