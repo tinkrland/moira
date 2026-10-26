@@ -38,6 +38,7 @@ import { OwnerApi } from '../facades/ownerapi.js';
 import { OwnerContext, isValidOwnerSession } from '../facades/ownercontext.js';
 import { OUTCOME } from '../model/constants.js';
 import { ConnectorHub } from '../connectors/hub.js';
+import { VaultService } from './vault.js';
 import { SwitchService } from './switching.js';
 import { CoreService } from './core.js';
 
@@ -63,6 +64,7 @@ function loadInstanceKey() {
 
 export class Moira {
   constructor({ store = defaultStore(), now = () => this._nowMs(), instanceKey = loadInstanceKey(), io = {} } = {}) {
+    this.io = io; // injectable adapters/fetch; the core stays offline and deterministic
     // key safety: a persistent store without a stable instance key would wrap
     // every persona key under a key that changes per process, locking (or
     // silently re-keying) every vault after a restart. refuse to start.
@@ -98,6 +100,7 @@ export class Moira {
     this.core = new CoreService({ store: this.store, keys: this.keys, personas: this.personas, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
     this.switching = new SwitchService({ store: this.store, keys: this.keys, agents: this.agents, personas: this.personas, sessions: this.sessions, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
     this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: () => this._nowMs(), io });
+    this.vault = new VaultService({ store: this.store, personas: this.personas, keys: this.keys, receipts: this.receipts, now: () => this._nowMs() });
     this.agent = new AgentApi(this);
     this.owner = new OwnerApi(this);
   }

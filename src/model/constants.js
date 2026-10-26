@@ -102,7 +102,8 @@ export const RECEIPT_OP = {
   DEMOTE: 'demote',
   LINKAGE: 'linkage',
   PERSONA_FREEZE: 'persona_freeze',
-  PERSONA_THAW: 'persona_thaw'
+  PERSONA_THAW: 'persona_thaw',
+  VAULT: 'vault'
 };
 
 // linkage findings (spec 22): kinds only, never values
@@ -165,6 +166,8 @@ export const VOICE_CATEGORY = 'voice';
 export const STACK_CATEGORY = 'stack';
 export const AI_CATEGORY = 'ai';
 export const WORKSPACE_CATEGORY = 'workspace';
+export const VAULT_CATEGORY = 'vault';
+export const VAULT_KINDS = ['link', 'note', 'image', 'file'];
 export const PREFERENCE_CATEGORIES = ['preferences', 'taste'];
 
 // heteronym bridge templates (section 13): only themes/interests, never biographical facts.

@@ -414,3 +414,19 @@ pass-gated handoff) is committed there with its contract
 (technobabble/viola.md). main keeps voiceProfile v0 and the voice design
 doc; viola carries the engine until it starts.
 
+## 2026-10-26 - the persona vault
+
+mymind's capture-anything meets linkwarden's preservation, sealed per
+persona (owner named the lineage: collect, mymind, raindrop.io,
+linkwarden, combined). src/core/vault.js: capture (link, note, image,
+file) with zero mandatory organization; tags and sets added later and
+only by union; optional snapshot at capture time, sealed, sha256 digest;
+saving is not liking (connector captures stay untrusted, no capture
+mints a fact). owner surface vaultAdd/vaultList/vaultTag/vaultRemove;
+agent surface vault_query under a sets-scoped vault pass, snapshots
+stay sealed. vaultTag re-seals through store.update (cas on hosted
+stores) so concurrent tags cannot drop each other's union. migration
+20261026_01 (table) + 20261026_02 (cas allowlist); schema-safety pins
+the allowlist == created-tables invariant. suite 208 tests, 196 pass,
+12 gated.
+

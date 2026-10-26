@@ -6,7 +6,7 @@
 // if a future tool needs owner authority it does not belong in this class.
 
 import {
-  OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, PASS_DURATION, PERSONA_STATUS, STACK_CATEGORY, AI_CATEGORY
+  OUTCOME, RUNG, PREFERENCE_CATEGORIES, VOICE_CATEGORY, WORKSPACE_CATEGORY, VAULT_CATEGORY, PASS_DURATION, PERSONA_STATUS, STACK_CATEGORY, AI_CATEGORY
 } from '../model/constants.js';
 import { entriesForPass } from '../core/sets.js';
 import { nameToRank } from '../core/policy.js';
@@ -303,6 +303,20 @@ export class AgentApi {
   // the persona's declared stack, pass-gated like every read: tool + sorted
   // uses, structured on purpose - agents get exactly what the owner stated,
   // nothing inferred, nothing from other personas.
+  // vault_query: recall over the persona vault, under a vault pass scoped to
+  // the sets the owner chose at connection time. snapshots stay sealed; the
+  // agent receives metadata and the digest.
+  vault_query(accessToken, { q, kinds, tags } = {}) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    const pass = this.gw.passes.verify({ clientId: ctx.clientId, personaId: ctx.persona.id, category: VAULT_CATEGORY, purpose: 'recall' });
+    if (!pass) return { outcome: OUTCOME.APPROVAL_REQUIRED, reason: 'no_vault_pass' };
+    const res = this.gw.vault.serve(ctx.persona.id, pass, { q, kinds, tags });
+    if (res.outcome !== OUTCOME.RESULTS) return res;
+    this.gw.receipts.write({ actor: ctx.clientId, personaId: ctx.persona.id, op: 'read', reason: 'vault' });
+    return res;
+  }
+
   stack_get(accessToken, {}) {
     const ctx = this._ctx(accessToken);
     if (ctx.outcome !== OUTCOME.RESULTS) return ctx;

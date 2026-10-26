@@ -225,6 +225,25 @@ connection time you choose which set this particular agent gets. a
 set-scoped pass exposes exactly that slice; an unscoped one still means
 the whole hat.
 
+## the vault: capture without filing
+
+each persona has a vault: collect (by wetransfer), mymind, raindrop.io and
+linkwarden, combined per persona. save a link, a note, an image, a file
+with nothing required - no folder, no tag, no filing (mymind's promise,
+kept deterministically: no model guesses your categories). organize later
+if you want, and organization only ever unions: tags and the same named
+sets the stack uses, added after capture, never a replace. a page can be
+snapshotted at capture time so it survives link-rot (linkwarden's point),
+sealed in the vault with a digest; the archive is yours, agents get the
+digest and the metadata.
+
+saving is not liking: a vault capture is evidence of a save, never a
+taste claim. connector captures stay untrusted with provenance attached,
+and no capture ever mints a fact. agents reach a vault only through a
+pass scoped to the sets you chose at connection time, and one persona's
+vault never opens for another - heteronym isolation is structural, the
+payloads are sealed under the persona's key.
+
 ## modality
 
 moira is designed to be reached the way you actually live:

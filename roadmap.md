@@ -54,6 +54,16 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## the vault (shipped 2026-10-26)
+
+the persona vault is live on main: collect (wetransfer), mymind,
+raindrop.io and linkwarden combined, per persona. capture without
+filing, organize later by union (tags + sets), snapshots beat link-rot,
+saving is not liking, pass-gated sets-scoped agent recall
+(`vault_query`), heteronym isolation structural. later: connector-fed
+capture (a read saved to the vault in one step) and highlights as a
+capture kind.
+
 ## viola
 
 the voice engine is **viola** - and like evie it is deliberately decoupled

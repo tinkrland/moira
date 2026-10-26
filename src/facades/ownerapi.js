@@ -387,6 +387,33 @@ export class OwnerApi {
     return { outcome: OUTCOME.RESULTS, thawed: true };
   }
 
+  // the persona vault (mymind's capture-anything, linkwarden's preservation,
+  // sealed per persona). capture is not a taste claim; tags/sets union later.
+  async vaultAdd(ctx, { personaId, kind, url, title, note, tags, sets, snapshot, source } = {}, opts = {}) {
+    this._require(ctx);
+    if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_required' };
+    const fetcher = opts.fetch ?? this.gw.io?.fetch ?? null;
+    return this.gw.vault.add(personaId, { kind, url, title, note, tags, sets, snapshot, source }, fetcher);
+  }
+
+  vaultList(ctx, { personaId, kinds, tags } = {}) {
+    this._require(ctx);
+    if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_required' };
+    return this.gw.vault.list(personaId, { kinds, tags });
+  }
+
+  vaultTag(ctx, { personaId, id, tags, sets } = {}) {
+    this._require(ctx);
+    if (!personaId || !id) return { outcome: OUTCOME.DECLINED, reason: 'persona_and_item_required' };
+    return this.gw.vault.tag(personaId, id, { tags: tags ?? [], sets: sets ?? [] });
+  }
+
+  vaultRemove(ctx, { personaId, id } = {}) {
+    this._require(ctx);
+    if (!personaId || !id) return { outcome: OUTCOME.DECLINED, reason: 'persona_and_item_required' };
+    return this.gw.vault.remove(personaId, id);
+  }
+
   exportPersona(ctx, personaId) {
     this._require(ctx);
     const persona = this.gw.personas.get(personaId);
