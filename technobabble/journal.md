@@ -430,3 +430,17 @@ stores) so concurrent tags cannot drop each other's union. migration
 the allowlist == created-tables invariant. suite 208 tests, 196 pass,
 12 gated.
 
+## 2026-10-29 - turnkey plug-in, step 1
+
+owner: continue step by step, "be able to turnkey plug in".
+src/transport/ownersession.js: reference owner-session verifier for the
+transport's getOwnerContext hook - one secret, constant-time compared
+(x-moira-owner header, bearer, or moira_owner cookie), minting a real
+OwnerContext through moira.createOwnerContext (never a bare object).
+scripts/serve.mjs wires it from MOIRA_OWNER_SECRET; readme gained "plug
+it in" (one command, endpoints, store auto-pick, honest gap: shared
+secret is turnkey-local, passkeys/oidc still next). proof in
+test/ownersession.test.js: a server booted with the verifier answers
+/anonymous 401 (honest default) and /authorize 302-with-code when the
+secret is present. suite 211 tests, 199 pass, 12 gated.
+

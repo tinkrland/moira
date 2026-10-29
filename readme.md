@@ -244,6 +244,30 @@ pass scoped to the sets you chose at connection time, and one persona's
 vault never opens for another - heteronym isolation is structural, the
 payloads are sealed under the persona's key.
 
+## plug it in
+
+the backend is meant to be turned on, not rebuilt. one command boots the
+whole thing:
+
+    MOIRA_TOKEN_KEY=$(openssl rand -hex 32) \
+    MOIRA_OWNER_SECRET=$(openssl rand -base64 32) \
+    node scripts/serve.mjs
+
+that serves the mcp endpoint (`/mcp`), the discovery documents, the pkce
+and device authorization flows, and a working consent step: `/authorize`
+accepts `MOIRA_OWNER_SECRET` as an `x-moira-owner` header, a bearer
+token, or a `moira_owner` cookie (constant-time compared, minting a real
+OwnerContext through the only legal path). persistence picks itself:
+`INSFORGE_URL` + `INSFORGE_ADMIN_KEY` first, then `SUPABASE_URL` +
+`SUPABASE_SERVICE_ROLE_KEY`, else the local file store. a host plugs in by
+pointing its agent at the discovery url and registering that agent once on
+the owner surface; everything after that is passes.
+
+honest gap, same as everywhere: a shared secret is turnkey for a
+single-host deployment, not final owner auth. passkeys/oidc remain the
+stated next step, and the verifier is a reference implementation to swap
+out, not a claim.
+
 ## modality
 
 moira is designed to be reached the way you actually live:

@@ -54,6 +54,16 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## turnkey plug-in (step 1 shipped 2026-10-29)
+
+one command boots the backend: `node scripts/serve.mjs` with
+MOIRA_TOKEN_KEY + MOIRA_OWNER_SECRET serves mcp, discovery, pkce/device
+flows, and a working /authorize (constant-time secret -> real
+OwnerContext). store auto-picks insforge, then supabase, then local
+file. next steps: passkeys/oidc as the real owner auth (the shared
+secret is a reference implementation to swap out), then a host quickstart
+walkthrough in docs/.
+
 ## the vault (shipped 2026-10-26)
 
 the persona vault is live on main: collect (wetransfer), mymind,

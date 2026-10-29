@@ -8,6 +8,7 @@
 
 import { Moira } from '../src/index.js';
 import { createMoiraServer } from '../src/transport/server.js';
+import { createOwnerSessionVerifier } from '../src/transport/ownersession.js';
 
 if (!process.env.MOIRA_TOKEN_KEY) {
   console.error('MOIRA_TOKEN_KEY required: generate one with `openssl rand -hex 32`');
@@ -23,9 +24,13 @@ const moiraServer = createMoiraServer({
   baseUrl: BASE,
   port: PORT,
   host: '127.0.0.1',
-  // owner-session auth is the phase 2 open item: hosts wire their own owner
-  // verification here until it lands. without it, /authorize answers 401.
-  getOwnerContext: null,
+  // turnkey: set MOIRA_OWNER_SECRET and /authorize accepts that secret
+  // (x-moira-owner header, bearer, or moira_owner cookie). without it,
+  // /authorize answers 401 until a host wires its own owner verification.
+  // a shared secret is turnkey for single-host deployments, not final auth.
+  getOwnerContext: process.env.MOIRA_OWNER_SECRET
+    ? createOwnerSessionVerifier({ moira, secret: process.env.MOIRA_OWNER_SECRET })
+    : null,
   allowedOrigins: (process.env.MOIRA_ALLOWED_ORIGINS || '').split(',').filter(Boolean)
 });
 
@@ -34,4 +39,6 @@ console.log(`moira server on ${BASE}`);
 console.log(`  mcp endpoint:          ${BASE}/mcp`);
 console.log(`  authorization server: ${BASE}/.well-known/oauth-authorization-server`);
 console.log(`  device flow:          ${BASE}/device/code`);
-console.log('note: /authorize requires an owner session (getOwnerContext); wire owner auth first.');
+console.log(process.env.MOIRA_OWNER_SECRET
+  ? 'owner session: MOIRA_OWNER_SECRET set (x-moira-owner header, bearer, or moira_owner cookie)'
+  : 'note: /authorize requires an owner session; set MOIRA_OWNER_SECRET for turnkey access.');
