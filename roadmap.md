@@ -54,6 +54,15 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## host quickstart + connections audit (2026-10-29)
+
+docs/host-quickstart.md is the turnkey host path; docs/connections.md is
+the coverage matrix against ego.ist (connection types and permission
+granularity, honest gaps). next candidates surfaced by the audit:
+field-level fact addressing (if it earns its schema), directed-disclosure
+-style one-shot delivery, and live oauth verification for the registered
+adapters.
+
 ## turnkey plug-in (step 1 shipped 2026-10-29)
 
 one command boots the backend: `node scripts/serve.mjs` with

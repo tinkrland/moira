@@ -444,3 +444,23 @@ test/ownersession.test.js: a server booted with the verifier answers
 /anonymous 401 (honest default) and /authorize 302-with-code when the
 secret is present. suite 211 tests, 199 pass, 12 gated.
 
+## 2026-10-29 - host quickstart + connections vs ego.ist
+
+owner: "yes do that" (the quickstart) "also check w ego.ist for what all
+types of connections we covered, and what level of perms we allow (api,
+oauth, mcp, smth else) and how fine grained". wrote docs/host-quickstart.md
+(boot, register agent, pkce + device flow, first mcp call, first pass,
+connector-fed capture, honest gaps) and docs/connections.md: a coverage
+matrix against the egoist ai passport (read from ego.ist/docs and
+ego.ist/developer). inbound: mcp + pkce s256 + rfc 8628 device + connect
+codes all live; deep integrations and directed disclosure deliberately
+unbuilt. outbound: oauth2-bearer (drive/dropbox/onedrive), session-key
+(mega), generic api-key envelope, ingest planned, no mcp consumption,
+multi-account yes. granularity: category + sets + rung + purpose +
+duration + uses/spend caps + separate connector passes + proposals +
+signed content-free receipts + instant revocation. unique to moira in
+this comparison: rungs, sets, persona isolation as a hard wall, bridges
+with privacy budgets, one-time passes. gaps named: field-level
+addressing, hosted surface, 800+ integrations (moira stays honest with
+planned statuses), directed disclosure, live oauth verification.
+
