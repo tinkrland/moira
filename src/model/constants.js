@@ -67,6 +67,9 @@ export const FACT_STATUS = {
   SUPERSEDED: 'deleted'
 };
 
+// a standing pass is never indefinite: it renews by the owner's hand.
+export const STANDING_PASS_MAX_MS = 90 * 24 * 60 * 60 * 1000;
+
 export const PASS_DURATION = {
   ONE_TIME: 'one_time',
   SESSION: 'session',

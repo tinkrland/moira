@@ -92,7 +92,7 @@ test('end to end: a fact derived from a purpose-restricted parent cannot be read
 
   // reading the derived fact for marketing: denied, purpose not allowed
   const agent = m.owner.registerAgent(ctx, { name: 'a', tier: 'verified', personasAllowed: [p.id] });
-  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'notes', purpose: 'marketing', maxRung: 3 });
+  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'notes', purpose: 'marketing', maxRung: 3 , acknowledgeFull: true });
   const session = m.owner.createSession(ctx, { clientId: agent.id, personaId: p.id });
   const res = m.agent.persona_context(session.accessToken, { categories: ['notes'], purpose: 'marketing' });
   assert.equal(res.outcome, 'empty'); // the restricted parent is not served for marketing

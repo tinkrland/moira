@@ -464,3 +464,22 @@ with privacy budgets, one-time passes. gaps named: field-level
 addressing, hosted surface, 800+ integrations (moira stays honest with
 planned statuses), directed disclosure, live oauth verification.
 
+## 2026-10-29 - no indefinite, no implicit full; the surface, first build
+
+owner: "moira should not hand over indefinite access or full access" +
+the proper build of the card ui + how isolation and permeability coexist.
+shipped, failing-test-first: (1) passes guardrailed - a 'permanent' pass
+is a STANDING pass (marked, expires at 90d, renew by owner's hand; never
+indefinite) and an unscoped grant is declined without
+acknowledgeFull (full_scope_requires_acknowledgement); every pass records
+scope 'sets'|'full'. 21 existing test grants migrated to the explicit
+acknowledgement - the contract changed on owner instruction, tests follow.
+(2) the surface: ui/ (index.html, app.js, ui.css) served by the transport
+at /app, zero dependencies, flippable persona cards ported from the card
+kit's anatomy, owner-gated /api/overview and /api/pass; the full-hat
+toggle is off by default and says so. (3) docs/isolation-permeability.md
+- hard walls (per-persona keys, personasAllowed, heteronym never
+inherits, shred) vs permeable paths (passes, sets, core promote/demote,
+bridges with budgets, handoffs/packs, switching, ingress) with the
+surface's enforcement. suite 214 tests, 202 pass, 12 gated.
+

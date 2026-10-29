@@ -32,7 +32,7 @@ test('read with a pass serves at the pass rung and writes a receipt', () => {
     content: 'midterm thursday at 9', category: 'schedule',
     rungs: { summary: 'busy thursday morning', exists: 'busy this week' }
   });
-  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research', maxRung: 3 });
+  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research', maxRung: 3 , acknowledgeFull: true });
   const session = m.owner.createSession(ctx, { clientId: agent.id, personaId: p.id });
   const res = m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' });
   assert.equal(res.outcome, 'results');
@@ -49,7 +49,7 @@ test('fact max_rung caps what a pass can serve', () => {
     rungs: { summary: 'busy', exists: 'busy this week' },
     policy: { maxRung: 2 }
   });
-  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research', maxRung: 4 });
+  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research', maxRung: 4 , acknowledgeFull: true });
   const session = m.owner.createSession(ctx, { clientId: agent.id, personaId: p.id });
   const res = m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' });
   assert.equal(res.categories.schedule.served[0].rung, 'conclusion' in res.categories.schedule.served[0] ? 'conclusion' : res.categories.schedule.served[0].rung);
@@ -60,7 +60,7 @@ test('fact max_rung caps what a pass can serve', () => {
 test('revocation takes effect on the next read (16)', () => {
   const { ctx, m, p, agent } = setup();
   m.facts.add(p, { content: 'fact', category: 'schedule' });
-  const granted = m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research' });
+  const granted = m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research' , acknowledgeFull: true });
   const session = m.owner.createSession(ctx, { clientId: agent.id, personaId: p.id });
   const first = m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' });
   assert.equal(first.outcome, 'results');
@@ -72,7 +72,7 @@ test('revocation takes effect on the next read (16)', () => {
 test('one-time pass is consumed by a single read', () => {
   const { ctx, m, p, agent } = setup();
   m.facts.add(p, { content: 'fact', category: 'schedule' });
-  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research', duration: 'one_time' });
+  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research', duration: 'one_time' , acknowledgeFull: true });
   const session = m.owner.createSession(ctx, { clientId: agent.id, personaId: p.id });
   assert.equal(m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' }).outcome, 'results');
   assert.equal(m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' }).outcome, 'approval_required');
@@ -104,7 +104,7 @@ test('refresh tokens rotate; replay revokes the family (11)', () => {
 test('one-tap agent revoke kills sessions and passes on the next request', () => {
   const { ctx, m, p, agent } = setup();
   m.facts.add(p, { content: 'fact', category: 'schedule' });
-  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research' });
+  m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'schedule', purpose: 'research' , acknowledgeFull: true });
   const s = m.owner.createSession(ctx, { clientId: agent.id, personaId: p.id });
   m.agents.revoke(agent.id);
   const res = m.sessions.resolve(s.accessToken);
@@ -116,7 +116,7 @@ test('tier gating: unverified agents cannot get voice passes (7.1, 7.5)', () => 
   const ctx = ownerCtx(m);
   const p = m.owner.createPersona(ctx, { name: 'student', identity: 'linked' });
   const agent = m.owner.registerAgent(ctx, { name: 'random-cli', tier: 'unverified', personasAllowed: [p.id] });
-  const res = m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'voice', purpose: 'writing' });
+  const res = m.owner.grantPass(ctx, { clientId: agent.id, personaId: p.id, category: 'voice', purpose: 'writing' , acknowledgeFull: true });
   assert.equal(res.outcome, 'declined');
   assert.equal(res.reason, 'tier_gated_category');
 });

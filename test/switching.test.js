@@ -48,7 +48,7 @@ test('switching: request -> approve -> collect, old session untouched', () => {
   // give the alias persona one fact so the read has something to serve
   m.facts.add(alias, { content: 'writes at night', category: 'identity', basis: 'stated' });
   // reads on the new persona still need their own pass (passes never widen)
-  m.owner.grantPass(ctx, { clientId: agentId, personaId: alias.id, category: 'identity', purpose: 'test', maxRung: 4 });
+  m.owner.grantPass(ctx, { clientId: agentId, personaId: alias.id, category: 'identity', purpose: 'test', maxRung: 4 , acknowledgeFull: true });
   const asAlias = m.agent.persona_context(col.accessToken, { categories: ['identity'], purpose: 'test' });
   assert.equal(asAlias.outcome, 'results');
   assert.equal(asAlias.categories.identity.served[0].content, 'writes at night', 'serves the alias persona facts');

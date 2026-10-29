@@ -112,7 +112,7 @@ test('stack: agents read it pass-gated, structured, persona-scoped', () => {
   assert.equal(denied.outcome, 'approval_required', 'a pass is needed, like every other read');
 
   // grant the pass, then the agent sees exactly the declared stack
-  m.owner.grantPass(ctx, { clientId: agentId, personaId: founder.id, category: 'stack', purpose: 'context', duration: 'permanent' });
+  m.owner.grantPass(ctx, { clientId: agentId, personaId: founder.id, category: 'stack', purpose: 'context', duration: 'permanent' , acknowledgeFull: true });
   const got = m.agent.stack_get(sess.accessToken, {});
   assert.equal(got.outcome, 'results');
   assert.equal(got.entries.length, 1);

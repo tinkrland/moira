@@ -54,6 +54,21 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## surface, first build (2026-10-29)
+
+ui/ lives: flippable persona cards served at /app by the transport, owner
+-gated /api/overview + /api/pass, zero dependencies, full-hat lending
+gated behind an explicit acknowledgement. the react card kit stays parked
+on the card-kit branch as the design reference. next: open a card into
+the real detail panels (facts by category, vault captures, voice/quirk
+summary), then persona creation and set editing from the surface.
+
+## pass guardrails (2026-10-29)
+
+no indefinite access (standing passes cap at 90 days and renew by hand),
+no implicit full access (unscoped grants need acknowledgeFull; scope is
+recorded and shown). see docs/isolation-permeability.md.
+
 ## host quickstart + connections audit (2026-10-29)
 
 docs/host-quickstart.md is the turnkey host path; docs/connections.md is

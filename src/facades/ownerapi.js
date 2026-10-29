@@ -423,6 +423,29 @@ export class OwnerApi {
     return this.gw.vault.remove(personaId, id);
   }
 
+  // owner overview: the raw material for the browser surface. personas with
+  // their sets, live pass inventory (scope, standing, expiry), frozen state.
+  // no content, no canon: the card shows the shape of the hat, and opening a
+  // card is a separate, deliberate read.
+  overview(ctx) {
+    this._require(ctx);
+    const personas = this.gw.personas.list().map((p) => {
+      const setsRes = this.gw.sets.list(p.id);
+      const passes = this.gw.store.list('passes', (x) => x.personaId === p.id).map((x) => ({
+        id: x.id, clientId: x.clientId, category: x.category, purpose: x.purpose,
+        duration: x.duration, scope: x.scope ?? null, standing: x.standing ?? false,
+        sets: x.sets ?? null, maxRung: x.maxRung, expiresAt: x.expiresAt, revoked: x.revoked === true
+      }));
+      return {
+        id: p.id, name: p.name, identity: p.identity, status: p.status,
+        createdAt: p.createdAt ?? null,
+        sets: setsRes.outcome === OUTCOME.RESULTS ? setsRes.sets : [],
+        passes
+      };
+    });
+    return { outcome: OUTCOME.RESULTS, personas };
+  }
+
   exportPersona(ctx, personaId) {
     this._require(ctx);
     const persona = this.gw.personas.get(personaId);

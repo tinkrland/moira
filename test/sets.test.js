@@ -76,7 +76,7 @@ test('sets: an unscoped pass still means the whole persona context', () => {
   m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'sqlite', uses: ['local storage'], sets: ['side projects'] });
   m.owner.stackAdd(ctx, { personaId: founder.id, tool: 'vscode', uses: ['editor'] }); // in no set at all
 
-  const grantRes = m.owner.grantPass(ctx, { clientId: agentId, personaId: founder.id, category: 'stack', purpose: 'context', duration: 'permanent' });
+  const grantRes = m.owner.grantPass(ctx, { clientId: agentId, personaId: founder.id, category: 'stack', purpose: 'context', duration: 'permanent' , acknowledgeFull: true });
   const got = m.agent.stack_get(sess.accessToken, {});
   assert.equal(got.outcome, 'results');
   assert.equal(got.entries.length, 3, 'unscoped pass reads everything, set membership or not');

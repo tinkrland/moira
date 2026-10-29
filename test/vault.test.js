@@ -75,7 +75,7 @@ test('vault: agents reach it only through a sets-scoped pass', async () => {
   // unscoped pass sees the whole persona vault (owner's explicit choice)
   const agent2 = m.owner.registerAgent(ctx, { name: 'scribe-2', tier: 'verified', personasAllowed: [persona.id], spendCaps: { usd: 1 } }).id;
   const sess2 = m.owner.createSession(ctx, { clientId: agent2, personaId: persona.id });
-  m.owner.grantPass(ctx, { clientId: agent2, personaId: persona.id, category: 'vault', purpose: 'recall', duration: 'permanent' });
+  m.owner.grantPass(ctx, { clientId: agent2, personaId: persona.id, category: 'vault', purpose: 'recall', duration: 'permanent' , acknowledgeFull: true });
   const all = m.agent.vault_query(sess2.accessToken, {});
   assert.equal(all.items.length, 2);
 });

@@ -8,7 +8,7 @@
 // passes grant READ, never write approval (section 9.3).
 
 import { randomId } from '../util/crypto.js';
-import { PASS_DURATION, OUTCOME } from '../model/constants.js';
+import { PASS_DURATION, OUTCOME, STANDING_PASS_MAX_MS } from '../model/constants.js';
 
 export class PassService {
   constructor({ store, agents, receipts, now = Date.now }) {
@@ -20,9 +20,18 @@ export class PassService {
 
   // owner grants. connect codes and consent screens call into this after
   // owner authentication; agents can never reach it directly.
-  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = 3, uses = null, sets = null }) {
+  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = 3, uses = null, sets = null, acknowledgeFull = false }) {
     const agent = this.agents.get(clientId);
     if (!agent) return { outcome: OUTCOME.UNAVAILABLE, reason: 'unknown_agent' };
+
+    // no implicit full access: an unscoped pass exposes the whole hat and
+    // must be asked for out loud.
+    const scopedSets = Array.isArray(sets) && sets.length > 0
+      ? [...new Set(sets.map((s) => String(s).trim()).filter(Boolean))]
+      : null;
+    if (!scopedSets && acknowledgeFull !== true) {
+      return { outcome: OUTCOME.DECLINED, reason: 'full_scope_requires_acknowledgement' };
+    }
 
     const pass = {
       id: randomId('pass'),
@@ -34,13 +43,16 @@ export class PassService {
       maxRung,
       usesLeft: duration === PASS_DURATION.ONE_TIME ? 1 : uses,
       createdAt: this.now(),
-      expiresAt: duration === PASS_DURATION.PERMANENT ? null : this.now() + (ttlMs ?? 60 * 60 * 1000),
+      // no indefinite access: standing passes still expire and renew by hand
+      expiresAt: duration === PASS_DURATION.PERMANENT
+        ? this.now() + (ttlMs ?? STANDING_PASS_MAX_MS)
+        : this.now() + (ttlMs ?? 60 * 60 * 1000),
+      ...(duration === PASS_DURATION.PERMANENT ? { standing: true } : {}),
+      scope: scopedSets ? 'sets' : 'full',
       revoked: false,
       // context sets shared at connection time (null = whole persona
       // context). normalized names; the read path filters entries by these.
-      sets: Array.isArray(sets) && sets.length > 0
-        ? [...new Set(sets.map((s) => String(s).trim()).filter(Boolean))]
-        : null
+      sets: scopedSets
     };
     this.store.put('passes', pass.id, pass);
     this.receipts.write({ actor: 'owner', personaId, op: 'pass_grant', categories: [category], reason: purpose });

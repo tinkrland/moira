@@ -57,7 +57,7 @@ test('golden: no pass -> approval_required; with pass -> rung-capped facts; one-
   const before = m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' });
   assert.equal(before.outcome, 'approval_required');
 
-  m.owner.grantPass(ctx, { clientId: agent.id, personaId: student.id, category: 'schedule', purpose: 'research', maxRung: 2, duration: 'one_time' });
+  m.owner.grantPass(ctx, { clientId: agent.id, personaId: student.id, category: 'schedule', purpose: 'research', maxRung: 2, duration: 'one_time' , acknowledgeFull: true });
   const after = m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' });
   assert.equal(after.outcome, 'results');
   const served = after.categories.schedule.served;
@@ -72,7 +72,7 @@ test('golden: no pass -> approval_required; with pass -> rung-capped facts; one-
 
 test('golden: preference facts are served with their basis, so agents can phrase them honestly', () => {
   const { ctx, m, student, agent } = buildWorld();
-  m.owner.grantPass(ctx, { clientId: agent.id, personaId: student.id, category: 'preferences', purpose: 'research' });
+  m.owner.grantPass(ctx, { clientId: agent.id, personaId: student.id, category: 'preferences', purpose: 'research' , acknowledgeFull: true });
   const session = m.owner.createSession(ctx, { clientId: agent.id, personaId: student.id });
   const res = m.agent.persona_context(session.accessToken, { categories: ['preferences'], purpose: 'research' });
   assert.equal(res.outcome, 'results');
@@ -160,7 +160,7 @@ test('golden: pseudonymous persona is device_only by default with pairwise subs'
 test('determinism: identical worlds produce identical receipt ledgers', () => {
   const run = () => {
     const { ctx, m, student, agent } = buildWorld();
-    m.owner.grantPass(ctx, { clientId: agent.id, personaId: student.id, category: 'schedule', purpose: 'research', maxRung: 2 });
+    m.owner.grantPass(ctx, { clientId: agent.id, personaId: student.id, category: 'schedule', purpose: 'research', maxRung: 2 , acknowledgeFull: true });
     const session = m.owner.createSession(ctx, { clientId: agent.id, personaId: student.id });
     m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' });
     return m.receipts.fingerprint();

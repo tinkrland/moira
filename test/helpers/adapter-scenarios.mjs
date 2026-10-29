@@ -26,7 +26,7 @@ export function fullScenario(m, ctx) {
     rungs: { summary: 'busy thursday morning', conclusion: 'low bandwidth this week' }
   });
   const agent = m.owner.registerAgent(ctx, { name: 'helper', tier: 'verified', personasAllowed: [student.id, founder.id], spendCaps: { usd: 15 } });
-  m.owner.grantPass(ctx, { clientId: agent.id, personaId: student.id, category: 'schedule', purpose: 'research', maxRung: 2 });
+  m.owner.grantPass(ctx, { clientId: agent.id, personaId: student.id, category: 'schedule', purpose: 'research', maxRung: 2, acknowledgeFull: true });
   const session = m.owner.createSession(ctx, { clientId: agent.id, personaId: student.id });
   const read = m.agent.persona_context(session.accessToken, { categories: ['schedule'], purpose: 'research' });
   out.read = { outcome: read.outcome, rung: read.categories.schedule.served[0].rung, content: read.categories.schedule.served[0].content };
@@ -70,7 +70,7 @@ export function restartScenario(store, instanceKey) {
   const p = a.owner.createPersona(ctx, { name: 'student', identity: 'linked' });
   a.facts.add(p, { content: 'midterm thursday at 9', category: 'schedule' });
   const agentId = a.owner.registerAgent(ctx, { name: 'x', tier: 'verified', personasAllowed: [p.id] }).id;
-  a.owner.grantPass(ctx, { clientId: agentId, personaId: p.id, category: 'schedule', purpose: 'research', maxRung: 4 });
+  a.owner.grantPass(ctx, { clientId: agentId, personaId: p.id, category: 'schedule', purpose: 'research', maxRung: 4, acknowledgeFull: true });
   return { gatewayA: a, personaId: p.id, agentId };
 }
 

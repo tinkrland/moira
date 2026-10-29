@@ -38,6 +38,21 @@ export function createMoiraServer({
   const auth = new AuthServer({ moira, tokens, baseUrl });
   const mcp = new McpServer({ moira, tokens, allowedOrigins, now: () => moira.now() });
 
+  // static app files live in ui/ at the repo root; read per request (tiny,
+  // and it keeps deploys to "drop files in place").
+  const UI_DIR = new URL('../../ui/', import.meta.url);
+  async function sendFile(res, name, type) {
+    try {
+      const { readFile } = await import('node:fs/promises');
+      const body = await readFile(new URL(name, UI_DIR));
+      res.writeHead(200, { 'content-type': type, 'cache-control': 'no-store' });
+      res.end(body);
+    } catch {
+      res.writeHead(404, { 'content-type': 'text/plain' });
+      res.end('not found');
+    }
+  }
+
   function json(res, status, body, headers = {}) {
     res.writeHead(status, { 'content-type': 'application/json', ...headers });
     res.end(JSON.stringify(body));
@@ -59,6 +74,30 @@ export function createMoiraServer({
     try {
       const url = new URL(req.url, baseUrl);
       const path = url.pathname;
+
+      // the browser surface: zero-dependency static app + owner-gated json.
+      if (path === '/app' || path === '/app/') {
+        return sendFile(res, 'index.html', 'text/html; charset=utf-8');
+      }
+      if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
+      if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
+
+      if (path === '/api/overview' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.overview(owner);
+        return json(res, 200, out);
+      }
+      if (path === '/api/pass' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body || !body.personaId || !body.clientId || !body.category || !body.purpose) {
+          return json(res, 400, { outcome: 'declined', reason: 'persona_client_category_purpose_required' });
+        }
+        const out = moira.owner.grantPass(owner, body);
+        return json(res, out.outcome === 'results' ? 200 : 409, out);
+      }
 
       if (path === '/.well-known/oauth-protected-resource') {
         return json(res, 200, auth.discovery().protectedResource);

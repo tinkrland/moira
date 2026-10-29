@@ -55,7 +55,7 @@ test('core: linked personas inherit core facts BY REFERENCE in reads', () => {
   const coreBase = m.facts.add(student, { content: 'likes cameras', category: 'hobbies', basis: 'stated' });
   m.owner.promoteFact(ctx, { factId: coreBase.fact.id });
 
-  m.owner.grantPass(ctx, { clientId: agentId, personaId: student.id, category: 'hobbies', purpose: 'research', maxRung: 4 });
+  m.owner.grantPass(ctx, { clientId: agentId, personaId: student.id, category: 'hobbies', purpose: 'research', maxRung: 4 , acknowledgeFull: true });
   const read = m.agent.persona_context(sess.accessToken, { categories: ['hobbies'], purpose: 'research' });
   assert.equal(read.outcome, 'results');
   assert.equal(read.categories.hobbies.served.length, 1, 'inherited core fact served under the linked persona');

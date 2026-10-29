@@ -20,7 +20,7 @@ async function setup({ allowedOrigins = [] } = {}) {
   const persona = m.owner.createPersona(ctx, { name: 'student', identity: 'linked' });
   m.facts.add(persona, { content: 'midterm thursday at 9', category: 'schedule' });
   const agentId = m.owner.registerAgent(ctx, { name: 'helper', tier: 'verified', personasAllowed: [persona.id], spendCaps: { usd: 15 } }).id;
-  m.owner.grantPass(ctx, { clientId: agentId, personaId: persona.id, category: 'schedule', purpose: 'research', maxRung: 4 });
+  m.owner.grantPass(ctx, { clientId: agentId, personaId: persona.id, category: 'schedule', purpose: 'research', maxRung: 4 , acknowledgeFull: true });
   const sess = m.owner.createSession(ctx, { clientId: agentId, personaId: persona.id });
   const moiraServer = createMoiraServer({
     moira: m, baseUrl: 'http://127.0.0.1:0', tokenKey: KEY, allowedOrigins, port: 0

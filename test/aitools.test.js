@@ -129,7 +129,7 @@ test('ai tools: agents read them pass-gated, structured, never another persona\'
   const denied = m.agent.ai_get(sess.accessToken, {});
   assert.equal(denied.outcome, 'approval_required', 'a pass is needed, like every read');
 
-  m.owner.grantPass(ctx, { clientId: agentId, personaId: founder.id, category: 'ai', purpose: 'context', duration: 'permanent' });
+  m.owner.grantPass(ctx, { clientId: agentId, personaId: founder.id, category: 'ai', purpose: 'context', duration: 'permanent' , acknowledgeFull: true });
   const got = m.agent.ai_get(sess.accessToken, {});
   assert.equal(got.outcome, 'results');
   assert.equal(got.jobs.length, 1);

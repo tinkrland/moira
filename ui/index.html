@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>moira</title>
+<link rel="stylesheet" href="/app/ui.css" />
+</head>
+<body>
+<header class="bar">
+  <span class="brand">moira</span>
+  <span class="hint" id="status">owner session required</span>
+  <form id="auth" class="auth">
+    <input id="secret" type="password" placeholder="owner secret" autocomplete="off" />
+    <button type="submit">open</button>
+  </form>
+</header>
+
+<main id="deck" class="deck" aria-live="polite"></main>
+
+<aside id="panel" class="panel" hidden>
+  <h2 id="panel-title">share this hat</h2>
+  <form id="pass-form">
+    <label>agent <input name="clientId" placeholder="agent id" required /></label>
+    <label>category <input name="category" value="preferences" required /></label>
+    <label>purpose <input name="purpose" value="personalization" required /></label>
+    <label>duration
+      <select name="duration">
+        <option value="session">session (1h)</option>
+        <option value="one_time">one read</option>
+        <option value="permanent">standing (90d, renew by hand)</option>
+      </select>
+    </label>
+    <label>sets (comma separated; empty = full hat)
+      <input name="sets" placeholder="work, side-projects" /></label>
+    <label class="ack">
+      <input type="checkbox" name="acknowledgeFull" />
+      I understand an empty scope exposes the <b>whole hat</b>
+    </label>
+    <button type="submit">lend context</button>
+    <p id="pass-msg" class="msg" role="status"></p>
+  </form>
+</aside>
+
+<script src="/app/app.js"></script>
+</body>
+</html>
