@@ -167,7 +167,7 @@ export const STACK_CATEGORY = 'stack';
 export const AI_CATEGORY = 'ai';
 export const WORKSPACE_CATEGORY = 'workspace';
 export const VAULT_CATEGORY = 'vault';
-export const VAULT_KINDS = ['link', 'note', 'image', 'file'];
+export const VAULT_KINDS = ['link', 'note', 'image', 'file', 'highlight'];
 export const PREFERENCE_CATEGORIES = ['preferences', 'taste'];
 
 // heteronym bridge templates (section 13): only themes/interests, never biographical facts.

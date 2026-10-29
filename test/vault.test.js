@@ -110,3 +110,39 @@ test('vault: saving is not liking', async () => {
   const recs = m.owner.exportPersona(ctx, persona.id).receipts;
   assert.equal(recs.filter((r) => r.op === 'vault').length, 1, 'one capture, one vault receipt, no taste bookkeeping');
 });
+
+
+test('vault: connector-fed capture in one step, highlights as a kind', async () => {
+  const { m, ctx, persona } = setup();
+
+  // one step: a row the owner just read from a connector lands in the vault,
+  // provenance attached, still untrusted
+  const row = { id: 'file_1', name: 'strategy.md', url: 'https://drive.example/strategy', mimeType: 'text/markdown' };
+  const cap = await m.owner.vaultCapture(ctx, { personaId: persona.id, connectorId: 'drive', row, tags: ['planning'], sets: ['work'] });
+  assert.equal(cap.outcome, 'results');
+  const list = m.owner.vaultList(ctx, { personaId: persona.id });
+  const item = list.items.find((i) => i.id === cap.item.id);
+  assert.equal(item.kind, 'link', 'a row with a url is a link capture');
+  assert.equal(item.title, 'strategy.md', 'the row name becomes the title');
+  assert.equal(item.source.via, 'connector');
+  assert.equal(item.source.connector, 'drive');
+  assert.equal(item.source.untrusted, true, 'provenance rides along, untrusted');
+  assert.deepEqual(item.tags, ['planning']);
+
+  // linkwarden's half is still available at capture time
+  const snap = await m.owner.vaultCapture(ctx, { personaId: persona.id, connectorId: 'drive', row, snapshot: true }, { fetch: async (u) => ({ ok: true, text: async () => `page ${u}` }) });
+  assert.equal(snap.outcome, 'results');
+
+  // a row without a url becomes a note capture, never an invented link
+  const noteCap = await m.owner.vaultCapture(ctx, { personaId: persona.id, connectorId: 'drive', row: { id: 'f2', name: 'meeting notes', snippet: 'we agreed to ship friday' } });
+  const noteItem = m.owner.vaultList(ctx, { personaId: persona.id }).items.find((i) => i.id === noteCap.item.id);
+  assert.equal(noteItem.kind, 'note');
+
+  // highlights: the quote is the capture
+  const hl = await m.owner.vaultAdd(ctx, { personaId: persona.id, kind: 'highlight', quote: 'the blob cannot serve any single hat well', url: 'https://example.com/essay', title: 'the essay' });
+  assert.equal(hl.outcome, 'results');
+  const hlNoQuote = await m.owner.vaultAdd(ctx, { personaId: persona.id, kind: 'highlight', url: 'https://example.com/x' });
+  assert.equal(hlNoQuote.outcome, 'declined', 'a highlight without a quote is declined');
+  const hlItem = m.owner.vaultList(ctx, { personaId: persona.id }).items.find((i) => i.id === hl.item.id);
+  assert.equal(hlItem.quote, 'the blob cannot serve any single hat well');
+});

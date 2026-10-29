@@ -44,7 +44,10 @@ export class VaultService {
     const kind = spec.kind;
     if (!VAULT_KINDS.includes(kind)) return { outcome: OUTCOME.DECLINED, reason: 'unknown_kind' };
     if (kind === 'note' && !spec.note) return { outcome: OUTCOME.DECLINED, reason: 'note_required' };
-    if (kind !== 'note' && !spec.url) return { outcome: OUTCOME.DECLINED, reason: 'url_required' };
+    // a highlight's quote is the capture: without it there is nothing saved
+    if (kind === 'highlight' && !spec.quote) return { outcome: OUTCOME.DECLINED, reason: 'quote_required' };
+    if (kind !== 'note' && kind !== 'highlight' && !spec.url) return { outcome: OUTCOME.DECLINED, reason: 'url_required' };
+    if (kind === 'highlight' && spec.url === undefined) spec = { ...spec, url: null };
 
     const source = spec.source && typeof spec.source === 'object'
       ? { ...spec.source }
@@ -56,6 +59,7 @@ export class VaultService {
       url: spec.url ?? null,
       title: spec.title ?? (kind === 'note' ? null : spec.url),
       note: spec.note ?? null,
+      ...(kind === 'highlight' ? { quote: spec.quote } : {}),
       tags: [...new Set((spec.tags ?? []).map(String))],
       sets: [...new Set((spec.sets ?? []).map(String))],
       source
@@ -84,6 +88,34 @@ export class VaultService {
     this.store.put('vaultItems', id, { id, personaId, kind, createdAt: this.now(), sealed });
     this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.VAULT, reason: 'vault_add' });
     return { outcome: OUTCOME.RESULTS, item: { id, kind } };
+  }
+
+  // connector-fed capture, one step: a row the owner just read through a
+  // connector lands in the vault with its provenance attached. mapping is
+  // deterministic and documented: a row with a url is a link, a row with
+  // only text is a note. the row is never re-fetched here, the caller
+  // supplies exactly what was read.
+  async captureFromConnector(personaId, { connectorId, row, tags = [], sets = [], snapshot = false } = {}, fetcher = null) {
+    if (!connectorId || typeof connectorId !== 'string') return { outcome: OUTCOME.DECLINED, reason: 'connector_required' };
+    if (!row || typeof row !== 'object') return { outcome: OUTCOME.DECLINED, reason: 'row_required' };
+    const spec = row.url
+      ? {
+        kind: 'link',
+        url: String(row.url),
+        title: row.name ?? row.title ?? String(row.url),
+        note: row.snippet ?? row.description ?? null,
+        tags, sets, snapshot,
+        source: { via: 'connector', connector: connectorId, connectorRowId: row.id ?? null }
+      }
+      : {
+        kind: 'note',
+        url: null,
+        title: row.name ?? row.title ?? null,
+        note: row.snippet ?? row.description ?? row.content ?? (row.name ?? JSON.stringify(row)),
+        tags, sets,
+        source: { via: 'connector', connector: connectorId, connectorRowId: row.id ?? null }
+      };
+    return this.add(personaId, spec, fetcher);
   }
 
   // open the persona's items in-process. only ever called for the owner or

@@ -389,11 +389,20 @@ export class OwnerApi {
 
   // the persona vault (mymind's capture-anything, linkwarden's preservation,
   // sealed per persona). capture is not a taste claim; tags/sets union later.
-  async vaultAdd(ctx, { personaId, kind, url, title, note, tags, sets, snapshot, source } = {}, opts = {}) {
+  async vaultAdd(ctx, { personaId, kind, url, title, note, quote, tags, sets, snapshot, source } = {}, opts = {}) {
     this._require(ctx);
     if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_required' };
     const fetcher = opts.fetch ?? this.gw.io?.fetch ?? null;
-    return this.gw.vault.add(personaId, { kind, url, title, note, tags, sets, snapshot, source }, fetcher);
+    return this.gw.vault.add(personaId, { kind, url, title, note, quote, tags, sets, snapshot, source }, fetcher);
+  }
+
+  // connector-fed capture: save a row you just read through a connector
+  // straight into the persona vault, provenance attached (still untrusted).
+  async vaultCapture(ctx, { personaId, connectorId, row, tags, sets, snapshot } = {}, opts = {}) {
+    this._require(ctx);
+    if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_required' };
+    const fetcher = opts.fetch ?? this.gw.io?.fetch ?? null;
+    return this.gw.vault.captureFromConnector(personaId, { connectorId, row, tags, sets, snapshot }, fetcher);
   }
 
   vaultList(ctx, { personaId, kinds, tags } = {}) {
