@@ -1,62 +1,105 @@
-/* the card anatomy from the kit, without the kit's dependencies: warm paper,
-   one accent, 3d flip, no chrome. */
+/* the card kit, compiled to plain css. values taken from
+   card-kit/builder.tsx (MoiraCardBuilder): dark gradient card, 1.58:1
+   aspect, Space Mono, spotlight, noise, tilt, kit flip easing. */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
 :root {
-  --paper: #f6f1e7;
-  --ink: #23201b;
-  --muted: #7d7466;
-  --line: #d9d0bf;
-  --accent: #2f6f5e;
-  --warn: #8a4b2f;
-  --card: #fffdf8;
-  --radius: 18px;
+  --p1: #d9a441;
+  --p2: #7fa87a;
+  --p3: #8f8ac9;
+  --p4: #6fa5c9;
+  --p5: #c98a8a;
+  --ec-card: #141414;
+  --paper: #101010;
+  --ink: #f3efe6;
+  --muted: #8d8778;
+  --line: #262626;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
-  font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, sans-serif;
-  font-variant-numeric: tabular-nums;
+  font: 14px/1.5 'Space Mono', ui-monospace, monospace;
 }
 .bar { display: flex; gap: 14px; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--line); }
-.brand { letter-spacing: .14em; text-transform: lowercase; font-weight: 600; }
-.hint { color: var(--muted); font-size: 13px; }
+.brand { letter-spacing: .22em; text-transform: uppercase; font-weight: 700; font-size: 12px; }
+.hint { color: var(--muted); font-size: 11px; }
 .auth { margin-left: auto; display: flex; gap: 8px; }
-.auth input { width: 200px; }
 input, select, button {
-  font: inherit; color: inherit; background: var(--card);
+  font: inherit; font-size: 12px; color: var(--ink); background: #1a1a1a;
   border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
 }
-button { cursor: pointer; background: var(--ink); color: var(--paper); border-color: var(--ink); }
-button:hover { opacity: .9; }
-.deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 22px; }
-.card { perspective: 1200px; height: 320px; }
+button { cursor: pointer; background: var(--ink); color: #121212; border-color: var(--ink); font-weight: 700; }
+.deck { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 26px; padding: 26px; }
+
+/* one card = the kit's perspective wrapper + rotating inner */
+.card { perspective: 1400px; }
 .card-inner {
-  position: relative; width: 100%; height: 100%;
-  transform-style: preserve-3d; transition: transform .55s cubic-bezier(.22,.61,.36,1);
+  position: relative; width: 100%; aspect-ratio: 1.58 / 1;
+  transform-style: preserve-3d; cursor: pointer;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform .7s cubic-bezier(.34, 1.56, .64, 1);
+  will-change: transform;
 }
-.card.flipped .card-inner { transform: rotateY(180deg); }
+.card.flipped .card-inner { transform: rotateX(var(--rx, 0deg)) rotateY(calc(180deg + var(--ry, 0deg))); }
 .face {
-  position: absolute; inset: 0; backface-visibility: hidden;
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 20px; display: flex; flex-direction: column; gap: 10px;
-  box-shadow: 0 1px 0 rgba(0,0,0,.03), 0 12px 30px -24px rgba(35,32,27,.5);
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: 18px; padding: 18px 22px; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(155deg, #1c1c1c 0%, #0d0d0d 60%, #111 100%);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 6px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
 }
 .back { transform: rotateY(180deg); }
-.face h3 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
-.face .identity { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .12em; }
-.pillrow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
-.pill { border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; font-size: 12px; color: var(--muted); }
-.pill.full { border-color: var(--warn); color: var(--warn); }
-.pill.standing { border-color: var(--accent); color: var(--accent); }
-.row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
-.row span:last-child { color: var(--muted); }
-.flip { margin-top: 8px; align-self: flex-start; background: transparent; color: var(--ink); border-color: var(--line); }
-.panel { position: fixed; right: 20px; bottom: 20px; width: 340px; background: var(--card);
-  border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: 0 20px 50px -30px rgba(0,0,0,.4); }
-.panel h2 { margin: 0 0 10px; font-size: 16px; }
-.panel label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0; }
-.panel label input, .panel label select { width: 100%; margin-top: 4px; color: var(--ink); }
-.panel .ack { display: flex; gap: 8px; align-items: flex-start; color: var(--ink); font-size: 12px; }
+/* spotlight follows the pointer; noise is the kit's svg turbulence */
+.face::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 18px;
+  background: radial-gradient(circle at var(--sx, 50%) var(--sy, 50%), rgba(255,255,255,.10) 0%, rgba(255,255,255,.02) 40%, transparent 70%);
+  opacity: 0; transition: opacity .5s ease-out; mix-blend-mode: overlay;
+}
+.card:hover .face::before { opacity: 1; }
+.face::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .035; border-radius: 18px;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.chips { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+.chip {
+  font-size: 9px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--a, var(--p1)) 45%, transparent);
+  color: color-mix(in oklab, var(--a, var(--p1)) 80%, white 20%);
+  background: color-mix(in oklab, var(--a, var(--p1)) 12%, transparent);
+}
+.chip.p1 { --a: var(--p1); } .chip.p2 { --a: var(--p2); } .chip.p3 { --a: var(--p3); }
+.chip.p4 { --a: var(--p4); } .chip.p5 { --a: var(--p5); }
+
+.footer { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.name { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 2px; text-transform: uppercase; line-height: 1.1; margin-bottom: 3px; }
+.handle { font-size: 8px; color: rgba(255,255,255,.4); letter-spacing: .3px; }
+.stamp { text-align: right; }
+.stamp div { font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; line-height: 1.5; color: rgba(255,255,255,.25); }
+.stamp div:first-child { color: rgba(255,255,255,.35); }
+
+/* back face: the consent side, same anatomy */
+.back .rows { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 6px; overflow: auto; }
+.row { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; color: rgba(255,255,255,.72); }
+.row .tag { font-size: 8px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+.row .full { color: var(--p5); }
+.row .standing { color: var(--p2); }
+.empty { font-size: 10px; color: rgba(255,255,255,.4); }
+.actions { position: relative; z-index: 1; display: flex; gap: 8px; }
+.tiny {
+  font-size: 9px; letter-spacing: .12em; text-transform: uppercase; padding: 5px 9px; border-radius: 8px;
+  background: rgba(255,255,255,.06); color: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.1);
+}
+.tiny:hover { background: rgba(255,255,255,.12); }
+
+/* lending panel */
+.panel { position: fixed; right: 20px; bottom: 20px; width: 340px; background: #161616;
+  border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+.panel h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+.panel label { display: block; font-size: 10px; color: var(--muted); margin: 10px 0; letter-spacing: .04em; }
+.panel label input, .panel label select { width: 100%; margin-top: 4px; }
+.panel .ack { display: flex; gap: 8px; align-items: flex-start; color: var(--ink); font-size: 10px; }
 .panel .ack input { width: auto; margin-top: 2px; }
-.msg { min-height: 18px; font-size: 12px; color: var(--accent); }
-.msg.err { color: var(--warn); }
-.empty { color: var(--muted); padding: 22px; }
+.msg { min-height: 16px; font-size: 10px; color: var(--p2); }
+.msg.err { color: var(--p5); }

@@ -483,3 +483,20 @@ inherits, shred) vs permeable paths (passes, sets, core promote/demote,
 bridges with budgets, handoffs/packs, switching, ingress) with the
 surface's enforcement. suite 214 tests, 202 pass, 12 gated.
 
+## 2026-10-29 - the card kit, compiled; the demo card
+
+owner: compile the kit into the surface first, with a dummy card for
+"moira airidian" / moira@dearagent.shop. shipped: ui/ rewritten as a
+faithful vanilla compile of card-kit/builder.tsx - dark gradient card,
+1.58:1 aspect, Space Mono, pointer tilt +/-6deg, spotlight, svg noise,
+the kit's cubic-bezier(.34,1.56,.64,1) flip, accent chips p1..p5 mapping
+to sets + categories instead of template cats. personas gained a
+first-class email field (validated, never inferred) shown in the kit's
+handle line. scripts/seed-demo.mjs seeds "moira airidian" +
+moira@dearagent.shop idempotently (stack/ai/vault/fact with the work set).
+real bug found live: serve.mjs ignored MOIRA_STATE while seed-demo wrote
+through it, so the surface showed an empty store - both scripts now share
+cli.js's selection (hosted env, then MOIRA_STATE FileStore, else memory),
+pinned by a static test. suite 216 tests, 204 pass, 12 gated; live check:
+overview returns the seeded persona with its address.
+

@@ -54,6 +54,15 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## card kit compiled (2026-10-29)
+
+ui/ is now the card kit compiled to vanilla css/js (kit geometry, type,
+tilt, spotlight, noise, flip easing, accent chips) - no react, no build
+step. demo card: `node scripts/seed-demo.mjs` -> "moira airidian" /
+moira@dearagent.shop. personas carry a first-class email. next: sections
+open into detail (facts by category, vault, voice), persona creation and
+set editing from the surface.
+
 ## surface, first build (2026-10-29)
 
 ui/ lives: flippable persona cards served at /app by the transport, owner

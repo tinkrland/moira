@@ -439,6 +439,8 @@ export class OwnerApi {
       return {
         id: p.id, name: p.name, identity: p.identity, status: p.status,
         createdAt: p.createdAt ?? null,
+        email: p.email ?? null,
+        bio: p.characterSheet?.bio ?? null,
         sets: setsRes.outcome === OUTCOME.RESULTS ? setsRes.sets : [],
         passes
       };

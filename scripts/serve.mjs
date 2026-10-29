@@ -9,6 +9,7 @@
 import { Moira } from '../src/index.js';
 import { createMoiraServer } from '../src/transport/server.js';
 import { createOwnerSessionVerifier } from '../src/transport/ownersession.js';
+import { FileStore } from '../src/store.js';
 
 if (!process.env.MOIRA_TOKEN_KEY) {
   console.error('MOIRA_TOKEN_KEY required: generate one with `openssl rand -hex 32`');
@@ -17,7 +18,14 @@ if (!process.env.MOIRA_TOKEN_KEY) {
 
 const PORT = Number(process.env.MOIRA_PORT || 8080);
 const BASE = process.env.MOIRA_BASE_URL || `http://127.0.0.1:${PORT}`;
-const moira = new Moira({ instanceKey: process.env.MOIRA_INSTANCE_KEY && Buffer.from(process.env.MOIRA_INSTANCE_KEY, 'hex') || undefined });
+// store selection mirrors cli.js: hosted env wins, then MOIRA_STATE file,
+// else the in-memory default (a demo that vanishes on restart, honestly).
+const hosted = (process.env.INSFORGE_URL && process.env.INSFORGE_ADMIN_KEY) || (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+const store = hosted ? undefined : (process.env.MOIRA_STATE ? new FileStore(process.env.MOIRA_STATE) : undefined);
+const moira = new Moira({
+  store,
+  instanceKey: process.env.MOIRA_INSTANCE_KEY && Buffer.from(process.env.MOIRA_INSTANCE_KEY, 'hex') || undefined
+});
 
 const moiraServer = createMoiraServer({
   moira,

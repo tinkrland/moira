@@ -24,6 +24,16 @@ async function boot() {
   return { m, ctx, persona, agentId, base: `http://127.0.0.1:${bound.port}`, server };
 }
 
+test('app surface: serve and seed share the MOIRA_STATE file store', async () => {
+  const { readFileSync } = await import('node:fs');
+  for (const f of ['../scripts/serve.mjs', '../scripts/seed-demo.mjs']) {
+    const src = readFileSync(new URL(f, import.meta.url), 'utf8');
+    assert.match(src, /MOIRA_STATE/, `${f} honors MOIRA_STATE`);
+    assert.match(src, /FileStore/, `${f} uses the file store`);
+    assert.match(src, /INSFORGE_URL/, `${f} keeps hosted-first selection`);
+  }
+});
+
 test('app surface: served, owner-gated, and never silently full', async (t) => {
   const { persona, agentId, base, server } = await boot();
   t.after(() => new Promise((r) => server.server.close(r)));
@@ -47,6 +57,16 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   assert.equal(ov.personas[0].name, 'alexa');
   assert.deepEqual(ov.personas[0].sets.map((s) => s.name), ['work'], 'sets feed the card face');
   assert.deepEqual(ov.personas[0].passes, [], 'isolation is the default');
+
+  // the card kit is compiled in: kit values are pinned (no drift)
+  const js = await (await fetch(`${base}/app/app.js`)).text();
+  const css = await (await fetch(`${base}/app/ui.css`)).text();
+  assert.match(css, /aspect-ratio: 1\.58 \/ 1/, 'kit aspect');
+  assert.match(css, /Space Mono/, 'kit typeface');
+  assert.match(css, /feTurbulence/, 'kit noise overlay');
+  assert.match(css, /cubic-bezier\(\.34, 1\.56, \.64, 1\)/, 'kit flip easing');
+  assert.match(js, /\* 6/, 'kit ±6° tilt');
+  assert.match(js, /0\.7s|--ry/, 'tilt applied through css vars');
 
   // lending: full scope without acknowledgement is refused at the api
   const post = (body) => fetch(`${base}/api/pass`, { method: 'POST', headers: { ...owner, 'content-type': 'application/json' }, body: JSON.stringify(body) });

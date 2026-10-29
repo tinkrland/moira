@@ -18,9 +18,16 @@ export class PersonaService {
     this.now = now;
   }
 
-  create({ name, identity, storage = STORAGE.HOSTED, ownerRef = 'owner', inheritsCore = null, characterSheet = null, voiceProfile = null, linkVisibility = null, disclosure = null, ingress = null, egress = null, sensitive = false }) {
+  create({ name, identity, storage = STORAGE.HOSTED, ownerRef = 'owner', inheritsCore = null, characterSheet = null, voiceProfile = null, linkVisibility = null, disclosure = null, ingress = null, egress = null, sensitive = false, email = null }) {
     if (!Object.values(IDENTITY).includes(identity)) throw new Error(`unknown identity kind: ${identity}`);
     if (!Object.values(STORAGE).includes(storage)) throw new Error(`unknown storage tier: ${storage}`);
+
+    // a persona can carry its own reachable address (owner-stated, for every
+    // identity kind: linked personas have emails too). never inferred.
+    const cleanEmail = typeof email === 'string' && email.trim() !== '' ? email.trim() : null;
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      throw new Error('persona email must look like an address');
+    }
 
     const id = randomId('psn');
 
@@ -42,6 +49,7 @@ export class PersonaService {
       // heteronyms never inherit the shared core (forced false, section 10)
       inheritsCore: isHeteronym ? false : (inheritsCore ?? isLinked),
       characterSheet: isHeteronym ? characterSheet : null,
+      email: cleanEmail,
       voiceProfile: voiceProfile ?? defaultVoiceProfile(identity),
       // pseudonymous and heteronymous personas hide the owner-join from the
       // broker unless the owner explicitly chooses broker visibility.
