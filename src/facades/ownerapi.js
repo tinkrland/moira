@@ -389,6 +389,51 @@ export class OwnerApi {
 
   // the persona vault (mymind's capture-anything, linkwarden's preservation,
   // sealed per persona). capture is not a taste claim; tags/sets union later.
+  // the card, opened: one persona's honest inventory for the detail panel.
+  // facts grouped by category (content included: this is the owner reading
+  // their own), vault captures without archives, declared stack/ai, sets,
+  // and the live permission ledger. unknown persona = unavailable.
+  personaDetail(ctx, personaId) {
+    this._require(ctx);
+    const persona = this.gw.personas.get(personaId);
+    if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+
+    const facts = this.gw.facts.active(personaId);
+    const byCategory = {};
+    for (const fact of facts) (byCategory[fact.category] ??= []).push({
+      id: fact.id, content: fact.content, rung: fact.rung,
+      source: fact.provenance?.source ?? null, createdAt: fact.provenance?.createdAt ?? fact.createdAt ?? null
+    });
+
+    const vault = this.gw.vault.list(personaId, {});
+    const stack = this.gw.stack.list(personaId);
+    const ai = this.gw.aitools.list(personaId);
+    const sets = this.gw.sets.list(personaId);
+    const passes = this.gw.store.list('passes', (x) => x.personaId === personaId).map((x) => ({
+      id: x.id, clientId: x.clientId, category: x.category, purpose: x.purpose, duration: x.duration,
+      scope: x.scope ?? null, standing: x.standing ?? false, sets: x.sets ?? null, expiresAt: x.expiresAt, revoked: x.revoked === true
+    }));
+
+    return {
+      outcome: OUTCOME.RESULTS,
+      persona: {
+        id: persona.id, name: persona.name, identity: persona.identity, status: persona.status,
+        email: persona.email ?? null, createdAt: persona.createdAt ?? null
+      },
+      facts: { total: facts.length, byCategory },
+      vault: {
+        items: (vault.outcome === OUTCOME.RESULTS ? vault.items : []).map((i) => ({
+          id: i.id, kind: i.kind, title: i.title, url: i.url ?? null, tags: i.tags ?? [],
+          sets: i.sets ?? [], createdAt: i.createdAt
+        }))
+      },
+      stack: stack.outcome === OUTCOME.RESULTS ? stack.entries ?? stack.stack ?? [] : [],
+      ai: ai.outcome === OUTCOME.RESULTS ? (ai.jobs ?? []) : [],
+      sets: sets.outcome === OUTCOME.RESULTS ? sets.sets : [],
+      passes
+    };
+  }
+
   async vaultAdd(ctx, { personaId, kind, url, title, note, quote, tags, sets, snapshot, source } = {}, opts = {}) {
     this._require(ctx);
     if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_required' };

@@ -82,6 +82,27 @@ export function createMoiraServer({
       if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
       if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
 
+      if (path === '/api/persona' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const id = url.searchParams.get('id');
+        if (!id) return json(res, 400, { outcome: 'declined', reason: 'persona_id_required' });
+        const out = moira.owner.personaDetail(owner, id);
+        return json(res, out.outcome === 'results' ? 200 : 404, out);
+      }
+      if (path === '/api/persona' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        try {
+          const persona = moira.owner.createPersona(owner, {
+            name: body?.name, identity: body?.identity, email: body?.email ?? null
+          });
+          return json(res, 200, { outcome: 'results', persona: { id: persona.id, name: persona.name } });
+        } catch (err) {
+          return json(res, 400, { outcome: 'declined', reason: String(err.message) });
+        }
+      }
       if (path === '/api/overview' && req.method === 'GET') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

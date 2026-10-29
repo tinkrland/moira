@@ -263,6 +263,12 @@ OwnerContext through the only legal path). persistence picks itself:
 pointing its agent at the discovery url and registering that agent once on
 the owner surface; everything after that is passes.
 
+if you run the demo seed (`node scripts/seed-demo.mjs`) and then the
+server against the same `MOIRA_STATE`, both must share `MOIRA_INSTANCE_KEY`:
+persona keys are wrapped under it, and a mismatch makes vaults refuse to
+unwarp (the error says exactly that, by design). `.env.local` in the repo
+root carries all three values for local runs.
+
 honest gap, same as everywhere: a shared secret is turnkey for a
 single-host deployment, not final owner auth. passkeys/oidc remain the
 stated next step, and the verifier is a reference implementation to swap

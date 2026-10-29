@@ -83,7 +83,7 @@ export class VaultService {
       }
     }
 
-    const id = randomId();
+    const id = randomId('vi');
     const sealed = this.keys.sealPayload(personaId, VAULT_CATEGORY, `item:${id}`, payload);
     this.store.put('vaultItems', id, { id, personaId, kind, createdAt: this.now(), sealed });
     this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.VAULT, reason: 'vault_add' });

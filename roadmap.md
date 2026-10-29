@@ -54,6 +54,13 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## card detail + creation (2026-10-30)
+
+cards open into an honest inventory (facts by category, vault, stack, ai,
+sets, who can read), owner-gated via /api/persona; "+ persona" creates
+from the surface with validation. note for demo runs: seed and serve must
+share MOIRA_INSTANCE_KEY or vaults refuse to unwrap (by design).
+
 ## card kit compiled (2026-10-29)
 
 ui/ is now the card kit compiled to vanilla css/js (kit geometry, type,

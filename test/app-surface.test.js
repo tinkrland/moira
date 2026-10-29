@@ -58,6 +58,27 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   assert.deepEqual(ov.personas[0].sets.map((s) => s.name), ['work'], 'sets feed the card face');
   assert.deepEqual(ov.personas[0].passes, [], 'isolation is the default');
 
+  // the card opens: detail endpoint returns the inventory, owner-gated
+  assert.equal((await fetch(`${base}/api/persona?id=${persona.id}`)).status, 401);
+  const detail = await (await fetch(`${base}/api/persona?id=${persona.id}`, { headers: owner })).json();
+  assert.equal(detail.outcome, 'results');
+  assert.equal(detail.persona.name, 'alexa');
+  assert.ok(detail.stack.some((s) => s.tool === 'supabase'), 'declared stack shows');
+  assert.deepEqual(detail.passes, [], 'isolated until lent');
+  assert.equal((await fetch(`${base}/api/persona?id=psn_nope`, { headers: owner })).status, 404);
+
+  // persona creation from the surface: validated, receipted, then visible
+  const created = await fetch(`${base}/api/persona`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'night desk', identity: 'linked', email: 'desk@dearagent.shop' })
+  });
+  assert.equal(created.status, 200);
+  const bad = await fetch(`${base}/api/persona`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'x', identity: 'linked', email: 'nope' })
+  });
+  assert.equal(bad.status, 400, 'bad email is refused, not stored');
+
   // the card kit is compiled in: kit values are pinned (no drift)
   const js = await (await fetch(`${base}/app/app.js`)).text();
   const css = await (await fetch(`${base}/app/ui.css`)).text();

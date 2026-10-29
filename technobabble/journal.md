@@ -500,3 +500,23 @@ cli.js's selection (hosted env, then MOIRA_STATE FileStore, else memory),
 pinned by a static test. suite 216 tests, 204 pass, 12 gated; live check:
 overview returns the seeded persona with its address.
 
+## 2026-10-30 - the card opens; persona creation from the surface
+
+owner: continue testing and building autonomously. shipped: (1) owner
+personaDetail(ctx, personaId) - the opened card as an honest inventory:
+facts grouped by category (content, rung, provenance, timestamp), vault
+captures (kind/title/tags/sets, never the sealed snapshot), declared
+stack + ai tools, sets, and the live pass ledger; unknown persona =
+unavailable, not an empty success. (2) routes GET /api/persona?id,
+POST /api/persona (validated; bad email refused, heteronym without a
+sheet refused), still owner-gated. (3) ui: back face gained "open", the
+detail overlay renders the six sections, a "+ persona" fab and create
+form. bugs found by testing/live: seed's aiAdd used strings where
+aitools wants {tool} entries (silently declined); vault ids were
+`undefined_...` (randomId had no prefix) - now vi_; facts carry
+provenance.createdAt, not createdAt, so the panel shows null - mapped.
+live: seed + serve now need a SHARED MOIRA_INSTANCE_KEY or the vault
+wrap refuses to open (correct honest error) - .env.local now carries
+one; that trap is documented here because it will bite anyone running
+demo state. suite 218 tests, 206 pass, 12 gated.
+

@@ -19,7 +19,7 @@ export function seedDemo(moira, ctx) {
 
   // a little declared context so the card face has sections to show
   moira.owner.stackAdd(ctx, { personaId: persona.id, tool: 'supabase', uses: ['auth', 'postgres'], sets: ['work'] });
-  moira.owner.aiAdd(ctx, { personaId: persona.id, job: 'scraping', tools: ['firecrawl', 'tavily'], sets: ['work'] });
+  moira.owner.aiAdd(ctx, { personaId: persona.id, job: 'scraping', tools: [{ tool: 'firecrawl' }, { tool: 'tavily' }], sets: ['work'] });
   moira.owner.vaultAdd(ctx, { personaId: persona.id, kind: 'note', note: 'the first thing moira airidian ever saved.', sets: ['work'], tags: ['first'] });
   // a fact the owner declares directly (the trusted path; agents only propose)
   moira.facts.add(moira.personas.get(persona.id), {

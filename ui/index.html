@@ -18,6 +18,30 @@
 
 <main id="deck" class="deck" aria-live="polite"></main>
 
+<button id="new-persona" class="fab" title="new persona">+ persona</button>
+
+<section id="detail" class="detail" hidden>
+  <header class="detail-head">
+    <h2 id="detail-name"></h2>
+    <button id="detail-close" class="tiny">close</button>
+  </header>
+  <div id="detail-body" class="detail-body"></div>
+</section>
+
+<form id="create" class="panel create" hidden>
+  <h2>new persona</h2>
+  <label>name <input name="name" required placeholder="night desk" /></label>
+  <label>identity
+    <select name="identity">
+      <option value="linked">linked</option>
+      <option value="pseudonymous">pseudonymous</option>
+    </select>
+  </label>
+  <label>email (optional) <input name="email" placeholder="desk@dearagent.shop" /></label>
+  <button type="submit">create</button>
+  <p id="create-msg" class="msg" role="status"></p>
+</form>
+
 <aside id="panel" class="panel" hidden>
   <h2 id="panel-title">share this hat</h2>
   <form id="pass-form">

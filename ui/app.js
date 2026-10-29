@@ -63,6 +63,7 @@ function card(p) {
         <div class="rows">${rows(p)}</div>
         <div class="actions">
           <button class="tiny flip">flip</button>
+          <button class="tiny open">open</button>
           <button class="tiny lend">lend context…</button>
         </div>
       </div>
@@ -86,9 +87,49 @@ function card(p) {
   });
   el.addEventListener('click', (e) => {
     if (e.target.closest('.lend')) return openPanel(p);
+    if (e.target.closest('.open')) return openDetail(p).catch((err) => status(err.message, true));
     el.classList.toggle('flipped');
   });
   return el;
+}
+
+// the card, opened: facts by category, vault captures, declared stack/ai,
+// sets, permissions. everything here is what moira actually holds.
+function detailSection(title, body) {
+  return `<div class="section"><h3>${esc(title)}</h3>${body}</div>`;
+}
+
+async function openDetail(p) {
+  const d = await api(`/api/persona?id=${encodeURIComponent(p.id)}`);
+  $('#detail').hidden = false;
+  $('#detail-name').textContent = `${d.persona.name} · ${d.persona.identity}${d.persona.email ? ' · ' + d.persona.email : ''}`;
+  const cats = Object.entries(d.facts.byCategory ?? {});
+  const factBody = cats.length
+    ? cats.map(([cat, list]) => `<div class="meta">${esc(cat)} · ${list.length}</div><ul>${list.slice(0, 6).map((f) => `<li>${esc(f.content)}</li>`).join('')}</ul>`).join('')
+    : '<div class="meta">no facts yet</div>';
+  const vaultBody = d.vault.items.length
+    ? `<ul>${d.vault.items.slice(0, 8).map((i) => `<li>${esc(i.title ?? i.kind)} <span class="meta">${esc(i.kind)}</span></li>`).join('')}</ul>`
+    : '<div class="meta">vault empty</div>';
+  const stackBody = d.stack.length
+    ? `<ul>${d.stack.map((s) => `<li>${esc(s.tool)} <span class="meta">${esc((s.uses || []).join(', '))}</span></li>`).join('')}</ul>`
+    : '<div class="meta">nothing declared</div>';
+  const aiBody = d.ai.length
+    ? `<ul>${d.ai.map((a) => `<li>${esc(a.job)} <span class="meta">${esc((a.tools || []).map((t) => t.tool).join(', '))}</span></li>`).join('')}</ul>`
+    : '<div class="meta">nothing declared</div>';
+  const setsBody = d.sets.length
+    ? `<div class="chips">${d.sets.map((s, i) => `<span class="chip p${(i % 5) + 1}">${esc(s.name)} · ${s.count}</span>`).join('')}</div>`
+    : '<div class="meta">no sets</div>';
+  const permBody = d.passes.length
+    ? `<ul>${d.passes.map((x) => `<li>${esc(x.category)} · ${esc(x.purpose)} <span class="meta">${x.scope === 'full' ? 'full hat' : esc((x.sets || []).join(', '))}</span></li>`).join('')}</ul>`
+    : '<div class="meta">nothing lent. isolated.</div>';
+  $('#detail-body').innerHTML = [
+    detailSection(`facts · ${d.facts.total}`, factBody),
+    detailSection(`vault · ${d.vault.items.length}`, vaultBody),
+    detailSection('stack', stackBody),
+    detailSection('ai tools', aiBody),
+    detailSection('sets', setsBody),
+    detailSection('who can read', permBody)
+  ].join('');
 }
 
 function openPanel(p) {
@@ -141,6 +182,33 @@ $('#pass-form').addEventListener('submit', async (e) => {
     msg.textContent = err.message === 'full_scope_requires_acknowledgement'
       ? 'an empty scope is the whole hat: tick the acknowledgement or name sets.'
       : `declined: ${err.message}`;
+    msg.classList.add('err');
+  }
+});
+
+
+$('#detail-close').addEventListener('click', () => { $('#detail').hidden = true; });
+$('#new-persona').addEventListener('click', () => { $('#create').hidden = false; $('#create-msg').textContent = ''; });
+$('#create').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const msg = $('#create-msg');
+  try {
+    await api('/api/persona', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: fd.get('name'),
+        identity: fd.get('identity'),
+        ...(String(fd.get('email') || '').trim() ? { email: String(fd.get('email')).trim() } : {})
+      })
+    });
+    msg.textContent = 'created.';
+    msg.classList.remove('err');
+    e.target.reset();
+    $('#create').hidden = true;
+    await load();
+  } catch (err) {
+    msg.textContent = `declined: ${err.message}`;
     msg.classList.add('err');
   }
 });
