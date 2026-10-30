@@ -26,7 +26,25 @@ export function seedDemo(moira, ctx) {
     content: 'writes in lowercase, by choice', category: 'preferences', sets: ['work']
   });
 
-  return { created: true, persona: { id: persona.id, name: persona.name } };
+  // a pending access request so the inbox has something real in it: the
+  // demo agent asks for the work slice, and the owner decides. idempotent -
+  // a second seed sees the pending ask and leaves it alone.
+  const agent = moira.owner.registerAgent(ctx, {
+    name: 'planner', tier: 'verified', personasAllowed: [persona.id], spendCaps: { usd: 1 }
+  });
+  const session = moira.owner.createSession(ctx, { clientId: agent.id, personaId: persona.id });
+  const pending = moira.owner.listAccessRequests(ctx, { personaId: persona.id, status: 'pending' }).requests;
+  if (pending.length === 0) {
+    moira.agent.request_access(session.accessToken, {
+      categories: ['preferences'],
+      purpose: 'draft_replies',
+      duration: 'session',
+      sets: ['work'],
+      note: 'want your writing preferences so the draft sounds like you'
+    });
+  }
+
+  return { created: true, persona: { id: persona.id, name: persona.name }, agentId: agent.id };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -54,6 +54,15 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## ego.ist build (2026-10-30)
+
+step 1: access requests (agent asks with categories/purpose/duration/note,
+owner approves, narrows or denies; edits only tighten; approval mints the
+pass; ask + decision receipted). step 2: the inbox face in /app with live
+count and per-ask narrowing controls; seed-demo carries one pending ask.
+next: field-level addressing (style.preferences-style paths) and directed
+disclosure.
+
 ## card detail + creation (2026-10-30)
 
 cards open into an honest inventory (facts by category, vault, stack, ai,

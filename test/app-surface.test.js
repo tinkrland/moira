@@ -35,7 +35,7 @@ test('app surface: serve and seed share the MOIRA_STATE file store', async () =>
 });
 
 test('app surface: served, owner-gated, and never silently full', async (t) => {
-  const { persona, agentId, base, server } = await boot();
+  const { m, ctx, persona, agentId, base, server } = await boot();
   t.after(() => new Promise((r) => server.server.close(r)));
   const owner = { 'x-moira-owner': SECRET };
 
@@ -99,6 +99,27 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   const inbox = await (await fetch(`${base}/api/requests`, { headers: owner })).json();
   assert.equal(inbox.outcome, 'results');
   assert.ok(Array.isArray(inbox.requests), 'inbox shape');
+
+  // a full ask -> approve, narrow, deny round trip over http
+  const agent = m.owner.registerAgent(ctx, { name: 'asker', tier: 'verified', personasAllowed: [persona.id], spendCaps: { usd: 1 } }).id;
+  const session = m.owner.createSession(ctx, { clientId: agent, personaId: persona.id });
+  m.agent.request_access(session.accessToken, { categories: ['preferences'], purpose: 'p1', duration: 'session' });
+  const live = await (await fetch(`${base}/api/requests`, { headers: owner })).json();
+  const ask = live.requests[0];
+  assert.ok(ask && ask.status === 'pending', 'ask visible in the inbox');
+  const decide = (body) => fetch(`${base}/api/requests/decide`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' }, body: JSON.stringify(body)
+  });
+  // widening over http is refused
+  const widen = await decide({ requestId: ask.id, action: 'approve', edits: { duration: 'permanent' } });
+  assert.equal(widen.status, 409);
+  // narrowing works, and mints exactly one pass
+  const ok = await decide({ requestId: ask.id, action: 'approve', edits: { sets: ['work'], maxRung: 1, duration: 'one_time' } });
+  assert.equal(ok.status, 200);
+  assert.equal((await ok.json()).passes.length, 1);
+  // a second decision on a settled request is refused, not replayed
+  const again = await decide({ requestId: ask.id, action: 'deny' });
+  assert.equal(again.status, 409);
 
   // the card kit is compiled in: kit values are pinned (no drift)
   const js = await (await fetch(`${base}/app/app.js`)).text();

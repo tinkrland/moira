@@ -152,6 +152,59 @@ function openPanel(p) {
   $('#pass-msg').textContent = '';
 }
 
+// the request inbox: who is asking, why, for what, for how long. approving
+// can only narrow (the api refuses widening), and denying grants nothing.
+async function loadInbox() {
+  const out = await api('/api/requests?status=pending');
+  const body = $('#inbox-body');
+  $('#req-count').textContent = String(out.requests.length);
+  if (!out.requests.length) {
+    body.innerHTML = '<div class="empty">nothing pending. silence is the default.</div>';
+    return;
+  }
+  body.innerHTML = out.requests.map((r) => `
+    <div class="ask" data-id="${esc(r.id)}">
+      <div class="from">${esc(r.clientId)} → ${esc(r.personaId)}</div>
+      <div class="why">${r.note ? esc(r.note) : 'no note'}</div>
+      <div class="want">wants ${esc(r.categories.join(', '))} · purpose ${esc(r.purpose)} · ${esc(r.duration)}${r.sets ? ' · sets ' + esc(r.sets.join(', ')) : ' · whole hat (will need acknowledgement)'}</div>
+      <div class="form-row">
+        <label>sets <input name="sets" value="${r.sets ? esc(r.sets.join(', ')) : ''}" placeholder="work" /></label>
+        <label>rung <select name="maxRung">
+          ${[4, 3, 2, 1].map((n) => `<option value="${n}">${n}</option>`).join('')}
+        </select></label>
+        <label>for <select name="duration">
+          ${['one_time', 'session', 'permanent'].map((d) => `<option value="${d}" ${d === r.duration ? 'selected' : ''}>${d}</option>`).join('')}
+        </select></label>
+      </div>
+      <div class="verdict">
+        <button class="tiny approve">approve</button>
+        <button class="tiny deny">deny</button>
+      </div>
+    </div>`).join('');
+
+  for (const card of body.querySelectorAll('.ask')) {
+    const id = card.dataset.id;
+    card.querySelector('.approve').addEventListener('click', async () => {
+      const sets = card.querySelector('[name=sets]').value.split(',').map((s) => s.trim()).filter(Boolean);
+      const edits = {
+        maxRung: Number(card.querySelector('[name=maxRung]').value),
+        duration: card.querySelector('[name=duration]').value,
+        ...(sets.length ? { sets } : {})
+      };
+      try {
+        await api('/api/requests/decide', { method: 'POST', body: JSON.stringify({ requestId: id, action: 'approve', edits }) });
+        await Promise.all([loadInbox(), load()]);
+      } catch (err) { status(`declined: ${err.message}`, true); }
+    });
+    card.querySelector('.deny').addEventListener('click', async () => {
+      try {
+        await api('/api/requests/decide', { method: 'POST', body: JSON.stringify({ requestId: id, action: 'deny', reason: 'owner declined' }) });
+        await loadInbox();
+      } catch (err) { status(`deny failed: ${err.message}`, true); }
+    });
+  }
+}
+
 async function load() {
   const out = await api('/api/overview');
   state.personas = out.personas;
@@ -163,6 +216,7 @@ async function load() {
     state.personas.forEach((p) => deck.appendChild(card(p)));
   }
   status(`${state.personas.length} persona${state.personas.length === 1 ? '' : 's'} · nothing is shared by default`);
+  await loadInbox().catch(() => {});
 }
 
 $('#auth').addEventListener('submit', async (e) => {
@@ -225,3 +279,10 @@ $('#create').addEventListener('submit', async (e) => {
     msg.classList.add('err');
   }
 });
+
+
+$('#requests').addEventListener('click', async () => {
+  $('#inbox').hidden = false;
+  try { await loadInbox(); } catch (err) { status(err.message, true); }
+});
+$('#inbox-close').addEventListener('click', () => { $('#inbox').hidden = true; });

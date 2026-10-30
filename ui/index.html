@@ -20,6 +20,17 @@
 
 <button id="new-persona" class="fab" title="new persona">+ persona</button>
 
+<section id="inbox" class="detail inbox" hidden>
+  <header class="detail-head">
+    <h2>requests</h2>
+    <button id="inbox-close" class="tiny">close</button>
+  </header>
+  <p class="meta">apps asking for context. nothing is readable until you decide.</p>
+  <div id="inbox-body" class="detail-body"></div>
+</section>
+
+<button id="requests" class="fab fab-right" title="access requests">requests <span id="req-count">0</span></button>
+
 <section id="detail" class="detail" hidden>
   <header class="detail-head">
     <h2 id="detail-name"></h2>

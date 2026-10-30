@@ -565,3 +565,19 @@ approveAccessRequest/denyAccessRequest, routes GET /api/requests + POST
 20261030_01, allowlist + schema-safety union extended. suite 223 tests,
 211 pass, 12 gated.
 
+## 2026-10-30 - the request inbox (ego.ist build step 2)
+
+the consent loop needed a face. ui: a "requests" button with a live count,
+an inbox overlay listing each ask as who -> which persona, the note, wants
+(categories, purpose, duration, sets or "whole hat"), and per-ask narrowing
+controls (sets field, rung select 4..1, duration select) with approve/deny.
+approve posts edits to /api/requests/decide and refreshes cards + inbox;
+widening is refused by the api, and the ui just reports it. seed-demo now
+seeds the demo agent "planner" and one pending ask (preferences /
+draft_replies / session / work) so the inbox is not empty on a fresh demo,
+idempotently. tests: seed pins one-and-only-one pending ask; the surface
+test drives the whole loop over http (401 anon, ask visible, widening 409,
+narrowed approval 200 with exactly one pass, second decision on a settled
+request 409). suite 223 tests, 211 pass, 12 gated; live check: seeded
+request served by /api/requests.
+

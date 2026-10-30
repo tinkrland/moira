@@ -23,6 +23,14 @@ test('seed: the dummy card exists once, with its address on the overview', () =>
   assert.deepEqual(p.sets.map((s) => s.name), ['work'], 'the card face has sections');
   assert.deepEqual(p.passes, [], 'isolation is still the default for the demo card');
 
+  // the seeded demo carries a real pending ask for the inbox to decide
+  const inbox = m.owner.listAccessRequests(ctx, { status: 'pending' });
+  assert.equal(inbox.requests.length, 1, 'one pending ask, seeded once');
+  assert.equal(inbox.requests[0].purpose, 'draft_replies');
+  assert.deepEqual(inbox.requests[0].sets, ['work']);
+  seedDemo(m, ctx);
+  assert.equal(m.owner.listAccessRequests(ctx, { status: 'pending' }).requests.length, 1, 'idempotent');
+
   // the address is validated, never invented
   assert.throws(() => m.owner.createPersona(ctx, { name: 'bad', identity: 'linked', email: 'not-an-address' }), /look like an address/);
 });
