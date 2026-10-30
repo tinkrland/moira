@@ -209,17 +209,30 @@ test('moira_status reports unknown budget as unknown, never "no limits" (11)', (
   assert.equal(status.budget.known, false);
 });
 
-test('request_disclosure: exact https destination, owner approved, delivered once (11)', () => {
+test('request_disclosure: exact https destination, owner approved, delivered once (11)', async () => {
   const { ctx, m, p, sender } = setup();
+  // disclosure addresses authored fields (category.field), not free labels
+  m.facts.add(p, { content: 'moira@dearagent.shop', category: 'contact', fields: ['email'] });
   const session = m.owner.createSession(ctx, { clientId: sender.id, personaId: p.id });
-  const bad = m.agent.request_disclosure(session.accessToken, { fields: ['email'], destination: 'http://evil.com', purpose: 'x' });
+  const bad = m.agent.request_disclosure(session.accessToken, { fields: ['contact.email'], destination: 'http://evil.com', purpose: 'x' });
   assert.equal(bad.outcome, 'declined');
-  const req = m.agent.request_disclosure(session.accessToken, { fields: ['email'], destination: 'https://partner.example.com', purpose: 'signup' });
+  const req = m.agent.request_disclosure(session.accessToken, { fields: ['contact.email'], destination: 'https://partner.example.com', purpose: 'signup' });
   assert.equal(req.outcome, 'approval_required');
-  const approved = m.owner.approveDisclosure(ctx, req.disclosureId);
+  // no deliver function, no delivery: "delivered" is never claimed without it
+  const noDelivery = await m.owner.approveDisclosure(ctx, { disclosureId: req.disclosureId });
+  assert.equal(noDelivery.outcome, 'declined');
+  assert.equal(noDelivery.reason, 'deliver_required');
+
+  const sent = [];
+  const approved = await m.owner.approveDisclosure(ctx, {
+    disclosureId: req.disclosureId,
+    deliver: async (destination, payload) => { sent.push({ destination, payload }); return { ok: true }; }
+  });
   assert.equal(approved.outcome, 'results');
-  assert.equal(approved.attestation.deliveredOnce, true);
-  assert.ok(approved.attestation.signature);
-  const second = m.owner.approveDisclosure(ctx, req.disclosureId);
-  assert.equal(second.outcome, 'unavailable'); // at most once
+  assert.equal(approved.disclosure.status, 'delivered');
+  assert.ok(approved.attestation, 'signed attestation');
+  assert.equal(sent.length, 1, 'delivered exactly once');
+  const second = await m.owner.approveDisclosure(ctx, { disclosureId: req.disclosureId, deliver: async () => ({ ok: true }) });
+  assert.equal(second.outcome, 'declined'); // at most once
+  assert.equal(second.reason, 'already_delivered')
 });

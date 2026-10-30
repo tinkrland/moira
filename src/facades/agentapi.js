@@ -463,25 +463,24 @@ export class AgentApi {
     return this.gw.switching.collect({ clientId: ctx.clientId, switchId });
   }
 
-  // --- directed disclosure (section 11, borrowed from ego.ist) ------------------------
+  // --- directed disclosure (section 11, the ego.ist shape) ---------------------------
 
-  // protected-field delivery to one exact https destination, owner-approved,
-  // delivered at most once with a signed attestation.
+  // ask for selected protected fields to be delivered to ONE exact https
+  // destination. approval is the owner's; the app gets a content-free status.
   request_disclosure(accessToken, { fields, destination, purpose }) {
     const ctx = this._ctx(accessToken);
     if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
-    if (!/^https:\/\//.test(destination)) return { outcome: OUTCOME.DECLINED, reason: 'destination_must_be_exact_https' };
-    const request = {
-      id: randomId('disc'),
-      personaId: ctx.persona.id,
-      clientId: ctx.clientId,
-      fields, destination, purpose,
-      status: 'pending',
-      createdAt: this.gw.now()
-    };
-    this.gw.store.put('disclosures', request.id, request);
-    this.gw.receipts.write({ actor: ctx.clientId, personaId: ctx.persona.id, op: 'disclosure', reason: 'requested' });
-    return { outcome: OUTCOME.APPROVAL_REQUIRED, disclosureId: request.id };
+    return this.gw.disclosures.request({
+      personaId: ctx.persona.id, clientId: ctx.clientId, fields, destination, purpose
+    });
+  }
+
+  // the app's view: status + attestation + the field paths it asked for.
+  // never the values.
+  disclosure_status(accessToken, { disclosureId }) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    return this.gw.disclosures.status({ clientId: ctx.clientId, disclosureId });
   }
 }
 

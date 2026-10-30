@@ -79,6 +79,27 @@ export class OwnerApi {
     return this.gw.requests.deny({ requestId, reason });
   }
 
+  // directed disclosure: the owner decides, and delivery happens once.
+  listDisclosures(ctx, { personaId = null, status = 'pending' } = {}) {
+    this._require(ctx);
+    return { outcome: OUTCOME.RESULTS, disclosures: this.gw.disclosures.list({ personaId, status }) };
+  }
+
+  // approval IS the delivery: the host passes deliver(destination, payload).
+  // no deliver, no delivery - and no "delivered" without one.
+  approveDisclosure(ctx, spec = {}) {
+    this._require(ctx);
+    const { disclosureId, deliver } = spec;
+    if (!disclosureId) return { outcome: OUTCOME.DECLINED, reason: 'disclosure_id_required' };
+    return this.gw.disclosures.approve({ disclosureId, deliver });
+  }
+
+  denyDisclosure(ctx, { disclosureId, reason = null } = {}) {
+    this._require(ctx);
+    if (!disclosureId) return { outcome: OUTCOME.DECLINED, reason: 'disclosure_id_required' };
+    return this.gw.disclosures.deny({ disclosureId, reason });
+  }
+
   createBridge(ctx, spec) {
     this._require(ctx);
     return this.gw.bridges.create(spec);
@@ -296,27 +317,6 @@ export class OwnerApi {
     this.gw.store.update('pendingConnects', rec.id, (p) => ({ ...p, status: 'denied' }));
     this.gw.receipts.write({ actor: 'owner', personaId: null, op: 'session', reason: 'device_code_denied' });
     return { outcome: OUTCOME.RESULTS, userCode };
-  }
-
-  // owner approves a directed disclosure: attestation delivered at most once.
-  approveDisclosure(ctx, disclosureId) {
-    this._require(ctx);
-    const d = this.gw.store.get('disclosures', disclosureId);
-    if (!d || d.status !== 'pending') return { outcome: OUTCOME.UNAVAILABLE, reason: 'disclosure_not_found_or_used' };
-    const attestation = {
-      personaId: d.personaId,
-      sub: this.gw.personas.sub(d.personaId, d.clientId),
-      fields: d.fields,
-      destination: d.destination,
-      purpose: d.purpose,
-      deliveredOnce: true,
-      nonce: randomId('nonce'),
-      ts: this.gw.now()
-    };
-    attestation.signature = this.gw.keys.signReceipt(attestation);
-    this.gw.store.update('disclosures', disclosureId, (x) => ({ ...x, status: 'delivered' }));
-    this.gw.receipts.write({ actor: 'owner', personaId: d.personaId, op: 'disclosure', reason: 'delivered_once' });
-    return { outcome: OUTCOME.RESULTS, attestation };
   }
 
   // owner declares that shared evidence between two personas is intentional

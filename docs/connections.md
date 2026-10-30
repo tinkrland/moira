@@ -89,7 +89,11 @@ moira's dials, in the same spirit but not field-addressed:
 3. **800+ integrations.** ego.ist advertises 800+ connector sources; moira
    has a registry of blocks/jobs with a handful active and the rest
    `planned` - deliberately honest statuses rather than phantom rows.
-4. **directed disclosure and deep integrations** are unbuilt (see above).
+4. ~~directed disclosure~~ **shipped 2026-10-31** (request → owner decision →
+   exactly one server-to-server delivery to the exact https destination →
+   content-free status with a signed attestation; values never returned to
+   the app, at any status). **deep integrations** (managed server-to-server
+   onboarding) remain deliberately unbuilt.
 5. **live oauth verification** - adapters are fixture-verified only.
 
 none of these change the shape: moira's model is a superset of ego.ist's

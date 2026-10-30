@@ -371,6 +371,16 @@ export const MCP_TOOLS = [
       required: ['fields', 'destination', 'purpose']
     },
     method: 'request_disclosure'
+  },
+  {
+    name: 'disclosure_status',
+    description: 'check a directed disclosure: status, times, signed attestation. never the values.',
+    inputSchema: {
+      type: 'object',
+      properties: { disclosureId: { type: 'string' } },
+      required: ['disclosureId']
+    },
+    method: 'disclosure_status'
   }
 ];
 

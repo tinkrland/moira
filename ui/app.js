@@ -155,14 +155,28 @@ function openPanel(p) {
 // the request inbox: who is asking, why, for what, for how long. approving
 // can only narrow (the api refuses widening), and denying grants nothing.
 async function loadInbox() {
-  const out = await api('/api/requests?status=pending');
+  const [out, disc] = await Promise.all([
+    api('/api/requests?status=pending'),
+    api('/api/disclosures?status=pending').catch(() => ({ disclosures: [] }))
+  ]);
   const body = $('#inbox-body');
-  $('#req-count').textContent = String(out.requests.length);
+  $('#req-count').textContent = String(out.requests.length + (disc.disclosures?.length ?? 0));
   if (!out.requests.length) {
     body.innerHTML = '<div class="empty">nothing pending. silence is the default.</div>';
     return;
   }
-  body.innerHTML = out.requests.map((r) => `
+  const discCards = (disc.disclosures ?? []).map((d) => `
+    <div class="ask" data-disc="${esc(d.id)}">
+      <div class="from">${esc(d.clientId)} → ${esc(d.personaId)}</div>
+      <div class="why">directed disclosure: deliver to <b>${esc(d.destination)}</b></div>
+      <div class="want">wants ${esc(d.fields.join(', '))} · purpose ${esc(d.purpose)} · one delivery, values never returned to the app</div>
+      <div class="verdict">
+        <button class="tiny approve-disc">deliver once</button>
+        <button class="tiny deny-disc">deny</button>
+      </div>
+    </div>`).join('');
+
+  body.innerHTML = discCards + out.requests.map((r) => `
     <div class="ask" data-id="${esc(r.id)}">
       <div class="from">${esc(r.clientId)} → ${esc(r.personaId)}</div>
       <div class="why">${r.note ? esc(r.note) : 'no note'}</div>
@@ -182,6 +196,22 @@ async function loadInbox() {
         <button class="tiny deny">deny</button>
       </div>
     </div>`).join('');
+
+  for (const card of body.querySelectorAll('.ask[data-disc]')) {
+    const id = card.dataset.disc;
+    card.querySelector('.approve-disc').addEventListener('click', async () => {
+      try {
+        await api('/api/disclosures/decide', { method: 'POST', body: JSON.stringify({ disclosureId: id, action: 'approve' }) });
+        await Promise.all([loadInbox(), load()]);
+      } catch (err) { status(`delivery declined: ${err.message}`, true); }
+    });
+    card.querySelector('.deny-disc').addEventListener('click', async () => {
+      try {
+        await api('/api/disclosures/decide', { method: 'POST', body: JSON.stringify({ disclosureId: id, action: 'deny', reason: 'owner declined' }) });
+        await loadInbox();
+      } catch (err) { status(err.message, true); }
+    });
+  }
 
   for (const card of body.querySelectorAll('.ask')) {
     const id = card.dataset.id;

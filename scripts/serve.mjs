@@ -27,8 +27,31 @@ const moira = new Moira({
   instanceKey: process.env.MOIRA_INSTANCE_KEY && Buffer.from(process.env.MOIRA_INSTANCE_KEY, 'hex') || undefined
 });
 
+// directed disclosure needs someone to actually make the call: one POST, no
+// redirects followed (a redirect is a different destination than the approved
+// one), bounded by a timeout.
+const deliver = async (destination, payload) => {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), 8000);
+  try {
+    const res = await fetch(destination, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'user-agent': 'moira-disclosure/1' },
+      body: JSON.stringify(payload),
+      redirect: 'error',
+      signal: ac.signal
+    });
+    return { ok: res.ok, status: res.status };
+  } catch {
+    return { ok: false };
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 const moiraServer = createMoiraServer({
   moira,
+  deliver,
   baseUrl: BASE,
   port: PORT,
   host: '127.0.0.1',

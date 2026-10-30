@@ -29,6 +29,7 @@ export function createMoiraServer({
   baseUrl = 'http://127.0.0.:8080',
   tokenKey = undefined,
   getOwnerContext = null,
+  deliver = null, // the host's https delivery function (directed disclosure)
   allowedOrigins = [],
   endpoint = '/mcp',
   port = 8080,
@@ -81,6 +82,29 @@ export function createMoiraServer({
       }
       if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
       if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
+
+      if (path === '/api/disclosures' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        return json(res, 200, moira.owner.listDisclosures(owner, { status: url.searchParams.get('status') ?? 'pending' }));
+      }
+      if (path === '/api/disclosures/decide' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.disclosureId || !['approve', 'deny'].includes(body.action)) {
+          return json(res, 400, { outcome: 'declined', reason: 'disclosure_id_and_action_required' });
+        }
+        if (body.action === 'deny') {
+          const out = moira.owner.denyDisclosure(owner, { disclosureId: body.disclosureId, reason: body.reason ?? null });
+          return json(res, out.outcome === 'results' ? 200 : 409, out);
+        }
+        if (typeof deliver !== 'function') {
+          return json(res, 409, { outcome: 'declined', reason: 'deliver_not_configured' });
+        }
+        const out = await moira.owner.approveDisclosure(owner, { disclosureId: body.disclosureId, deliver });
+        return json(res, out.outcome === 'results' ? 200 : 409, out);
+      }
 
       if (path === '/api/requests' && req.method === 'GET') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;

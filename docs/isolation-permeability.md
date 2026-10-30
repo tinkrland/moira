@@ -26,6 +26,7 @@ revocable. "lending, not handing over" is the whole grammar.
 | **core** | facts a linked persona promotes to the shared core | promote/demote are audited; heteronyms never see core |
 | **bridges** | two-sided sharing between personas | privacy budget, most-restrictive taint wins, both sides declared |
 | **handoffs / packs** | a strict, pre-declared bundle to a named recipient agent | rung is the strict deal; one-time; expires |
+| **directed disclosure** | selected addressed fields delivered once to one exact https destination | owner-approved; delivered server-to-server; the app only ever sees status + a signed attestation, never values; a failure is a failure, not a retry loop |
 | **switching** | moving an agent between personas | owner approves, teardown is explicit, the old context does not follow silently |
 | **ingress allow** | letting another persona's content in | owner-allowlisted pairwise; not global |
 

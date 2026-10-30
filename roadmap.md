@@ -60,7 +60,9 @@ step 1: access requests (agent asks with categories/purpose/duration/note,
 owner approves, narrows or denies; edits only tighten; approval mints the
 pass; ask + decision receipted). step 2: the inbox face in /app with live
 count and per-ask narrowing controls; seed-demo carries one pending ask.
-step 3: field-level addressing (`preferences.writing_style`) across facts,
+step 4: directed disclosure (request -> owner decision -> exactly one
+server-to-server delivery to the exact https destination -> content-free
+status + signed attestation; no deliver, no delivery). step 3: field-level addressing (`preferences.writing_style`) across facts,
 passes, requests and approvals - addresses can only narrow. next: directed
 disclosure (one-shot delivery to an exact destination with a content-free
 status back).

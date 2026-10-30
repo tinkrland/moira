@@ -134,6 +134,21 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   const again = await decide({ requestId: ask.id, action: 'deny' });
   assert.equal(again.status, 409);
 
+  // directed disclosure over http: owner-gated, delivered once, content-free back
+  assert.equal((await fetch(`${base}/api/disclosures`)).status, 401);
+  m.facts.add(m.personas.get(persona.id), { content: 'size M', category: 'preferences', fields: ['sizes'] });
+  const discAsk = m.agent.request_disclosure(session.accessToken, {
+    fields: ['preferences.sizes'], destination: 'https://shop.example.com/hook', purpose: 'size_rec'
+  });
+  assert.equal(discAsk.outcome, 'approval_required');
+  const pend = await (await fetch(`${base}/api/disclosures`, { headers: owner })).json();
+  assert.equal(pend.disclosures.length, 1, 'the ask is in the owner inbox');
+  const noDeliver = await fetch(`${base}/api/disclosures/decide`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ disclosureId: discAsk.disclosureId, action: 'approve' })
+  });
+  assert.equal(noDeliver.status, 409, 'no deliverer configured, no delivery claimed');
+
   // the card kit is compiled in: kit values are pinned (no drift)
   const js = await (await fetch(`${base}/app/app.js`)).text();
   const css = await (await fetch(`${base}/app/ui.css`)).text();

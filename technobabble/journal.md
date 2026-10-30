@@ -598,3 +598,28 @@ demo shows the shape. http pinned: an out-of-category address is 409.
 suite 225 tests, 213 pass, 12 gated; live check confirms fields on the
 panel payload.
 
+## 2026-10-31 - directed disclosure (ego.ist build step 4)
+
+the last gap my audit named, closed. src/core/disclosures.js: an app asks
+for addressed fields (category.field) to be delivered to ONE exact https
+destination (https only, no credentials, no fragment, validated) with a
+purpose; the owner sees it in the inbox; approval IS the delivery - the
+host passes deliver(destination, payload), moira calls it once and records
+delivered/failed. the app's view (disclosure_status) is status + times +
+fields asked + signed attestation and NEVER values: verified in the live
+harness that the returned JSON contains no value. a second approval is
+'already_delivered'; a deny and a failed delivery leak nothing either; a
+failed delivery is terminal, retrying is a new ask. found and killed a
+phantom on the way: an older ownerapi.approveDisclosure(ctx, id) marked
+disclosures 'delivered' with an attestation WITHOUT ever delivering
+anything - deleted, its test migrated to the real contract (no deliver ->
+'decline_required'... actually 'deliver_required'), and the packs test now
+authors contact.email so addressing is exercised. runtime: server takes a
+deliver option (409 deliver_not_configured without it), serve.mjs ships a
+real fetch deliverer (8s abort, redirect:'error' - a redirect is a
+different destination), mcp tool disclosure_status (manifest now 32),
+routes GET /api/disclosures + POST /api/disclosures/decide, surface inbox
+shows disclosure cards with "deliver once" / deny. suite 227 tests, 215
+pass, 12 gated; live round trip: pending 1 -> approve 200 delivered ->
+payload ['size M in outerwear'] -> agent view leaks a value? false.
+

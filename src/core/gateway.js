@@ -42,6 +42,7 @@ import { ConnectorHub } from '../connectors/hub.js';
 import { VaultService } from './vault.js';
 import { SwitchService } from './switching.js';
 import { CoreService } from './core.js';
+import { DisclosureService } from './disclosures.js';
 
 function defaultStore() {
   if (process.env.INSFORGE_URL && process.env.INSFORGE_ADMIN_KEY) {
@@ -87,6 +88,9 @@ export class Moira {
     this.agents = new AgentService({ store, receipts: this.receipts, now });
     this.sessions = new SessionService({ store, agents: this.agents, now });
     this.passes = new PassService({ store, agents: this.agents, receipts: this.receipts, now });
+    this.disclosures = new DisclosureService({
+      store, personas: this.personas, facts: this.facts, keys: this.keys, receipts: this.receipts, now
+    });
     this.requests = new AccessRequestService({
       store, personas: this.personas, agents: this.agents, passes: this.passes, receipts: this.receipts, now
     });
