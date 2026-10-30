@@ -67,6 +67,16 @@ export class FactService {
 
     const resolvedBasis = writeDecision.basis;
 
+    // sets: same vocabulary and validation as declared context, so one
+    // 'work' slice spans stack, ai tools, facts and the vault.
+    let factSets = [];
+    if (spec.sets !== undefined && spec.sets !== null) {
+      if (!Array.isArray(spec.sets) || !spec.sets.every((x) => typeof x === 'string' && x.trim() !== '')) {
+        return { outcome: OUTCOME.DECLINED, reason: 'sets_invalid' };
+      }
+      factSets = [...new Set(spec.sets.map((x) => x.trim()))];
+    }
+
     const fact = {
       id: randomId('fact'),
       personaId: persona.id,
@@ -85,6 +95,7 @@ export class FactService {
       policy,
       preferenceBasis: resolvedBasis,
       validUntil: validUntil ?? (resolvedBasis === BASIS.AVAILABILITY_DRIVEN && spec.circumstanceEndsAt ? spec.circumstanceEndsAt : null),
+      sets: factSets,
       provenance: { source, clientId, evidence, createdAt: this.now(), actor },
       sealed: null
     };
@@ -170,8 +181,15 @@ export class FactService {
 
   // search within one persona only. facts whose rung cannot be served under the
   // cap are reported as skipped, never served above their max_rung.
-  serve(personaId, { categories = null, predicate = null, capRank = RUNG.FULL, purpose = null }) {
-    const facts = this.active(personaId).filter((f) => categories === null || categories.includes(f.category));
+  serve(personaId, { categories = null, predicate = null, capRank = RUNG.FULL, purpose = null, sets = null }) {
+    const setScope = Array.isArray(sets) && sets.length > 0
+      ? new Set(sets.map((s) => String(s).trim().toLowerCase()))
+      : null;
+    const facts = this.active(personaId).filter((f) =>
+      (categories === null || categories.includes(f.category)) &&
+      // a set-scoped pass slices facts too: unfiled facts stay out of a
+      // sliced read (same rule as entriesForPass for declared context)
+      (!setScope || (f.sets ?? []).some((s) => setScope.has(String(s).trim().toLowerCase()))));
     // shared core: personas with inheritsCore read core facts by reference
     // (spec 5/17). heteronyms never reach here - personas.js forces the flag
     // false at create and update - but serve still guards, because the core is

@@ -101,6 +101,7 @@ export class Moira {
     this.switching = new SwitchService({ store: this.store, keys: this.keys, agents: this.agents, personas: this.personas, sessions: this.sessions, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
     this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: () => this._nowMs(), io });
     this.vault = new VaultService({ store: this.store, personas: this.personas, keys: this.keys, receipts: this.receipts, now: () => this._nowMs() });
+    this.sets.vault = this.vault; // one set vocabulary spans declared context, facts and the vault
     this.agent = new AgentApi(this);
     this.owner = new OwnerApi(this);
   }

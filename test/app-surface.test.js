@@ -79,6 +79,21 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   });
   assert.equal(bad.status, 400, 'bad email is refused, not stored');
 
+  // set editing from the surface: untag everywhere, nothing deleted
+  const setPost = await fetch(`${base}/api/set`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ personaId: persona.id, name: 'work' })
+  });
+  assert.equal(setPost.status, 200);
+  const afterSet = await (await fetch(`${base}/api/persona?id=${persona.id}`, { headers: owner })).json();
+  assert.equal(afterSet.sets.length, 0, 'set gone');
+  assert.ok(afterSet.stack.length === 1, 'the declaration survives, untagged');
+  const missing = await fetch(`${base}/api/set`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ personaId: persona.id, name: 'nope' })
+  });
+  assert.equal(missing.status, 404, 'unknown set is honest');
+
   // the card kit is compiled in: kit values are pinned (no drift)
   const js = await (await fetch(`${base}/app/app.js`)).text();
   const css = await (await fetch(`${base}/app/ui.css`)).text();

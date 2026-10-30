@@ -72,7 +72,7 @@ export class AgentApi {
         results.approvals.push({ category, action: 'approval_required' });
         continue;
       }
-      const served = this.gw.facts.serve(persona.id, { categories: [category], predicate, capRank: pass.maxRung, purpose });
+      const served = this.gw.facts.serve(persona.id, { categories: [category], predicate, capRank: pass.maxRung, purpose, sets: pass.sets ?? null });
       results.categories[category] = served;
       if (served.served.length > 0) anyServed = true;
       if (pass.duration === PASS_DURATION.ONE_TIME) this.gw.passes.consume(pass.id);

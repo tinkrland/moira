@@ -129,6 +129,31 @@ export class VaultService {
       });
   }
 
+  // the sets service's view: set names only, never payloads
+  setEntries(personaId) {
+    return this._open(personaId).map((i) => ({ id: i.id, sets: i.sets ?? [] }));
+  }
+
+  // untag one set name from every item (used by sets.remove); tags/sets
+  // only ever union on the way in, and removal is explicit on the way out.
+  untagSet(personaId, name) {
+    const target = String(name).trim().toLowerCase();
+    if (!target) return 0;
+    let touched = 0;
+    for (const row of this.store.list('vaultItems', (r) => r.personaId === personaId)) {
+      const next = this.store.update('vaultItems', row.id, (rec) => {
+        const p = this.keys.openPayload(personaId, VAULT_CATEGORY, `item:${row.id}`, rec.sealed) ?? {};
+        const kept = (p.sets ?? []).filter((s) => String(s).trim().toLowerCase() !== target);
+        if (kept.length === (p.sets ?? []).length) return rec;
+        p.sets = kept;
+        rec.sealed = this.keys.sealPayload(personaId, VAULT_CATEGORY, `item:${row.id}`, p);
+        return rec;
+      });
+      if (next) touched++;
+    }
+    return touched;
+  }
+
   list(personaId, { kinds = null, tags = null } = {}) {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };

@@ -117,7 +117,8 @@ async function openDetail(p) {
     ? `<ul>${d.ai.map((a) => `<li>${esc(a.job)} <span class="meta">${esc((a.tools || []).map((t) => t.tool).join(', '))}</span></li>`).join('')}</ul>`
     : '<div class="meta">nothing declared</div>';
   const setsBody = d.sets.length
-    ? `<div class="chips">${d.sets.map((s, i) => `<span class="chip p${(i % 5) + 1}">${esc(s.name)} · ${s.count}</span>`).join('')}</div>`
+    ? `<div class="chips">${d.sets.map((s, i) => `<span class="chip p${(i % 5) + 1}">${esc(s.name)} · ${s.count} <button class="x" data-set="${esc(s.name)}" title="untag everywhere">×</button></span>`).join('')}</div>
+       <div class="meta">removing a set untags everything; nothing is deleted</div>`
     : '<div class="meta">no sets</div>';
   const permBody = d.passes.length
     ? `<ul>${d.passes.map((x) => `<li>${esc(x.category)} · ${esc(x.purpose)} <span class="meta">${x.scope === 'full' ? 'full hat' : esc((x.sets || []).join(', '))}</span></li>`).join('')}</ul>`
@@ -130,6 +131,18 @@ async function openDetail(p) {
     detailSection('sets', setsBody),
     detailSection('who can read', permBody)
   ].join('');
+
+  for (const btn of $('#detail-body').querySelectorAll('button.x')) {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const name = btn.dataset.set;
+      if (!confirm(`untag "${name}" everywhere? nothing is deleted.`)) return;
+      try {
+        await api('/api/set', { method: 'POST', body: JSON.stringify({ personaId: d.persona.id, name }) });
+        await Promise.all([load(), openDetail({ id: d.persona.id })]);
+      } catch (err) { status(`set removal declined: ${err.message}`, true); }
+    });
+  }
 }
 
 function openPanel(p) {

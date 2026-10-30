@@ -82,6 +82,15 @@ export function createMoiraServer({
       if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
       if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
 
+      if (path === '/api/set' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.personaId || !body?.name) return json(res, 400, { outcome: 'declined', reason: 'persona_and_name_required' });
+        const out = moira.owner.setRemove(owner, { personaId: body.personaId, name: body.name });
+        return json(res, out.outcome === 'results' ? 200 : 404, out);
+      }
+
       if (path === '/api/persona' && req.method === 'GET') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

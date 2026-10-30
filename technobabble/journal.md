@@ -520,3 +520,20 @@ wrap refuses to open (correct honest error) - .env.local now carries
 one; that trap is documented here because it will bite anyone running
 demo state. suite 218 tests, 206 pass, 12 gated.
 
+## 2026-10-30 - sets become one vocabulary (and stop being a promise)
+
+checking the docs against the code found sets were a two-store idea
+wearing a four-store claim: sets.list/remove only saw stack + ai
+declarations, and facts silently dropped spec.sets on the floor. shipped
+failing-test-first: facts validate and store sets (sets_invalid, same
+rule as stack); sets span stack + ai + active facts + vault items (vault
+opens its own payloads for the set index, never exposing them); removing
+a set untags every holder including vault items (re-sealed through the
+cas update path) and deletes nothing; and a set-scoped pass now slices
+facts too - unfiled facts stay out of a sliced read, same rule as
+entriesForPass. surface: set chips in the detail panel carry an x that
+untags everywhere, and POST /api/set exists (404 for an unknown set).
+rung note worth remembering: default grantPass maxRung is 3 (summary),
+so a fact that only authors full/exists serves at exists; ask for
+maxRung 4 when you want the content. suite 220 tests, 208 pass, 12 gated.
+

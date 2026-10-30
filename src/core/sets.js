@@ -19,7 +19,11 @@ export class SetsService {
   _entries(personaId) {
     const stack = this.store.list('stackEntries', (e) => e.personaId === personaId, { personaId });
     const ai = this.store.list('aiToolEntries', (e) => e.personaId === personaId, { personaId });
-    return [...stack, ...ai];
+    const facts = this.store.list('facts', (e) => e.personaId === personaId && e.status === 'active', { personaId });
+    // vault items keep sets inside the sealed payload; the vault service
+    // opens them for this persona and hands back only the set names.
+    const vault = this.vault ? this.vault.setEntries(personaId) : [];
+    return [...stack, ...ai, ...facts, ...vault];
   }
 
   list(personaId) {
@@ -48,7 +52,8 @@ export class SetsService {
     const key = target.toLowerCase();
     const kinds = [
       { kind: 'stackEntries', field: 'stack' },
-      { kind: 'aiToolEntries', field: 'ai' }
+      { kind: 'aiToolEntries', field: 'ai' },
+      { kind: 'facts', field: 'facts' }
     ];
     let touched = 0;
     for (const { kind } of kinds) {
@@ -59,6 +64,7 @@ export class SetsService {
         touched++;
       }
     }
+    if (this.vault) touched += this.vault.untagSet(personaId, target);
     if (touched === 0) return { outcome: OUTCOME.UNAVAILABLE, reason: 'set_not_found' };
     return { outcome: OUTCOME.RESULTS, untagged: touched };
   }
