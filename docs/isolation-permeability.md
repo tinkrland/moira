@@ -21,7 +21,7 @@ revocable. "lending, not handing over" is the whole grammar.
 
 | path | what crosses | the limit |
 |---|---|---|
-| **pass grants** | one category, one purpose, one duration, optionally one set slice | never widens; expires; can be one-time; revoked on next read |
+| **pass grants** | one category, one purpose, one duration, optionally one set slice, optionally named fields (`preferences.writing_style`) | never widens; expires; can be one-time; revoked on next read; an address can never leave its category |
 | **sets** | named slices (work, side projects) spanning stack, ai tools, facts and the vault, one vocabulary everywhere | scoped at connection time; setless entries are excluded from a scoped pass; removing a set untags its holders and deletes nothing |
 | **core** | facts a linked persona promotes to the shared core | promote/demote are audited; heteronyms never see core |
 | **bridges** | two-sided sharing between personas | privacy budget, most-restrictive taint wins, both sides declared |

@@ -77,6 +77,18 @@ export class FactService {
       factSets = [...new Set(spec.sets.map((x) => x.trim()))];
     }
 
+    // fields: the path a fact can be addressed by, authored at write time
+    // ("writing_style" inside "preferences" -> preferences.writing_style).
+    // labels only, never inferred from content.
+    let factFields = [];
+    if (spec.fields !== undefined && spec.fields !== null) {
+      if (!Array.isArray(spec.fields) || spec.fields.length === 0 ||
+          !spec.fields.every((x) => typeof x === 'string' && /^[a-z0-9][a-z0-9_-]*$/.test(x.trim()))) {
+        return { outcome: OUTCOME.DECLINED, reason: 'fields_invalid' };
+      }
+      factFields = [...new Set(spec.fields.map((x) => x.trim()))];
+    }
+
     const fact = {
       id: randomId('fact'),
       personaId: persona.id,
@@ -96,6 +108,7 @@ export class FactService {
       preferenceBasis: resolvedBasis,
       validUntil: validUntil ?? (resolvedBasis === BASIS.AVAILABILITY_DRIVEN && spec.circumstanceEndsAt ? spec.circumstanceEndsAt : null),
       sets: factSets,
+      fields: factFields,
       provenance: { source, clientId, evidence, createdAt: this.now(), actor },
       sealed: null
     };
@@ -181,15 +194,19 @@ export class FactService {
 
   // search within one persona only. facts whose rung cannot be served under the
   // cap are reported as skipped, never served above their max_rung.
-  serve(personaId, { categories = null, predicate = null, capRank = RUNG.FULL, purpose = null, sets = null }) {
+  serve(personaId, { categories = null, predicate = null, capRank = RUNG.FULL, purpose = null, sets = null, fields = null }) {
     const setScope = Array.isArray(sets) && sets.length > 0
       ? new Set(sets.map((s) => String(s).trim().toLowerCase()))
       : null;
+    // an addressed read names paths (category.field). a fact that never
+    // authored a field can never match one: no inference from content.
+    const fieldScope = Array.isArray(fields) && fields.length > 0
+      ? new Set(fields.map((fld) => String(fld).trim().toLowerCase()))
+      : null;
     const facts = this.active(personaId).filter((f) =>
       (categories === null || categories.includes(f.category)) &&
-      // a set-scoped pass slices facts too: unfiled facts stay out of a
-      // sliced read (same rule as entriesForPass for declared context)
-      (!setScope || (f.sets ?? []).some((s) => setScope.has(String(s).trim().toLowerCase()))));
+      (!setScope || (f.sets ?? []).some((s) => setScope.has(String(s).trim().toLowerCase()))) &&
+      (!fieldScope || (f.fields ?? []).some((x) => fieldScope.has(`${f.category}.${x}`.toLowerCase()))));
     // shared core: personas with inheritsCore read core facts by reference
     // (spec 5/17). heteronyms never reach here - personas.js forces the flag
     // false at create and update - but serve still guards, because the core is

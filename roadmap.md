@@ -60,8 +60,10 @@ step 1: access requests (agent asks with categories/purpose/duration/note,
 owner approves, narrows or denies; edits only tighten; approval mints the
 pass; ask + decision receipted). step 2: the inbox face in /app with live
 count and per-ask narrowing controls; seed-demo carries one pending ask.
-next: field-level addressing (style.preferences-style paths) and directed
-disclosure.
+step 3: field-level addressing (`preferences.writing_style`) across facts,
+passes, requests and approvals - addresses can only narrow. next: directed
+disclosure (one-shot delivery to an exact destination with a content-free
+status back).
 
 ## card detail + creation (2026-10-30)
 

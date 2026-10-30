@@ -79,9 +79,11 @@ moira's dials, in the same spirit but not field-addressed:
 
 ## honest gaps against ego.ist (named, not hidden)
 
-1. **field-level addressing.** ego.ist can ask for `profile.sizes`; moira
-   asks for a category and a rung. expanding the category vocabulary is
-   cheap; per-field addressing would need a schema of fact kinds.
+1. ~~field-level addressing~~ **closed 2026-10-30.** facts author `fields`
+   at write time; passes, requests and approvals can address
+   `category.field` exactly (`preferences.writing_style`). an addressed pass
+   cannot reach a fact that never named a field, an address cannot leave its
+   category, and an owner can only cut fields from an ask, never add them.
 2. **hosted trust surface.** ego.ist ships an iphone app, hosted consent
    screens and a partner program. moira ships api + reference consent.
 3. **800+ integrations.** ego.ist advertises 800+ connector sources; moira

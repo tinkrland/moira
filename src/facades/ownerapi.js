@@ -420,6 +420,7 @@ export class OwnerApi {
     const byCategory = {};
     for (const fact of facts) (byCategory[fact.category] ??= []).push({
       id: fact.id, content: fact.content, rung: fact.rung,
+      fields: fact.fields ?? [], sets: fact.sets ?? [],
       source: fact.provenance?.source ?? null, createdAt: fact.provenance?.createdAt ?? fact.createdAt ?? null
     });
 

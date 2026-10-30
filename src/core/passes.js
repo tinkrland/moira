@@ -20,7 +20,7 @@ export class PassService {
 
   // owner grants. connect codes and consent screens call into this after
   // owner authentication; agents can never reach it directly.
-  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = RUNG.FULL, uses = null, sets = null, acknowledgeFull = false }) {
+  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = RUNG.FULL, uses = null, sets = null, acknowledgeFull = false, fields = null }) {
     const agent = this.agents.get(clientId);
     if (!agent) return { outcome: OUTCOME.UNAVAILABLE, reason: 'unknown_agent' };
 
@@ -31,6 +31,24 @@ export class PassService {
       : null;
     if (!scopedSets && acknowledgeFull !== true) {
       return { outcome: OUTCOME.DECLINED, reason: 'full_scope_requires_acknowledgement' };
+    }
+
+    // field addressing: a pass may narrow to specific paths inside its own
+    // category. addresses are stored fully qualified (category.field) and may
+    // never point at another category.
+    let scopedFields = null;
+    if (fields !== undefined && fields !== null) {
+      if (!Array.isArray(fields) || fields.length === 0 || !fields.every((x) => typeof x === 'string' && x.trim() !== '')) {
+        return { outcome: OUTCOME.DECLINED, reason: 'fields_invalid' };
+      }
+      const normalized = fields.map((x) => {
+        const raw = String(x).trim().toLowerCase();
+        return raw.includes('.') ? raw : `${category}.${raw}`;
+      });
+      if (!normalized.every((x) => x.split('.')[0] === String(category).toLowerCase())) {
+        return { outcome: OUTCOME.DECLINED, reason: 'fields_outside_category' };
+      }
+      scopedFields = [...new Set(normalized)];
     }
 
     const pass = {
@@ -49,6 +67,7 @@ export class PassService {
         : this.now() + (ttlMs ?? 60 * 60 * 1000),
       ...(duration === PASS_DURATION.PERMANENT ? { standing: true } : {}),
       scope: scopedSets ? 'sets' : 'full',
+      fields: scopedFields,
       revoked: false,
       // context sets shared at connection time (null = whole persona
       // context). normalized names; the read path filters entries by these.

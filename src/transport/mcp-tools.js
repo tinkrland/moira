@@ -70,6 +70,7 @@ export const MCP_TOOLS = [
         purpose: { type: 'string' },
         duration: { type: 'string', enum: ['one_time', 'session', 'permanent'] },
         sets: { type: ['array', 'null'], items: { type: 'string' } },
+        fields: { type: ['array', 'null'], items: { type: 'string' }, description: 'address specific fields inside the categories, e.g. "writing_style" or "preferences.writing_style"' },
         note: { type: ['string', 'null'] }
       },
       required: ['categories', 'purpose', 'duration']

@@ -581,3 +581,20 @@ narrowed approval 200 with exactly one pass, second decision on a settled
 request 409). suite 223 tests, 211 pass, 12 gated; live check: seeded
 request served by /api/requests.
 
+## 2026-10-30 - field-level addressing (ego.ist build step 3)
+
+the gap my own audit named is closed. facts author `fields` at write time
+(validated ^[a-z0-9][a-z0-9_-]*$, declined 'fields_invalid', labels only,
+never inferred from content); passes take `fields` normalized to
+category.field and refused when they leave their own category
+('fields_outside_category'); facts.serve filters on the addressed set, so
+a fact that never named a field can never match an address - no inference
+in either direction. requests take fields too (bare labels get the ask's
+category prefix), and approval can only CUT fields: adding one, or dropping
+the address back to whole-category, is 'edits_widen_the_request'. surface:
+detail facts show their addresses, the inbox shows the ask's address and
+gets a fields input for narrowing, seed-demo authors writing_style so the
+demo shows the shape. http pinned: an out-of-category address is 409.
+suite 225 tests, 213 pass, 12 gated; live check confirms fields on the
+panel payload.
+

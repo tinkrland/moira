@@ -72,7 +72,7 @@ export class AgentApi {
         results.approvals.push({ category, action: 'approval_required' });
         continue;
       }
-      const served = this.gw.facts.serve(persona.id, { categories: [category], predicate, capRank: pass.maxRung, purpose, sets: pass.sets ?? null });
+      const served = this.gw.facts.serve(persona.id, { categories: [category], predicate, capRank: pass.maxRung, purpose, sets: pass.sets ?? null, fields: pass.fields ?? null });
       results.categories[category] = served;
       if (served.served.length > 0) anyServed = true;
       if (pass.duration === PASS_DURATION.ONE_TIME) this.gw.passes.consume(pass.id);
@@ -120,11 +120,11 @@ export class AgentApi {
   // bridge_request(from_persona, query, max_rung, purpose): mediated, transformed, receipted.
   // the ask. the session fixes the persona; the agent names categories, a
   // purpose and a duration, and nothing becomes readable until the owner acts.
-  request_access(accessToken, { categories, purpose, duration, sets = null, note = null }) {
+  request_access(accessToken, { categories, purpose, duration, sets = null, fields = null, note = null }) {
     const ctx = this._ctx(accessToken);
     if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
     return this.gw.requests.request({
-      personaId: ctx.persona.id, clientId: ctx.clientId, categories, purpose, duration, sets, note
+      personaId: ctx.persona.id, clientId: ctx.clientId, categories, purpose, duration, sets, fields, note
     });
   }
 

@@ -79,6 +79,19 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   });
   assert.equal(bad.status, 400, 'bad email is refused, not stored');
 
+  // field addressing survives the http surface: a pass narrowed to a field
+  const fieldPass = await fetch(`${base}/api/pass`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ personaId: persona.id, clientId: agentId, category: 'preferences', purpose: 'fp', duration: 'session', acknowledgeFull: true, fields: ['writing_style'] })
+  });
+  assert.equal(fieldPass.status, 200);
+  assert.deepEqual((await fieldPass.json()).pass.fields, ['preferences.writing_style']);
+  const outside = await fetch(`${base}/api/pass`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ personaId: persona.id, clientId: agentId, category: 'stack', purpose: 'fp', duration: 'session', acknowledgeFull: true, fields: ['preferences.writing_style'] })
+  });
+  assert.equal(outside.status, 409, 'an address cannot leave its category');
+
   // set editing from the surface: untag everywhere, nothing deleted
   const setPost = await fetch(`${base}/api/set`, {
     method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
@@ -141,7 +154,7 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   const scoped = await post({ personaId: persona.id, clientId: agentId, category: 'stack', purpose: 'context', duration: 'session', sets: ['work'] });
   assert.equal(scoped.status, 200);
   const after = await (await fetch(`${base}/api/overview`, { headers: owner })).json();
-  const pass = after.personas[0].passes[0];
+  const pass = after.personas[0].passes.find((x) => x.category === 'stack' && x.purpose === 'context');
   assert.equal(pass.scope, 'sets');
   assert.deepEqual(pass.sets, ['work']);
 

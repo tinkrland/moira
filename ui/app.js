@@ -105,7 +105,7 @@ async function openDetail(p) {
   $('#detail-name').textContent = `${d.persona.name} · ${d.persona.identity}${d.persona.email ? ' · ' + d.persona.email : ''}`;
   const cats = Object.entries(d.facts.byCategory ?? {});
   const factBody = cats.length
-    ? cats.map(([cat, list]) => `<div class="meta">${esc(cat)} · ${list.length}</div><ul>${list.slice(0, 6).map((f) => `<li>${esc(f.content)}</li>`).join('')}</ul>`).join('')
+    ? cats.map(([cat, list]) => `<div class="meta">${esc(cat)} · ${list.length}</div><ul>${list.slice(0, 6).map((f) => `<li>${esc(f.content)}${(f.fields || []).length ? ` <span class="meta">${esc(f.fields.map((x) => cat + '.' + x).join(', '))}</span>` : ''}</li>`).join('')}</ul>`).join('')
     : '<div class="meta">no facts yet</div>';
   const vaultBody = d.vault.items.length
     ? `<ul>${d.vault.items.slice(0, 8).map((i) => `<li>${esc(i.title ?? i.kind)} <span class="meta">${esc(i.kind)}</span></li>`).join('')}</ul>`
@@ -166,12 +166,13 @@ async function loadInbox() {
     <div class="ask" data-id="${esc(r.id)}">
       <div class="from">${esc(r.clientId)} → ${esc(r.personaId)}</div>
       <div class="why">${r.note ? esc(r.note) : 'no note'}</div>
-      <div class="want">wants ${esc(r.categories.join(', '))} · purpose ${esc(r.purpose)} · ${esc(r.duration)}${r.sets ? ' · sets ' + esc(r.sets.join(', ')) : ' · whole hat (will need acknowledgement)'}</div>
+      <div class="want">wants ${esc(r.categories.join(', '))}${r.fields ? ' · ' + esc(r.fields.join(', ')) : ''} · purpose ${esc(r.purpose)} · ${esc(r.duration)}${r.sets ? ' · sets ' + esc(r.sets.join(', ')) : ' · whole hat (will need acknowledgement)'}</div>
       <div class="form-row">
         <label>sets <input name="sets" value="${r.sets ? esc(r.sets.join(', ')) : ''}" placeholder="work" /></label>
         <label>rung <select name="maxRung">
           ${[4, 3, 2, 1].map((n) => `<option value="${n}">${n}</option>`).join('')}
         </select></label>
+        ${r.fields ? `<label>fields <input name="fields" value="${esc(r.fields.join(', '))}" /></label>` : ''}
         <label>for <select name="duration">
           ${['one_time', 'session', 'permanent'].map((d) => `<option value="${d}" ${d === r.duration ? 'selected' : ''}>${d}</option>`).join('')}
         </select></label>
@@ -186,10 +187,13 @@ async function loadInbox() {
     const id = card.dataset.id;
     card.querySelector('.approve').addEventListener('click', async () => {
       const sets = card.querySelector('[name=sets]').value.split(',').map((s) => s.trim()).filter(Boolean);
+      const fieldsEl = card.querySelector('[name=fields]');
+      const fields = fieldsEl ? fieldsEl.value.split(',').map((f) => f.trim()).filter(Boolean) : null;
       const edits = {
         maxRung: Number(card.querySelector('[name=maxRung]').value),
         duration: card.querySelector('[name=duration]').value,
-        ...(sets.length ? { sets } : {})
+        ...(sets.length ? { sets } : {}),
+        ...(fields ? { fields } : {})
       };
       try {
         await api('/api/requests/decide', { method: 'POST', body: JSON.stringify({ requestId: id, action: 'approve', edits }) });

@@ -23,7 +23,7 @@ export function seedDemo(moira, ctx) {
   moira.owner.vaultAdd(ctx, { personaId: persona.id, kind: 'note', note: 'the first thing moira airidian ever saved.', sets: ['work'], tags: ['first'] });
   // a fact the owner declares directly (the trusted path; agents only propose)
   moira.facts.add(moira.personas.get(persona.id), {
-    content: 'writes in lowercase, by choice', category: 'preferences', sets: ['work']
+    content: 'writes in lowercase, by choice', category: 'preferences', sets: ['work'], fields: ['writing_style']
   });
 
   // a pending access request so the inbox has something real in it: the

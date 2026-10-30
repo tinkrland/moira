@@ -26,7 +26,7 @@ export class AccessRequestService {
   }
 
   // an agent asks. the session already fixed which persona it can even address.
-  request({ personaId, clientId, categories, purpose, duration, sets = null, note = null }) {
+  request({ personaId, clientId, categories, purpose, duration, sets = null, fields = null, note = null }) {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
     const cats = Array.isArray(categories)
@@ -39,6 +39,20 @@ export class AccessRequestService {
       return { outcome: OUTCOME.DECLINED, reason: 'sets_invalid' };
     }
 
+    // an ask may be addressed: field labels become category.field paths
+    let askFields = null;
+    if (fields !== undefined && fields !== null) {
+      if (!Array.isArray(fields) || fields.length === 0 || !fields.every((x) => typeof x === 'string' && x.trim() !== '')) {
+        return { outcome: OUTCOME.DECLINED, reason: 'fields_invalid' };
+      }
+      askFields = [...new Set(fields.map((x) => {
+        const raw = String(x).trim().toLowerCase();
+        if (raw.includes('.')) return raw;
+        const cat = String(cats[0]).toLowerCase();
+        return `${cat}.${raw}`;
+      }))];
+    }
+
     const req = {
       id: randomId('rq'),
       personaId,
@@ -47,6 +61,7 @@ export class AccessRequestService {
       purpose: String(purpose).trim(),
       duration,
       sets: sets ? [...new Set(sets.map((s) => s.trim()))] : null,
+      fields: askFields,
       note: note ? String(note).slice(0, 500) : null,
       status: STATUS.PENDING,
       createdAt: this.now(),
@@ -106,6 +121,27 @@ export class AccessRequestService {
       sets = [...new Set(sets.map((s) => String(s).trim()))];
     }
 
+    // field addressing: the owner may cut fields, never add them, and cannot
+    // turn an addressed ask back into a category-wide one.
+    let fields = req.fields;
+    if (edits.fields !== undefined) {
+      if (edits.fields === null) {
+        if (req.fields !== null) return { outcome: OUTCOME.DECLINED, reason: 'edits_widen_the_request' };
+        fields = null;
+      } else {
+        if (!Array.isArray(edits.fields) || edits.fields.length === 0) return { outcome: OUTCOME.DECLINED, reason: 'fields_invalid' };
+        const asked = new Set((req.fields ?? []).map((x) => String(x).toLowerCase()));
+        const wanted = edits.fields.map((x) => {
+          const raw = String(x).trim().toLowerCase();
+          return raw.includes('.') ? raw : `${String(req.categories[0]).toLowerCase()}.${raw}`;
+        });
+        if (req.fields === null || !wanted.every((x) => asked.has(x))) {
+          return { outcome: OUTCOME.DECLINED, reason: 'edits_widen_the_request' };
+        }
+        fields = [...new Set(wanted)];
+      }
+    }
+
     // approval IS the owner's consent act: a full-scope ask the owner approved
     // counts as the explicit acknowledgement passes require.
     const passes = [];
@@ -118,6 +154,7 @@ export class AccessRequestService {
         duration,
         maxRung,
         sets: sets ?? null,
+        fields,
         acknowledgeFull: true
       });
       if (res.outcome === OUTCOME.RESULTS) passes.push(res.pass);
