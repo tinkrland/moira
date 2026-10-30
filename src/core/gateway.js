@@ -22,6 +22,7 @@ import { FactService } from './facts.js';
 import { AgentService, SessionService } from './agents.js';
 import { PassService } from './passes.js';
 import { BridgeService } from './bridges.js';
+import { AccessRequestService } from './requests.js';
 import { PackService } from './packs.js';
 import { HandoffService } from './handoffs.js';
 import { LedgerService } from './ledger.js';
@@ -86,6 +87,9 @@ export class Moira {
     this.agents = new AgentService({ store, receipts: this.receipts, now });
     this.sessions = new SessionService({ store, agents: this.agents, now });
     this.passes = new PassService({ store, agents: this.agents, receipts: this.receipts, now });
+    this.requests = new AccessRequestService({
+      store, personas: this.personas, agents: this.agents, passes: this.passes, receipts: this.receipts, now
+    });
     this.bridges = new BridgeService({ store, personas: this.personas, facts: this.facts, receipts: this.receipts, now });
     this.packs = new PackService({ store, personas: this.personas, facts: this.facts, receipts: this.receipts, keys: this.keys, now });
     this.ledger = new LedgerService({ store, personas: this.personas, keys: this.keys, receipts: this.receipts, now });

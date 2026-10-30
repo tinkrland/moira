@@ -82,6 +82,24 @@ export function createMoiraServer({
       if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
       if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
 
+      if (path === '/api/requests' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        return json(res, 200, moira.owner.listAccessRequests(owner, { status: url.searchParams.get('status') ?? 'pending' }));
+      }
+      if (path === '/api/requests/decide' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.requestId || !['approve', 'deny'].includes(body.action)) {
+          return json(res, 400, { outcome: 'declined', reason: 'request_id_and_action_required' });
+        }
+        const out = body.action === 'approve'
+          ? moira.owner.approveAccessRequest(owner, { requestId: body.requestId, edits: body.edits ?? {} })
+          : moira.owner.denyAccessRequest(owner, { requestId: body.requestId, reason: body.reason ?? null });
+        return json(res, out.outcome === 'results' ? 200 : 409, out);
+      }
+
       if (path === '/api/set' && req.method === 'POST') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

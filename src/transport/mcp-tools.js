@@ -61,6 +61,22 @@ export const MCP_TOOLS = [
     method: 'forget'
   },
   {
+    name: 'request_access',
+    description: 'ask the owner for context: name the categories, a purpose and a duration. nothing is readable until the owner approves, and approval may come back narrower.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        categories: { type: 'array', items: { type: 'string' } },
+        purpose: { type: 'string' },
+        duration: { type: 'string', enum: ['one_time', 'session', 'permanent'] },
+        sets: { type: ['array', 'null'], items: { type: 'string' } },
+        note: { type: ['string', 'null'] }
+      },
+      required: ['categories', 'purpose', 'duration']
+    },
+    method: 'request_access'
+  },
+  {
     name: 'bridge_request',
     description: 'read across a two-sided persona bridge at a permitted rung, with egress transforms and privacy budget.',
     inputSchema: {

@@ -118,6 +118,16 @@ export class AgentApi {
   }
 
   // bridge_request(from_persona, query, max_rung, purpose): mediated, transformed, receipted.
+  // the ask. the session fixes the persona; the agent names categories, a
+  // purpose and a duration, and nothing becomes readable until the owner acts.
+  request_access(accessToken, { categories, purpose, duration, sets = null, note = null }) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    return this.gw.requests.request({
+      personaId: ctx.persona.id, clientId: ctx.clientId, categories, purpose, duration, sets, note
+    });
+  }
+
   bridge_request(accessToken, { srcPersonaId, query, purpose, maxRung = null }) {
     const ctx = this._ctx(accessToken);
     if (ctx.outcome !== OUTCOME.RESULTS) return ctx;

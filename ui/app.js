@@ -181,7 +181,7 @@ $('#pass-form').addEventListener('submit', async (e) => {
     category: fd.get('category'),
     purpose: fd.get('purpose'),
     duration: fd.get('duration'),
-    maxRung: 2,
+    maxRung: 4, // owner direction: full content by default; lower rungs are opt-in
     ...(sets.length ? { sets } : {}),
     ...(fd.get('acknowledgeFull') === 'on' ? { acknowledgeFull: true } : {})
   };

@@ -61,6 +61,24 @@ export class OwnerApi {
     return { outcome: OUTCOME.RESULTS, pass: this.gw.passes.revoke(passId) };
   }
 
+  // access requests: the app's ask, the owner's call.
+  listAccessRequests(ctx, { personaId = null, status = 'pending' } = {}) {
+    this._require(ctx);
+    return { outcome: OUTCOME.RESULTS, requests: this.gw.requests.list({ personaId, status }) };
+  }
+
+  approveAccessRequest(ctx, { requestId, edits = {} } = {}) {
+    this._require(ctx);
+    if (!requestId) return { outcome: OUTCOME.DECLINED, reason: 'request_id_required' };
+    return this.gw.requests.approve({ requestId, edits });
+  }
+
+  denyAccessRequest(ctx, { requestId, reason = null } = {}) {
+    this._require(ctx);
+    if (!requestId) return { outcome: OUTCOME.DECLINED, reason: 'request_id_required' };
+    return this.gw.requests.deny({ requestId, reason });
+  }
+
   createBridge(ctx, spec) {
     this._require(ctx);
     return this.gw.bridges.create(spec);

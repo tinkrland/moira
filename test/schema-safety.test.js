@@ -15,7 +15,8 @@ const security = read('../backend/security.sql');
 const connectors = read('../backend/connectors.sql');
 const switchpersona = read('../backend/switchpersona.sql');
 const vault = read('../backend/vault.sql');
-const schema = [base, security, connectors, switchpersona, vault].join('\n');
+const requests = read('../backend/requests.sql');
+const schema = [base, security, connectors, switchpersona, vault, requests].join('\n');
 const migration = read('../backend/migrations/20261015_01_phase0_security.sql', 'utf8');
 
 const COLLECTIONS = [
@@ -107,12 +108,12 @@ test('cas allowlist covers EVERY table - a real bug class found 2026-10-16', () 
   };
   // tables are created in base.sql AND in the topic files (connectors,
   // switchpersona each own their tables). the allowlist must equal the union.
-  const created = new Set([...array(base), ...array(connectors), ...array(switchpersona), ...array(vault)]);
+  const created = new Set([...array(base), ...array(connectors), ...array(switchpersona), ...array(vault), ...array(requests)]);
   const allow = new Set(
     schema.match(/if p_table not in \(([\s\S]*?)\) then/)[1].match(/'([a-z_]+)'/g).map((s) => s.slice(1, -1))
   );
   assert.deepEqual([...created].sort(), [...allow].sort(), 'cas allowlist must cover exactly the created tables');
-  for (const extra of ['connector_identities', 'connector_passes', 'persona_switches', 'vault_items']) {
+  for (const extra of ['connector_identities', 'connector_passes', 'persona_switches', 'vault_items', 'access_requests']) {
     assert.ok(allow.has(extra), `${extra} must be cas-updatable (hub/switching update these rows)`);
   }
 });
@@ -121,7 +122,8 @@ test('topic files own their tables completely (creation + grants + rls)', () => 
   for (const [file, tables] of [
     [connectors, ['connector_identities', 'connector_passes']],
     [switchpersona, ['persona_switches']],
-    [vault, ['vault_items']]
+    [vault, ['vault_items']],
+    [requests, ['access_requests']]
   ]) {
     for (const tbl of tables) {
       assert.ok(file.includes(`'${tbl}'`), `${tbl} created in its topic file`);

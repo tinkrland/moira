@@ -537,3 +537,31 @@ rung note worth remembering: default grantPass maxRung is 3 (summary),
 so a fact that only authors full/exists serves at exists; ask for
 maxRung 4 when you want the content. suite 220 tests, 208 pass, 12 gated.
 
+## 2026-10-30 - rung 4 default, pseudonymous audit, ego.ist build begins
+
+owner: "do rung 4" + "did we tackle pseudonymous" + "then we start the
+ego.ist build". (1) rung: grantPass default maxRung is now RUNG.FULL (4) -
+a default grant serves the fact's content, not the mechanical exists
+placeholder; lower rungs stay available as an explicit dial (maxRung 1 ->
+"there is a note in <category>"), pinned by test. the surface form sends 4.
+(2) pseudonymous, verified rather than remembered: identity kinds carry
+their own defaults - linked (core inheritance, broker link visibility,
+trusted ingress, summary egress), pseudonymous (no core unless an audited
+opt-in, device_only link visibility so the broker cannot join the profile
+to the owner, ingress deny + sanitize strip-linkable, egress summary with
+allowToLinked), heteronymous (forced no-core, secret disclosure,
+inspiration_only ingress). isolation is structural (per-persona keys) and
+bridges into a pseudonymous destination filter linkable facts (existing
+test asserts outcome empty). (3) ego.ist build step 1: access requests.
+src/core/requests.js - an agent asks ({categories, purpose, duration,
+sets, note}), pending reads are approval_required, owner lists/approves/
+denies, approval mints passes through the normal grant path and edits can
+only NARROW (duration rank, rung, sets subset; widening = declined
+'edits_widen_the_request'), approval is the owner's ack for full scope,
+'rq_' ids, RECEIPT_OP.ACCESS_REQUEST receipts both ways. agent tool
+request_access (mcp manifest now 31 tools), owner listAccessRequests/
+approveAccessRequest/denyAccessRequest, routes GET /api/requests + POST
+/api/requests/decide. schema: backend/requests.sql + migration
+20261030_01, allowlist + schema-safety union extended. suite 223 tests,
+211 pass, 12 gated.
+

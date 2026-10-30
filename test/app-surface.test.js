@@ -94,6 +94,12 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   });
   assert.equal(missing.status, 404, 'unknown set is honest');
 
+  // the request inbox: owner-gated, and deciding is the owner's act
+  assert.equal((await fetch(`${base}/api/requests`)).status, 401);
+  const inbox = await (await fetch(`${base}/api/requests`, { headers: owner })).json();
+  assert.equal(inbox.outcome, 'results');
+  assert.ok(Array.isArray(inbox.requests), 'inbox shape');
+
   // the card kit is compiled in: kit values are pinned (no drift)
   const js = await (await fetch(`${base}/app/app.js`)).text();
   const css = await (await fetch(`${base}/app/ui.css`)).text();

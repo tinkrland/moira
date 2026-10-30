@@ -8,7 +8,7 @@
 // passes grant READ, never write approval (section 9.3).
 
 import { randomId } from '../util/crypto.js';
-import { PASS_DURATION, OUTCOME, STANDING_PASS_MAX_MS } from '../model/constants.js';
+import { PASS_DURATION, OUTCOME, STANDING_PASS_MAX_MS, RUNG } from '../model/constants.js';
 
 export class PassService {
   constructor({ store, agents, receipts, now = Date.now }) {
@@ -20,7 +20,7 @@ export class PassService {
 
   // owner grants. connect codes and consent screens call into this after
   // owner authentication; agents can never reach it directly.
-  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = 3, uses = null, sets = null, acknowledgeFull = false }) {
+  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = RUNG.FULL, uses = null, sets = null, acknowledgeFull = false }) {
     const agent = this.agents.get(clientId);
     if (!agent) return { outcome: OUTCOME.UNAVAILABLE, reason: 'unknown_agent' };
 

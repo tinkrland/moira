@@ -86,7 +86,7 @@ begin
     'bridges', 'packs', 'handoffs', 'accounts', 'leases', 'receipts',
     'workspace', 'privacy_budgets', 'disclosures', 'connect_codes',
     'pending_connects', 'keywraps', 'linkage_declarations',
-    'connector_identities', 'connector_passes', 'persona_switches', 'vault_items'
+    'connector_identities', 'connector_passes', 'persona_switches', 'vault_items', 'access_requests'
   ) then
     raise exception 'moira_cas_update: table not allowed: %', p_table;
   end if;

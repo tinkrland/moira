@@ -10,6 +10,16 @@ shape in `src/core/passes.js`.
 
 ## connection types
 
+### the consent loop (shipped 2026-10-30)
+
+apps ask, the owner decides, nothing is readable meanwhile. `request_access`
+takes categories, a purpose, a duration and an optional note; the owner sees
+the ask in the inbox and may **narrow** it (shorten the duration, lower the
+rung, cut the sets) or deny it. approval is the only path from a request to a
+pass, edits can only tighten (`edits_widen_the_request`), and the ask plus
+the decision are receipted content-free. that is ego.ist's loop, built on
+moira's pass instead of a passport.
+
 ### inbound: how an agent or app reaches moira
 
 | type | ego.ist | moira | notes |

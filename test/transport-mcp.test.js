@@ -74,7 +74,7 @@ test('mcp: full handshake -> tools/list -> tools/call roundtrip', async () => {
 
     const list = await rpc(base, { jsonrpc: '2.0', id: 2, method: 'tools/list' }, { session: sid, token: jwt });
     assert.equal(list.status, 200);
-    assert.equal(list.json.result.tools.length, 30, 'all 30 agent tools exposed');
+    assert.equal(list.json.result.tools.length, 31, 'all 31 agent tools exposed');
     const names = list.json.result.tools.map((t) => t.name);
     const facadeMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(m.agent)).filter((k) => k !== 'constructor' && !k.startsWith('_'));
     for (const t of names) assert.ok(facadeMethods.includes(t), `tool ${t} missing from agentapi`);
