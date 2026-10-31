@@ -93,6 +93,26 @@ direct is enforced; inferred is measured, and coarsened only when the owner
 asks. surface: `GET /api/leakage/grade`, `POST /api/leakage/guard`, and the mode
 selector under the inference check in the detail panel.
 
+### the coarsest giveaway is not inference at all
+
+a profile picture, a display name, a bio deanonymise a persona in one glance.
+no token overlap, no combination of reads, nothing for this audit to measure -
+which is exactly why it is worth stating what is served rather than trusting
+that nobody widened it.
+
+current truth, pinned by `test/identity-giveaway.test.js`:
+
+- no avatar or photo field exists on a persona.
+- a bio (`characterSheet`) exists on heteronymous personas and is **never**
+  served to a client.
+- `email` is owner-side only (the card face). it is not client-facing.
+- the display **name** is served, deliberately: it is the handle an agent
+  addresses, and for a pseudonymous persona it is the pseudonym, not the
+  linked identity's real name.
+- the client-facing persona block is a closed set - `name`, `identity`,
+  `storage`, `sub` - so adding a field is a decision, not a spread operator
+  away. `sub` is the per-client subject, derived, never the record id.
+
 ## inference is not retrieval (measured since 2026-10-31)
 
 every wall in this document governs *retrieval*. none of them governs
