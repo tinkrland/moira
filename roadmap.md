@@ -54,6 +54,13 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## inference check (2026-10-31)
+
+shipped: owner.leakageAudit + GET /api/leakage + a surface line per connected
+agent. deterministic containment scoring, three finding kinds (rung_gap,
+slice_gap, cross_persona), content-free findings with stated caveats. a
+detector, not a fix - narrowing the pass stays the owner's call.
+
 ## people / human context (2026-10-31)
 
 shipped: owner + agent surfaces for per-persona human context - one address

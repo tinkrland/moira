@@ -48,6 +48,29 @@ the browser surface renders the walls and the lending side by side:
 - **every grant is receipted**, content-free, and revocation is one call
   (or freeze the persona, which declines everything without destroying).
 
+## inference is not retrieval (measured since 2026-10-31)
+
+every wall in this document governs *retrieval*. none of them governs
+*inference*, and that is the honest hole: a pass that blocks a fact can still
+leave it reconstructible from what it allows. `owner.leakageAudit({personaId,
+clientId})` measures that instead of claiming it away - deterministic, no
+model: normalize both sides to distinctive tokens (stopwords dropped, length
+>= 3), score containment of the withheld text inside the served text, flag at
+0.6 (the threshold is printed on every finding).
+
+three finding kinds: `rung_gap` (a served rung reproduces the same fact's
+fuller rung), `slice_gap` (a withheld fact is reconstructible from a served
+one in the same persona - wrong set, off scope), `cross_persona` (content that
+was served also exists under a persona this client cannot read - isolation
+failing in practice, not on paper). the report carries ids, categories, kinds
+and scores, never content, because a leak report that quotes the secret is
+itself a leak. it names its caveats too: vault payloads and people notes are
+not served as facts and are out of scope, and text overlap does not model
+common knowledge.
+
+a detector, not a fix. the fix is the owner's: narrow the pass, split the
+fact, or accept the leak knowingly.
+
 ## the rule of thumb
 
 default to the narrowest slice that does the job, name it, and let it

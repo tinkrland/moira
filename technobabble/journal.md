@@ -650,3 +650,26 @@ family, 5) and dave (work, 3). bug found: store has del(), not delete().
 suite 229 tests, 217 pass, 12 gated; live: /api/people?personaId returns
 the seeded book.
 
+## 2026-10-31 - the inference check (leakage, measured)
+
+from the memorium read: inference leakage is the sandbox's hardest half and
+moira had no defence. built the honest version - a detector, not a fix.
+src/core/leakage.js: distinctive-token containment (lowercase, punctuation
+out, tokens >=3 chars, stopwords dropped), threshold 0.6 printed on every
+finding, three kinds: rung_gap (a served rung reproduces the same fact's
+full text), slice_gap (a withheld fact reconstructible from a served one in
+the same persona), cross_persona (served content also exists under a persona
+this client cannot read). owner.leakageAudit({personaId, clientId}); route
+GET /api/leakage; the surface detail panel runs one audit per connected
+agent and prints "n inferable - kinds/scores". reports ids, categories,
+kinds, scores + caveats (vault payloads and people notes are not
+fact-served; overlap does not model common knowledge) and NEVER content -
+pinned by a test that the report string cannot contain the fact text.
+read-only: it computes served sets straight from passes and never consumes
+a one_time pass. two of my own mistakes, both caught by tests: my grants
+were declined for full-scope acknowledgement (the audit was right, my test
+was wrong), and my cross_persona scan looked at withheld facts instead of
+served ones - the leak direction is served content matching a secret held
+elsewhere. suite 232 tests, 220 pass, 12 gated; live over http: served 1,
+withheld 0, findings [], caveats present.
+

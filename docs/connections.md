@@ -20,6 +20,13 @@ pass, edits can only tighten (`edits_widen_the_request`), and the ask plus
 the decision are receipted content-free. that is ego.ist's loop, built on
 moira's pass instead of a passport.
 
+### the inference check (shipped 2026-10-31)
+
+a pass blocks reads, not inference. `GET /api/leakage?personaId=&clientId=`
+reports which withheld facts are reconstructible from what that agent is
+served, with the containment score, the threshold used, and its caveats - and
+never quotes content. method in docs/isolation-permeability.md.
+
 ### inbound: how an agent or app reaches moira
 
 | type | ego.ist | moira | notes |
