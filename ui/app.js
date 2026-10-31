@@ -177,7 +177,26 @@ async function openDetail(p) {
           : `<li>${esc(clientId)} <span class="meta">nothing inferable</span></li>`);
       } catch { rows.push(`<li>${esc(clientId)} <span class="meta">audit failed</span></li>`); }
     }
-    box.innerHTML = `<ul>${rows.join('')}</ul><div class="meta">token containment, threshold 0.6. counts, not content.</div>`;
+    // direct leakage would be a serving bug; inference is a measured risk, so
+    // the guard is an explicit opt-in, not a default
+    const guard = d.persona.inferenceGuard === 'coarsen' ? 'coarsen' : 'off';
+    box.innerHTML = `<ul>${rows.join('')}</ul>
+      <div class="meta">token containment, threshold 0.6. counts, not content.</div>
+      <label class="meta" style="display:flex;gap:.4rem;align-items:center;margin-top:.4rem">
+        <select id="guard-mode">
+          <option value="off"${guard === 'off' ? ' selected' : ''}>serve as asked</option>
+          <option value="coarsen"${guard === 'coarsen' ? ' selected' : ''}>coarsen colliding facts</option>
+        </select>
+        <span>inference guard</span>
+      </label>`;
+    const sel = $('#guard-mode');
+    if (sel) sel.addEventListener('change', async () => {
+      try {
+        await api('/api/leakage/guard', { method: 'POST', body: JSON.stringify({ personaId: d.persona.id, mode: sel.value }) });
+        status(sel.value === 'coarsen' ? 'colliding facts now serve as their exists rung' : 'guard off: facts serve as asked');
+        await openDetail({ id: d.persona.id });
+      } catch (err) { status(`guard unchanged: ${err.message}`, true); }
+    });
   })();
 
   for (const btn of $('#detail-body').querySelectorAll('button.x')) {

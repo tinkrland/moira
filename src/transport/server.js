@@ -83,6 +83,26 @@ export function createMoiraServer({
       if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
       if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
 
+      // the grade: direct (must be empty) separated from inferred (scored risk)
+      if (path === '/api/leakage/grade' && req.method === 'GET') {
+        const ctx = getOwnerContext ? getOwnerContext(req) : null;
+        if (!ctx) return json(res, 401, { error: 'owner_session_required' });
+        const u = new URL(req.url, 'http://127.0.0.1');
+        const personaId = u.searchParams.get('personaId');
+        const clientId = u.searchParams.get('clientId');
+        if (!personaId || !clientId) return json(res, 400, { error: 'persona_and_client_required' });
+        return json(res, 200, moira.owner.leakageGrade(ctx, { personaId, clientId }));
+      }
+
+      // the inference guard is opt-in per persona: off (default) or coarsen
+      if (path === '/api/leakage/guard' && req.method === 'POST') {
+        const ctx = getOwnerContext ? getOwnerContext(req) : null;
+        if (!ctx) return json(res, 401, { error: 'owner_session_required' });
+        const body = await readBody(req);
+        const out = moira.owner.setInferenceGuard(ctx, body);
+        return json(res, out.outcome === 'results' ? 200 : 400, out);
+      }
+
       if (path === '/api/leakage' && req.method === 'GET') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

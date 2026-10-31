@@ -77,6 +77,34 @@ export class AgentApi {
       if (served.served.length > 0) anyServed = true;
       if (pass.duration === PASS_DURATION.ONE_TIME) this.gw.passes.consume(pass.id);
     }
+    // inference guard (opt-in per persona): a served fact that collides with
+    // something withheld degrades to its exists rung, and the downgrade is named
+    // in the response and in a receipt. this removes the material being inferred
+    // from; it does not claim to stop inference.
+    if (persona.inferenceGuard === 'coarsen' && anyServed) {
+      const { coarsened } = this.gw.leakage.guard({ personaId: persona.id, clientId });
+      if (coarsened.length) {
+        const byId = new Map(coarsened.map((c) => [c.factId, c]));
+        for (const [cat, payload] of Object.entries(results.categories)) {
+          const hits = [];
+          for (const item of payload.served ?? []) {
+            const hit = byId.get(item.factId);
+            if (!hit) continue;
+            item.content = `there is a note in ${cat}`;
+            item.rung = 'exists';
+            item.coarsened = true;
+            hits.push({ factId: item.factId, reason: hit.reason, score: hit.score });
+          }
+          if (hits.length) payload.coarsened = hits;
+        }
+        this.gw.receipts.write({
+          actor: clientId, personaId: persona.id, op: 'read',
+          categories: Object.keys(results.categories), reason: 'coarsened_inference',
+          factCount: coarsened.length
+        });
+      }
+    }
+
     if (anyServed) {
       results.outcome = OUTCOME.RESULTS;
     } else if (anyApproval) {

@@ -48,6 +48,39 @@ the browser surface renders the walls and the lending side by side:
 - **every grant is receipted**, content-free, and revocation is one call
   (or freeze the persona, which declines everything without destroying).
 
+## two kinds of leak (since 2026-10-31)
+
+they need different answers, and conflating them is how a system ends up
+claiming a defence it does not have.
+
+**direct leakage** is a *serving bug*: content crosses a boundary the pass does
+not cover - the wrong category, a set outside the slice, a rung above
+`maxRung`, an address the pass never named, a persona the client may not read.
+it must never happen. because the serve path and the checker would otherwise be
+the same code agreeing with itself, `checkServedAgainstPass` re-derives every
+constraint from the *pass record* and is deliberately independent of
+`facts.serve`. `owner.leakageGrade({personaId, clientId})` returns it as
+`direct: []`. an empty list is a real assertion; a non-empty one is a bug with
+the offending pass named.
+
+**inferred leakage** is *not* a bug. every served fact was served legally and
+the withheld thing is still reconstructible from the set of them. no permission
+check catches it, so it gets measurement and, at most, an explicit mitigation:
+
+- measured: `inferred` in the same grade, plus `leakageAudit` with its
+  `rung_gap` / `slice_gap` / `cross_persona` findings and scores.
+- mitigated, opt-in per persona: the **inference guard**
+  (`owner.setInferenceGuard({personaId, mode})`, `off` by default). when a
+  served fact collides with a withheld one above threshold, it degrades to its
+  `exists` rung - "there is a note in <category>" - and says so: the response
+  carries `coarsened: [{factId, reason, score}]` and a `coarsened_inference`
+  receipt is written. it removes the material being inferred from. it does not
+  stop inference, and nothing here will claim it does.
+
+direct is enforced; inferred is measured, and coarsened only when the owner
+asks. surface: `GET /api/leakage/grade`, `POST /api/leakage/guard`, and the mode
+selector under the inference check in the detail panel.
+
 ## inference is not retrieval (measured since 2026-10-31)
 
 every wall in this document governs *retrieval*. none of them governs

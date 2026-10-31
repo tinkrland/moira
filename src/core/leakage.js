@@ -34,6 +34,41 @@ const STOPWORDS = new Set([
 
 export const DEFAULT_THRESHOLD = 0.6;
 
+// DIRECT leakage: does a served item fall outside the pass that allowed it?
+// this is deliberately independent of the serve path - it re-derives every
+// constraint from the pass record. a checker that asks the server "was that
+// allowed?" only repeats whatever bug the server has.
+//
+// returns null when clean, else { kind, passId, detail }.
+export function checkServedAgainstPass(item, pass) {
+  if (!pass) return { kind: 'no_pass', passId: null, detail: 'served without a pass' };
+  if (item.personaId !== pass.personaId) {
+    return { kind: 'persona_mismatch', passId: pass.id, detail: `${item.personaId} != ${pass.personaId}` };
+  }
+  if (pass.category && item.category !== pass.category) {
+    return { kind: 'category_out_of_scope', passId: pass.id, detail: `${item.category} not ${pass.category}` };
+  }
+  // a scoped pass serves only its own sets; an unfiled item is out of a slice
+  if (Array.isArray(pass.sets) && pass.sets.length > 0) {
+    const itemSets = item.sets ?? [];
+    if (!itemSets.some((s) => pass.sets.includes(s))) {
+      return { kind: 'set_out_of_scope', passId: pass.id, detail: `sets ${itemSets.join(',')} outside ${pass.sets.join(',')}` };
+    }
+  }
+  // rungs arrive named ("summary") or ranked (2): accept both, never guess
+  const rankOf = (r) => (typeof r === 'number' ? r : ({ nothing: 0, exists: 1, summary: 2, conclusion: 3, full: 4 }[r] ?? 0));
+  if (rankOf(item.rung) > (pass.maxRung ?? 0)) {
+    return { kind: 'rung_exceeded', passId: pass.id, detail: `${item.rung} above maxRung ${pass.maxRung}` };
+  }
+  if (Array.isArray(pass.fields) && pass.fields.length > 0) {
+    const addressed = item.field ?? `${item.category}.`;
+    if (!pass.fields.some((f) => addressed === f || addressed.startsWith(`${f}.`))) {
+      return { kind: 'address_out_of_scope', passId: pass.id, detail: `${addressed} outside ${pass.fields.join(',')}` };
+    }
+  }
+  return null;
+}
+
 export function distinctiveTokens(text) {
   return String(text ?? '')
     .toLowerCase()
@@ -171,6 +206,79 @@ export class LeakageAudit {
         b.score - a.score || a.kind.localeCompare(b.kind) || a.withheldFactId.localeCompare(b.withheldFactId))
     };
   }
+
+  // the grade: direct first (must be empty), then inferred (a risk, measured).
+  grade({ personaId, clientId, threshold = DEFAULT_THRESHOLD }) {
+    const audit = this.audit({ personaId, clientId, threshold });
+    if (audit.outcome !== 'results') return audit;
+    const direct = [];
+    // the fact table once, from the fact service (this audit holds no store)
+    const byId = new Map(this.facts.active(personaId).map((f) => [f.id, f]));
+    for (const pass of this._activePasses(clientId, personaId)) {
+      if (pass.category === 'vault') continue;
+      const served = this.facts.serve(personaId, {
+        categories: [pass.category], capRank: pass.maxRung, purpose: pass.purpose,
+        sets: pass.sets ?? null, fields: pass.fields ?? null
+      });
+      for (const s of served.served ?? []) {
+        if (s.rung === 'nothing') continue;
+        const fact = byId.get(s.factId);
+        const violation = checkServedAgainstPass({
+          personaId: fact?.personaId ?? personaId,
+          category: s.category,
+          sets: fact?.sets ?? null,
+          field: s.field ?? null,
+          rung: s.rung
+        }, pass);
+        if (violation) direct.push({ ...violation, factId: s.factId, category: s.category, rung: s.rung });
+      }
+    }
+    const inferred = audit.findings;
+    return {
+      outcome: 'results',
+      measured: true,
+      method: audit.method,
+      threshold,
+      personaId,
+      clientId,
+      direct,
+      inferred,
+      verdict: direct.length === 0
+        ? `no_direct_leaks_${inferred.length}_inference_risk${inferred.length === 1 ? '' : 's'}`
+        : `${direct.length}_direct_leaks`,
+      caveats: audit.caveats
+    };
+  }
+
+  // the guard: an explicit, opt-in mitigation for inferred leakage. when a
+  // served fact collides with a withheld one above threshold, the served fact
+  // degrades to its exists rung. it does not prevent inference - it removes the
+  // material being inferred from, and says so with the score, in the response
+  // and in a receipt.
+  guard({ personaId, clientId, threshold = DEFAULT_THRESHOLD }) {
+    const served = this._served(personaId, clientId);
+    const all = this.facts.active(personaId).map((f) => {
+      const opened = this.facts.open(personaId, f);
+      return { id: opened.id, category: opened.category, content: opened.content ?? '', locked: !!opened.locked };
+    });
+    const withheld = all.filter((f) => !served.has(f.id) && !f.locked);
+    const coarsened = [];
+    for (const [servedId, s] of served) {
+      let best = null;
+      for (const w of withheld) {
+        const score = containment(w.content, s.text);
+        if (score >= threshold && (!best || score > best.score)) best = { score, withheldFactId: w.id };
+      }
+      if (best) {
+        coarsened.push({
+          factId: servedId, reason: 'inference_collision',
+          score: round(best.score), againstFactId: best.withheldFactId
+        });
+      }
+    }
+    return { coarsened };
+  }
+
 }
 
 const round = (n) => Math.round(n * 1000) / 1000;

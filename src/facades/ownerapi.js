@@ -119,6 +119,26 @@ export class OwnerApi {
     return { outcome: OUTCOME.RESULTS, traces: this.gw.traces.list({ status, limit }) };
   }
 
+  // direct vs inferred leakage, graded. direct must be empty: it means a
+  // serving bug. inferred is a risk with a number attached.
+  leakageGrade(ctx, { personaId, clientId, threshold } = {}) {
+    this._require(ctx);
+    if (!personaId || !clientId) return { outcome: OUTCOME.DECLINED, reason: 'persona_and_client_required' };
+    return this.gw.leakage.grade({ personaId, clientId, ...(threshold ? { threshold } : {}) });
+  }
+
+  // the inference guard is opt-in per persona. off = plain serving (default).
+  setInferenceGuard(ctx, { personaId, mode } = {}) {
+    this._require(ctx);
+    const persona = this.gw.personas.get(personaId);
+    if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    const allowed = ['off', 'coarsen'];
+    if (!allowed.includes(mode)) return { outcome: OUTCOME.DECLINED, reason: 'mode_invalid' };
+    this.gw.store.update('personas', personaId, (p) => ({ ...p, inferenceGuard: mode === 'off' ? null : mode }));
+    this.gw.receipts.write({ actor: 'owner', personaId, op: 'approve', reason: `inference_guard_${mode}` });
+    return { outcome: OUTCOME.RESULTS, personaId, mode };
+  }
+
   // people: the address book is owner-level, every relationship is
   // (person, persona). circles are soft tags and importance is per persona.
   peopleAdd(ctx, spec) {
@@ -522,7 +542,8 @@ export class OwnerApi {
       outcome: OUTCOME.RESULTS,
       persona: {
         id: persona.id, name: persona.name, identity: persona.identity, status: persona.status,
-        email: persona.email ?? null, createdAt: persona.createdAt ?? null
+        email: persona.email ?? null, createdAt: persona.createdAt ?? null,
+        inferenceGuard: persona.inferenceGuard ?? null
       },
       facts: { total: facts.length, byCategory },
       vault: {
