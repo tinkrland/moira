@@ -220,7 +220,27 @@ export function createMoiraServer({
       if (path === '/.well-known/oauth-authorization-server') {
         return json(res, 200, auth.discovery().authorizationServer);
       }
-      if (path === endpoint && await mcp.handle(req, res, { endpoint })) return;
+      // a caller may scope its work to a trace: one header, one chain. an
+      // unknown or closed trace is refused at the door rather than silently
+      // running untraced, because untraced work is what a trace exists to stop.
+      if (path === endpoint) {
+        const traceHeader = req.headers['x-moira-trace'];
+        if (traceHeader) {
+          try {
+            moira.useTrace(String(traceHeader));
+          } catch (err) {
+            return json(res, 409, {
+              error: err.code ?? 'trace_unusable',
+              error_description: 'this trace is closed or unknown; work cannot attach to it'
+            });
+          }
+        }
+        try {
+          if (await mcp.handle(req, res, { endpoint })) return;
+        } finally {
+          if (traceHeader) moira.clearTrace();
+        }
+      }
 
       if (req.method === 'GET' && path === '/authorize') {
         const ctx = getOwnerContext ? getOwnerContext(req) : null;

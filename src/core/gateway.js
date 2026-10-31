@@ -43,6 +43,7 @@ import { VaultService } from './vault.js';
 import { SwitchService } from './switching.js';
 import { CoreService } from './core.js';
 import { DisclosureService } from './disclosures.js';
+import { TraceService } from './traces.js';
 import { PeopleService } from './people.js';
 import { LeakageAudit } from './leakage.js';
 
@@ -64,6 +65,7 @@ function loadInstanceKey() {
   const buf = Buffer.from(hex, 'hex');
   if (buf.length !== 32) throw new Error('MOIRA_INSTANCE_KEY must be hex of 32 bytes (openssl rand -hex 32)');
   return buf;
+
 }
 
 export class Moira {
@@ -85,7 +87,13 @@ export class Moira {
     // keyStore: wrapped persona keys persist through the same store, so
     // vaults survive restarts on persistent deployments (supabase).
     this.keys = new KeyService({ instanceKey, keyStore: this.store, now });
-    this.receipts = new ReceiptLedger({ store, keys: this.keys, now });
+    this._trace = null;
+    this.traces = new TraceService({ store, now: () => this._nowMs() });
+    this.receipts = new ReceiptLedger({
+      store, keys: this.keys, now,
+      traceOf: () => this._trace,
+      traces: this.traces
+    });
     this.personas = new PersonaService({ store, keys: this.keys, now });
     this.facts = new FactService({ store, keys: this.keys, personas: this.personas, now: () => this._nowMs() });
     this.agents = new AgentService({ store, receipts: this.receipts, now });
@@ -148,5 +156,24 @@ export class Moira {
     const session = { id: randomId('pend'), agentId: agent.id, personaId: found.personaId };
     this.store.put('pendingConnects', session.id, session);
     return { outcome: OUTCOME.APPROVAL_REQUIRED, agentId: agent.id, pendingId: session.id, nameShownAs: 'unverified' };
+  }
+  // trace scope. explicit, not ambient magic: a host sets it, does one unit of
+  // work, clears it in a finally. a closed trace refuses rather than letting
+  // late work attach itself to a finished story.
+  useTrace(traceId) {
+    if (!traceId) return null;
+    const trace = this.traces.get(traceId);
+    if (!trace) { this._trace = null; return null; }
+    if (trace.status !== 'open') {
+      const err = new Error('trace_closed');
+      err.code = 'trace_closed';
+      throw err;
+    }
+    this._trace = traceId;
+    return traceId;
+  }
+
+  clearTrace() {
+    this._trace = null;
   }
 }

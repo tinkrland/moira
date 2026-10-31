@@ -11,14 +11,33 @@ import { RECEIPT_OP } from '../model/constants.js';
 const ALLOWED_OPS = new Set(Object.values(RECEIPT_OP));
 
 export class ReceiptLedger {
-  constructor({ store, keys, now = Date.now }) {
+  constructor({ store, keys, now = Date.now, traceOf = null, traces = null }) {
     this.store = store;
     this.keys = keys;
     this.now = now;
+    // traceOf() returns the trace in scope (or null). traces stamps the sequence.
+    // both are optional so an untraced moira behaves exactly as before.
+    this.traceOf = traceOf;
+    this.traces = traces;
   }
 
   write({ actor, personaId, op, categories = [], rung = null, factCount = null, bridgeId = null, handoffId = null, packId = null, amount = null, unit = null, reason = null }) {
     if (!ALLOWED_OPS.has(op)) throw new Error(`unknown receipt op: ${op}`);
+
+    // a trace in scope stamps the receipt. a closed trace refuses the write
+    // rather than letting work hide inside a finished story.
+    const traceId = this.traceOf ? this.traceOf() : null;
+    let seq = null;
+    if (traceId) {
+      const stamp = this.traces ? this.traces.nextSeq(traceId) : { error: 'trace_not_found' };
+      if (stamp.error) {
+        const err = new Error(stamp.error);
+        err.code = stamp.error;
+        throw err;
+      }
+      seq = stamp.seq;
+    }
+
     const record = {
       id: randomId('rcpt'),
       ts: this.now(),
@@ -33,7 +52,9 @@ export class ReceiptLedger {
       packId,
       amount,
       unit,
-      reason
+      reason,
+      traceId,
+      seq
     };
     record.signature = this.keys.signReceipt(record);
     return this.store.append('receipts', record);

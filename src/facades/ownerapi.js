@@ -87,6 +87,38 @@ export class OwnerApi {
     return this.gw.leakage.audit({ personaId, clientId, threshold });
   }
 
+  // traces: one unit of work, one chain. begin, do, end, read it back.
+  traceBegin(ctx, { label, personaId = null, onBehalfOf = null } = {}) {
+    this._require(ctx);
+    const trace = this.gw.traces.begin({ label, personaId, onBehalfOf, actor: ctx.ownerRef ?? 'owner' });
+    if (!trace.id) return trace; // declined with a reason
+    return { outcome: OUTCOME.RESULTS, traceId: trace.id };
+  }
+
+  traceEnd(ctx, { traceId, outcome = 'completed' } = {}) {
+    this._require(ctx);
+    if (!traceId) return { outcome: OUTCOME.DECLINED, reason: 'trace_id_required' };
+    if (!['completed', 'abandoned'].includes(outcome)) return { outcome: OUTCOME.DECLINED, reason: 'bad_trace_outcome' };
+    const ended = this.gw.traces.end(traceId, { outcome });
+    if (ended.outcome === 'unavailable') return ended;
+    return { outcome: OUTCOME.RESULTS, traceId, status: outcome };
+  }
+
+  // the chain: ordered by sequence, never by clock. outcomes are part of it -
+  // a refused read belongs in the story as much as a granted one.
+  traceReceipts(ctx, { traceId } = {}) {
+    this._require(ctx);
+    if (!traceId) return { outcome: OUTCOME.DECLINED, reason: 'trace_id_required' };
+    const chain = this.gw.traces.receiptsFor(traceId);
+    if (!chain) return { outcome: OUTCOME.UNAVAILABLE, reason: 'trace_not_found' };
+    return { outcome: OUTCOME.RESULTS, ...chain };
+  }
+
+  tracesList(ctx, { status = null, limit = 50 } = {}) {
+    this._require(ctx);
+    return { outcome: OUTCOME.RESULTS, traces: this.gw.traces.list({ status, limit }) };
+  }
+
   // people: the address book is owner-level, every relationship is
   // (person, persona). circles are soft tags and importance is per persona.
   peopleAdd(ctx, spec) {
