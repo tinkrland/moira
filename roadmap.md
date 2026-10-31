@@ -54,6 +54,15 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## people / human context (2026-10-31)
+
+shipped: owner + agent surfaces for per-persona human context - one address
+book, relationships as (person, persona), soft overlapping circles,
+importance 1-5 per persona with no inheritance, notes at full rung, a
+people pass sliced by its circles. next in this phase: connector-fed
+meetings/social capture, and accept/decline around connect codes for
+persona-to-persona bridges between two owners.
+
 ## ego.ist build (2026-10-30)
 
 step 1: access requests (agent asks with categories/purpose/duration/note,

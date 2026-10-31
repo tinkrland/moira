@@ -467,6 +467,33 @@ export class AgentApi {
 
   // ask for selected protected fields to be delivered to ONE exact https
   // destination. approval is the owner's; the app gets a content-free status.
+  // --- people (human context, per persona) -------------------------------------------
+
+  // who this persona actually knows, served under a 'people' pass. the pass's
+  // sets are the circle slice (one slice vocabulary across moira); notes are a
+  // full-rung detail, names/circles/importance are summary.
+  people_get(accessToken, { purpose = null } = {}) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    const { persona, clientId } = ctx;
+    const pass = this.gw.passes.verify({ clientId, personaId: persona.id, category: 'people', purpose });
+    if (!pass) {
+      return { outcome: OUTCOME.APPROVAL_REQUIRED, approvals: [{ category: 'people', action: 'approval_required' }] };
+    }
+    const listed = this.gw.people.list({ personaId: persona.id, circles: pass.sets ?? null });
+    if (listed.outcome !== OUTCOME.RESULTS) return listed;
+    const showNotes = pass.maxRung >= RUNG.FULL;
+    const people = listed.people.map((p) => ({
+      name: p.name,
+      circles: p.circles,
+      importance: p.importance,
+      ...(showNotes && p.note ? { note: p.note } : {})
+    }));
+    if (pass.duration === PASS_DURATION.ONE_TIME) this.gw.passes.consume(pass.id);
+    this.gw.receipts.write({ actor: clientId, personaId: persona.id, op: 'read', categories: ['people'], reason: people.length ? 'results' : 'empty' });
+    return { outcome: people.length ? OUTCOME.RESULTS : OUTCOME.EMPTY, people };
+  }
+
   request_disclosure(accessToken, { fields, destination, purpose }) {
     const ctx = this._ctx(accessToken);
     if (ctx.outcome !== OUTCOME.RESULTS) return ctx;

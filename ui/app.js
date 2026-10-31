@@ -100,7 +100,10 @@ function detailSection(title, body) {
 }
 
 async function openDetail(p) {
-  const d = await api(`/api/persona?id=${encodeURIComponent(p.id)}`);
+  const [d, people] = await Promise.all([
+    api(`/api/persona?id=${encodeURIComponent(p.id)}`),
+    api(`/api/people?personaId=${encodeURIComponent(p.id)}`).catch(() => ({ people: [], circles: [] }))
+  ]);
   $('#detail').hidden = false;
   $('#detail-name').textContent = `${d.persona.name} · ${d.persona.identity}${d.persona.email ? ' · ' + d.persona.email : ''}`;
   const cats = Object.entries(d.facts.byCategory ?? {});
@@ -123,7 +126,15 @@ async function openDetail(p) {
   const permBody = d.passes.length
     ? `<ul>${d.passes.map((x) => `<li>${esc(x.category)} · ${esc(x.purpose)} <span class="meta">${x.scope === 'full' ? 'full hat' : esc((x.sets || []).join(', '))}</span></li>`).join('')}</ul>`
     : '<div class="meta">nothing lent. isolated.</div>';
+  // people, per persona: circles are soft tags, importance is this persona's
+  const peopleBody = (people.people ?? []).length
+    ? `<div class="chips">${(people.circles ?? []).map((c, i) => `<span class="chip p${(i % 5) + 1}">${esc(c.name)} · ${c.count}</span>`).join('')}</div>
+       <ul>${people.people.map((x) => `<li>${esc(x.name)} <span class="meta">${'●'.repeat(x.importance ?? 0)}${'○'.repeat(Math.max(0, 5 - (x.importance ?? 0)))} ${esc(x.circles.join(' · '))}</span></li>`).join('')}</ul>
+       <button class="tiny add-person">+ person</button>`
+    : `<div class="meta">nobody known to this persona yet</div><button class="tiny add-person">+ person</button>`;
+
   $('#detail-body').innerHTML = [
+    detailSection(`people · ${(people.people ?? []).length}`, peopleBody),
     detailSection(`facts · ${d.facts.total}`, factBody),
     detailSection(`vault · ${d.vault.items.length}`, vaultBody),
     detailSection('stack', stackBody),
@@ -131,6 +142,24 @@ async function openDetail(p) {
     detailSection('sets', setsBody),
     detailSection('who can read', permBody)
   ].join('');
+
+  const addBtn = $('#detail-body').querySelector('.add-person');
+  if (addBtn) addBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const name = prompt('who? (name as you know them)');
+    if (!name) return;
+    const circles = (prompt('circles for this persona (comma separated)') || '').split(',').map((c) => c.trim()).filter(Boolean);
+    const importance = Math.min(5, Math.max(1, Number(prompt('importance 1-5 for this persona', '3')) || 3));
+    const note = prompt('a note for this persona (optional)') || null;
+    try {
+      const made = await api('/api/people', { method: 'POST', body: JSON.stringify({ name }) });
+      await api('/api/people/profile', {
+        method: 'POST',
+        body: JSON.stringify({ personaId: d.persona.id, personId: made.person.id, circles, importance, note })
+      });
+      await openDetail({ id: d.persona.id });
+    } catch (err) { status(`person not added: ${err.message}`, true); }
+  });
 
   for (const btn of $('#detail-body').querySelectorAll('button.x')) {
     btn.addEventListener('click', async (e) => {

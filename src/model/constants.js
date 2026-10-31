@@ -86,6 +86,7 @@ export const DISCLOSURE_MODE = { SECRET: 'secret', OPEN_SECRET: 'open_secret', D
 
 // receipt op kinds (section 16). receipts are content-free.
 export const RECEIPT_OP = {
+  PEOPLE: 'people',
   ACCESS_REQUEST: 'access_request',
   READ: 'read',
   PROPOSE: 'propose',

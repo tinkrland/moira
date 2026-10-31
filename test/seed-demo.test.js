@@ -31,6 +31,13 @@ test('seed: the dummy card exists once, with its address on the overview', () =>
   seedDemo(m, ctx);
   assert.equal(m.owner.listAccessRequests(ctx, { status: 'pending' }).requests.length, 1, 'idempotent');
 
+  // the demo address book: two humans, soft circles, per-persona importance
+  const people = m.owner.peopleList(ctx, { personaId: p.id });
+  assert.equal(people.people.length, 2);
+  assert.equal(people.people[0].name, 'nina');
+  assert.equal(people.people[0].importance, 5);
+  assert.deepEqual(m.owner.peopleCircles(ctx, { personaId: p.id }).circles.map((c) => c.name).sort(), ['basically family', 'friends', 'work']);
+
   // the address is validated, never invented
   assert.throws(() => m.owner.createPersona(ctx, { name: 'bad', identity: 'linked', email: 'not-an-address' }), /look like an address/);
 });

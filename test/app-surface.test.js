@@ -149,6 +149,31 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   });
   assert.equal(noDeliver.status, 409, 'no deliverer configured, no delivery claimed');
 
+  // people over http: address book is owner-level, relationships are per persona
+  assert.equal((await fetch(`${base}/api/people`)).status, 401);
+  const madePerson = await fetch(`${base}/api/people`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'nina' })
+  });
+  assert.equal(madePerson.status, 200);
+  const person = (await madePerson.json()).person;
+  const rel = await fetch(`${base}/api/people/profile`, {
+    method: 'POST', headers: { ...owner, 'content-type': 'application/json' },
+    body: JSON.stringify({ personaId: persona.id, personId: person.id, circles: ['work', 'mentors'], importance: 5, note: 'hired me' })
+  });
+  assert.equal(rel.status, 200);
+  const perPersona = await (await fetch(`${base}/api/people?personaId=${persona.id}`, { headers: owner })).json();
+  assert.deepEqual(perPersona.people.map((x) => x.name), ['nina']);
+  assert.equal(perPersona.people[0].importance, 5);
+  assert.deepEqual(perPersona.circles.map((c) => c.name).sort(), ['mentors', 'work']);
+  // a persona that never met nina does not see her
+  const other = m.owner.createPersona(ctx, { name: 'sable', identity: 'pseudonymous' });
+  const otherView = await (await fetch(`${base}/api/people?personaId=${other.id}`, { headers: owner })).json();
+  assert.deepEqual(otherView.people, [], 'isolation per persona');
+  // the address book still holds her
+  const book = await (await fetch(`${base}/api/people`, { headers: owner })).json();
+  assert.equal(book.people.length, 1);
+
   // the card kit is compiled in: kit values are pinned (no drift)
   const js = await (await fetch(`${base}/app/app.js`)).text();
   const css = await (await fetch(`${base}/app/ui.css`)).text();

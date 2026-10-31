@@ -79,6 +79,51 @@ export class OwnerApi {
     return this.gw.requests.deny({ requestId, reason });
   }
 
+  // people: the address book is owner-level, every relationship is
+  // (person, persona). circles are soft tags and importance is per persona.
+  peopleAdd(ctx, spec) {
+    this._require(ctx);
+    return this.gw.people.addPerson(spec);
+  }
+
+  peopleAll(ctx) {
+    this._require(ctx);
+    return { outcome: OUTCOME.RESULTS, people: this.gw.people.all() };
+  }
+
+  peopleList(ctx, { personaId, circles = null } = {}) {
+    this._require(ctx);
+    if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_id_required' };
+    return this.gw.people.list({ personaId, circles });
+  }
+
+  peopleCircles(ctx, { personaId } = {}) {
+    this._require(ctx);
+    if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_id_required' };
+    return this.gw.people.circleList({ personaId });
+  }
+
+  peopleProfileSet(ctx, spec) {
+    this._require(ctx);
+    return this.gw.people.setProfile(spec);
+  }
+
+  peopleCircleAdd(ctx, spec) {
+    this._require(ctx);
+    return this.gw.people.addCircle(spec);
+  }
+
+  peopleProfileRemove(ctx, spec) {
+    this._require(ctx);
+    return this.gw.people.removeProfile(spec);
+  }
+
+  peopleRemove(ctx, { personId } = {}) {
+    this._require(ctx);
+    if (!personId) return { outcome: OUTCOME.DECLINED, reason: 'person_id_required' };
+    return this.gw.people.removePerson(personId);
+  }
+
   // directed disclosure: the owner decides, and delivery happens once.
   listDisclosures(ctx, { personaId = null, status = 'pending' } = {}) {
     this._require(ctx);

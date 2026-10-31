@@ -381,6 +381,16 @@ export const MCP_TOOLS = [
       required: ['disclosureId']
     },
     method: 'disclosure_status'
+  },
+  {
+    name: 'people_get',
+    description: 'who this persona actually knows: names, circles and importance under a people pass; notes only at full rung. a person unknown here cannot appear.',
+    inputSchema: {
+      type: 'object',
+      properties: { purpose: { type: ['string', 'null'], description: 'must match the pass purpose' } },
+      additionalProperties: false
+    },
+    method: 'people_get'
   }
 ];
 

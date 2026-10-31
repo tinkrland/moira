@@ -83,6 +83,36 @@ export function createMoiraServer({
       if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
       if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
 
+      if (path === '/api/people' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const personaId = url.searchParams.get('personaId');
+        if (!personaId) return json(res, 200, moira.owner.peopleAll(owner));
+        const out = moira.owner.peopleList(owner, { personaId, circles: url.searchParams.getAll('circle') });
+        const circles = moira.owner.peopleCircles(owner, { personaId });
+        return json(res, out.outcome === 'results' ? 200 : 404, { ...out, circles: circles.circles ?? [] });
+      }
+      if (path === '/api/people' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        const out = moira.owner.peopleAdd(owner, { name: body?.name, aliases: body?.aliases ?? [], handles: body?.handles ?? {} });
+        return json(res, out.outcome === 'results' ? 200 : 409, out);
+      }
+      if (path === '/api/people/profile' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.personaId || !body?.personId) {
+          return json(res, 400, { outcome: 'declined', reason: 'persona_and_person_required' });
+        }
+        const out = moira.owner.peopleProfileSet(owner, {
+          personaId: body.personaId, personId: body.personId,
+          circles: body.circles, importance: body.importance, note: body.note
+        });
+        return json(res, out.outcome === 'results' ? 200 : 409, out);
+      }
+
       if (path === '/api/disclosures' && req.method === 'GET') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

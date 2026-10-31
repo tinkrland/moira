@@ -623,3 +623,30 @@ shows disclosure cards with "deliver once" / deny. suite 227 tests, 215
 pass, 12 gated; live round trip: pending 1 -> approve 200 delivered ->
 payload ['size M in outerwear'] -> agent view leaks a value? false.
 
+## 2026-10-31 - human context circles (the people phase)
+
+the model was already written down twice (features.md, buildplan.md), so
+this build was mostly the discipline of not breaking it. src/core/people.js:
+one address book (people, ppl_ ids, name + aliases + handles, duplicate
+name refused as 'person_exists'); relationships in personaPeople with
+circles (soft tags, case-insensitive display preserved), importance 1..5
+validated, note - and NO profile inheritance: work-alex's 5 and sable's 2
+are independent truths, and a person profiled only on one persona is
+invisible on the other (peopleList lists exactly the humans THAT persona
+knows). circles are implicit like sets (circleList derives from profiles,
+counts + summed importance, never a table); addCircle appends softly so
+"friends" can also become "basically family". agent surface: people_get
+under a 'people' pass, the pass's sets ARE the circle slice, notes only at
+RUNG.FULL, one_time consumed, receipted; a purpose-scoped pass is used for
+its purpose (verify matches purpose exactly - my first test asked with no
+purpose and correctly got approval_required). owner surface: peopleAdd/
+peopleAll/peopleList/peopleCircles/peopleProfileSet/peopleCircleAdd/
+peopleProfileRemove/peopleRemove. mcp tool people_get (33 tools), routes
+GET/POST /api/people + POST /api/people/profile, schema backend/people.sql
+(moira_people + moira_persona_people) + migration 20261031_01 + allowlist.
+surface: detail panel grew a people section (chips per circle, ●●●○○
+importance, "+ person" flow), seed-demo seeds nina (friends, basically
+family, 5) and dave (work, 3). bug found: store has del(), not delete().
+suite 229 tests, 217 pass, 12 gated; live: /api/people?personaId returns
+the seeded book.
+

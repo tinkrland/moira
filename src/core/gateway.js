@@ -43,6 +43,7 @@ import { VaultService } from './vault.js';
 import { SwitchService } from './switching.js';
 import { CoreService } from './core.js';
 import { DisclosureService } from './disclosures.js';
+import { PeopleService } from './people.js';
 
 function defaultStore() {
   if (process.env.INSFORGE_URL && process.env.INSFORGE_ADMIN_KEY) {
@@ -88,6 +89,7 @@ export class Moira {
     this.agents = new AgentService({ store, receipts: this.receipts, now });
     this.sessions = new SessionService({ store, agents: this.agents, now });
     this.passes = new PassService({ store, agents: this.agents, receipts: this.receipts, now });
+    this.people = new PeopleService({ store, personas: this.personas, receipts: this.receipts, now });
     this.disclosures = new DisclosureService({
       store, personas: this.personas, facts: this.facts, keys: this.keys, receipts: this.receipts, now
     });

@@ -43,7 +43,11 @@ what actually shipped (with commits and bug hunts) is
 4. **live provider verification.** the files adapters are
    fixture-tested; live runs need each provider's oauth credentials
    registered. until then, honestly not verified.
-5. **people connections (the people phase).** the people block
+5. **people connections (the people phase).** *(owner surface + agent
+   surface shipped 2026-10-31: `people` category passes, circles as the
+   slice, importance per persona, notes at full rung. remaining here:
+   connector-fed meetings/social, and accept/decline around connect
+   codes.)* the people block
    (meetings: calendly, cal.com, z cal, granola, zoom, google meet;
    social media; networking; family and friends circles) activates
    here, alongside persona-to-persona bridges between two owners -

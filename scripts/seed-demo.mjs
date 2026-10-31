@@ -44,6 +44,19 @@ export function seedDemo(moira, ctx) {
     });
   }
 
+  // two humans, each known differently: circles are soft tags and importance
+  // is this persona's, so the same person can matter more elsewhere.
+  const book = moira.owner.peopleAll(ctx).people;
+  const nina = book.find((p) => p.name === 'nina') ?? moira.owner.peopleAdd(ctx, { name: 'nina', handles: { email: 'nina@example.com' } }).person;
+  const dave = book.find((p) => p.name === 'dave') ?? moira.owner.peopleAdd(ctx, { name: 'dave' }).person;
+  moira.owner.peopleProfileSet(ctx, {
+    personaId: persona.id, personId: nina.id, circles: ['friends', 'basically family'], importance: 5,
+    note: 'the one who reads the drafts'
+  });
+  moira.owner.peopleProfileSet(ctx, {
+    personaId: persona.id, personId: dave.id, circles: ['work'], importance: 3, note: 'signs off on the invoices'
+  });
+
   return { created: true, persona: { id: persona.id, name: persona.name }, agentId: agent.id };
 }
 

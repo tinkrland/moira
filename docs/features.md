@@ -95,8 +95,13 @@ branch. nothing here pretends.
   always (person, persona), never (person, owner) wholesale. circles
   are soft tags (a friend tagged as basically family is fine); what
   differs per persona is the relationship's importance profile, not
-  which you is real - they are all the real you) activates with the
-  people phase
+  which you is real - they are all the real you) - **shipped
+  2026-10-31** for the owner surface and the agent surface: one address
+  book, one relationship per (person, persona) with circles, importance
+  1-5 and a note; `people_get` under a `people` pass, sliced by the
+  pass's circles, notes at full rung only; a person unknown to a persona
+  cannot appear there. connector-fed meetings/social ingestion still
+  waits on the people-phase connectors
 - **honestly missing:** mega (encrypted rpc protocol, its own work
   item; returns documented `not_implemented`)
 
