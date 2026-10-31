@@ -54,6 +54,23 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## the sandbox problem, audited (2026-10-31)
+
+`docs/sandbox-problem.md` maps moira onto both halves (isolation declarative and
+fail-closed; permeability as gates; coordination deliberately thin). it names
+two open gaps as work rather than prose:
+
+- **the action log is not a chain.** receipts answer "who saw what" but not "who
+  did what, on whose behalf, in what order, with what outcome". next: a
+  correlation id on every crossing receipt, plus an owner-side trace export that
+  stitches one unit of delegated work in order. timestamp ordering is not
+  accountability.
+- **crossing atomicity.** writes are CAS-atomic per record; a crossing that
+  touches two personas is two atomic writes. safe today because crossings are
+  read-through or one-shot (disclosure delivers once, packs are strict-rung
+  handoffs). a multi-step crossing would need the transactional boundary named
+  in the source doc.
+
 ## inference check (2026-10-31)
 
 shipped: owner.leakageAudit + GET /api/leakage + a surface line per connected
