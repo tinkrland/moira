@@ -12,7 +12,7 @@ import { Moira } from '../src/index.js';
 import { MemoryStore } from '../src/store.js';
 
 function setup() {
-  const m = new Moira({ store: new MemoryStore() });
+  const m = new Moira({ store: new MemoryStore(), netguard: { resolve: async () => ['93.184.216.34'] } });
   const ctx = m.createOwnerContext({ kind: 'owner_session', verified: true, ownerRef: 'owner' });
   const persona = m.owner.createPersona(ctx, { name: 'alexa', identity: 'linked' });
   const agentId = m.owner.registerAgent(ctx, { name: 'shop', tier: 'verified', personasAllowed: [persona.id], spendCaps: { usd: 1 } }).id;
@@ -67,6 +67,31 @@ test('disclosure: one exact destination, one delivery, no values to the app', as
   });
   assert.equal(again.outcome, 'declined');
   assert.equal(again.reason, 'already_delivered');
+});
+
+test('disclosure: a destination that resolves inward is refused before anything opens', async () => {
+  const m = new Moira({ store: new MemoryStore(), netguard: { resolve: async () => ['169.254.169.254'] } });
+  const ctx = m.createOwnerContext({ kind: 'owner_session', verified: true, ownerRef: 'owner' });
+  const persona = m.owner.createPersona(ctx, { name: 'alexa', identity: 'linked' });
+  m.facts.add(m.personas.get(persona.id), { content: 'size M in outerwear', category: 'preferences', fields: ['sizes'] });
+  const agentId = m.owner.registerAgent(ctx, { name: 'styler', tier: 'verified', personasAllowed: [persona.id], spendCaps: { usd: 5 } }).id;
+  const token = m.owner.createSession(ctx, { clientId: agentId, personaId: persona.id }).accessToken;
+
+  const ask = m.agent.request_disclosure(token, {
+    fields: ['preferences.sizes'],
+    destination: 'https://innocent-looking.example/hook', // resolves to imds
+    purpose: 'size_recommendation'
+  });
+  let delivered = 0;
+  const res = await m.owner.approveDisclosure(ctx, { disclosureId: ask.disclosureId, deliver: async () => { delivered += 1; return { ok: true }; } });
+
+  assert.equal(res.outcome, 'declined');
+  assert.equal(res.reason, 'cloud_metadata_blocked');
+  assert.equal(delivered, 0, 'nothing was sent anywhere');
+  const app = m.agent.disclosure_status(token, { disclosureId: ask.disclosureId });
+  assert.equal(app.status, 'failed');
+  assert.equal(app.failure, 'cloud_metadata_blocked');
+  assert.equal(JSON.stringify(app).includes('size M'), false, 'still no values');
 });
 
 test('disclosure: denial and failed delivery leak nothing either', async () => {

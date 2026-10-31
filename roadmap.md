@@ -54,6 +54,17 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## outbound target guard (2026-10-31)
+
+from the agent-vault read: directed disclosure checked `https://` and nothing
+else, so a destination resolving inward was an exfiltration gadget. now
+`src/util/netguard.js` judges every outbound target before anything is opened
+(ip literals directly, every resolved address, metadata always blocked,
+private gated by allowPrivate/allowlist, unresolvable fails closed). knobs are a
+gateway option. see `docs/agent-vault-review.md` for what else is worth taking
+(service rules, approval-link tokens) and what is not (the MITM proxy, the
+dependency).
+
 ## the sandbox problem, audited (2026-10-31)
 
 `docs/sandbox-problem.md` maps moira onto both halves (isolation declarative and

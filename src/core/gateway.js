@@ -67,8 +67,9 @@ function loadInstanceKey() {
 }
 
 export class Moira {
-  constructor({ store = defaultStore(), now = () => this._nowMs(), instanceKey = loadInstanceKey(), io = {} } = {}) {
+  constructor({ store = defaultStore(), now = () => this._nowMs(), instanceKey = loadInstanceKey(), io = {}, netguard = {} } = {}) {
     this.io = io; // injectable adapters/fetch; the core stays offline and deterministic
+    this.netguard = netguard; // outbound target policy knobs (resolve/allowPrivate/allowlist); default = real dns, private blocked
     // key safety: a persistent store without a stable instance key would wrap
     // every persona key under a key that changes per process, locking (or
     // silently re-keying) every vault after a restart. refuse to start.
@@ -92,7 +93,7 @@ export class Moira {
     this.passes = new PassService({ store, agents: this.agents, receipts: this.receipts, now });
     this.leakage = new LeakageAudit({ personas: this.personas, facts: this.facts, passes: this.passes, now });
     this.people = new PeopleService({ store, personas: this.personas, receipts: this.receipts, now });
-    this.disclosures = new DisclosureService({
+    this.disclosures = new DisclosureService({ netguard: this.netguard,
       store, personas: this.personas, facts: this.facts, keys: this.keys, receipts: this.receipts, now
     });
     this.requests = new AccessRequestService({

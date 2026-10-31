@@ -71,6 +71,27 @@ common knowledge.
 a detector, not a fix. the fix is the owner's: narrow the pass, split the
 fact, or accept the leak knowingly.
 
+## outbound targets are judged, not trusted (2026-10-31)
+
+isolation governs what leaves; it says nothing about *where it goes*. any
+outbound call moira makes on a persona's behalf runs through
+`src/util/netguard.js` first:
+
+- ip literals are judged directly (no resolver to fool)
+- a name is resolved, and **every** returned address is judged - any private
+  or metadata address blocks the destination (the DNS-rebinding shape)
+- cloud metadata (`169.254.169.254`, `fd00:ec2::254`) is blocked even when
+  the operator allowlists it; there is no legitimate POST of persona fields
+  into IMDS
+- loopback, RFC-1918, link-local, CGNAT and ULA are blocked unless
+  `allowPrivate`, and `allowlist` CIDRs/hosts can open narrow holes
+- anything that does not resolve fails closed
+
+knobs live on the gateway (`new Moira({ netguard: { allowPrivate, allowlist,
+resolve } })`). this closes a gap the agent-vault read exposed: directed
+disclosure validated `https://` and stopped there, so a delivery endpoint that
+resolved inward was an exfiltration gadget with our own feature's name on it.
+
 ## the rule of thumb
 
 default to the narrowest slice that does the job, name it, and let it

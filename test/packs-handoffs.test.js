@@ -11,7 +11,7 @@ const ownerCtx = (m) => m.createOwnerContext(ownerSession());
 
 
 const setup = () => {
-  const m = new Moira({});
+  const m = new Moira({ netguard: { resolve: async () => ['93.184.216.34'] } });
   const ctx = ownerCtx(m);
   const p = m.owner.createPersona(ctx, { name: 'founder', identity: 'linked' });
   const sender = m.owner.registerAgent(ctx, { name: 'scout', tier: 'verified', personasAllowed: [p.id], spendCaps: { usd: 50 } });
@@ -168,7 +168,7 @@ test('delete persona: key shredding, severed artifacts, receipt stubs (16)', () 
 });
 
 test('monitor hook: shared payer hash across decoupled personas is a hard finding; advisory only (22.4)', () => {
-  const m = new Moira({});
+  const m = new Moira({ netguard: { resolve: async () => ['93.184.216.34'] } });
   const ctx = ownerCtx(m);
   const a = m.owner.createPersona(ctx, { name: 'main', identity: 'linked' });
   const b = m.owner.createPersona(ctx, { name: 'alias', identity: 'pseudonymous' });
@@ -189,7 +189,7 @@ test('monitor hook: shared payer hash across decoupled personas is a hard findin
 });
 
 test('connect codes: mint -> redeem (unverified) -> owner approves -> session (11)', () => {
-  const m = new Moira({});
+  const m = new Moira({ netguard: { resolve: async () => ['93.184.216.34'] } });
   const ctx = ownerCtx(m);
   const p = m.owner.createPersona(ctx, { name: 'student', identity: 'linked' });
   const minted = m.owner.mintConnectCode(ctx, { personaId: p.id });

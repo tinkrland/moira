@@ -10,13 +10,15 @@
 // one request, one delivery. retrying is a new ask and a new owner decision.
 
 import { randomId, signPayload } from '../util/crypto.js';
+import { checkDestination } from '../util/netguard.js';
 import { OUTCOME, RECEIPT_OP } from '../model/constants.js';
 
 const STATUS = { PENDING: 'pending', DELIVERED: 'delivered', DENIED: 'denied', FAILED: 'failed' };
 
 export class DisclosureService {
-  constructor({ store, personas, facts, keys, receipts, now = Date.now }) {
+  constructor({ store, personas, facts, keys, receipts, netguard = {}, now = Date.now }) {
     this.store = store;
+    this.netguard = netguard;
     this.personas = personas;
     this.facts = facts;
     this.keys = keys;
@@ -89,6 +91,18 @@ export class DisclosureService {
       return { outcome: OUTCOME.DECLINED, reason: rec.status === STATUS.DELIVERED ? 'already_delivered' : 'disclosure_already_decided' };
     }
     if (typeof deliver !== 'function') return { outcome: OUTCOME.DECLINED, reason: 'deliver_required' };
+
+    // the target is judged before anything is opened: private ranges, loopback
+    // and cloud metadata are refused, because a delivery endpoint that resolves
+    // inward is an exfiltration gadget wearing this feature's name.
+    const verdict = await checkDestination(rec.destination, this.netguard ?? {});
+    if (!verdict.allowed) {
+      const next = this.store.update('disclosures', disclosureId, (x) => ({
+        ...x, status: STATUS.FAILED, decidedAt: this.now(), failure: verdict.reason
+      }));
+      this.receipts.write({ actor: 'owner', personaId: rec.personaId, op: RECEIPT_OP.DISCLOSURE, reason: `blocked_${verdict.reason}` });
+      return { outcome: OUTCOME.DECLINED, reason: verdict.reason, disclosure: next };
+    }
 
     const values = this._values(rec);
     if (values.length === 0) {
