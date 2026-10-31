@@ -83,6 +83,19 @@ export function createMoiraServer({
       if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
       if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
 
+      if (path === '/api/leakage' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const personaId = url.searchParams.get('personaId');
+        const clientId = url.searchParams.get('clientId');
+        const threshold = url.searchParams.get('threshold');
+        const out = moira.owner.leakageAudit(owner, {
+          personaId, clientId,
+          ...(threshold ? { threshold: Number(threshold) } : {})
+        });
+        return json(res, out.outcome === 'results' ? 200 : 400, out);
+      }
+
       if (path === '/api/people' && req.method === 'GET') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

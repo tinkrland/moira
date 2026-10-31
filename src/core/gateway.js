@@ -44,6 +44,7 @@ import { SwitchService } from './switching.js';
 import { CoreService } from './core.js';
 import { DisclosureService } from './disclosures.js';
 import { PeopleService } from './people.js';
+import { LeakageAudit } from './leakage.js';
 
 function defaultStore() {
   if (process.env.INSFORGE_URL && process.env.INSFORGE_ADMIN_KEY) {
@@ -89,6 +90,7 @@ export class Moira {
     this.agents = new AgentService({ store, receipts: this.receipts, now });
     this.sessions = new SessionService({ store, agents: this.agents, now });
     this.passes = new PassService({ store, agents: this.agents, receipts: this.receipts, now });
+    this.leakage = new LeakageAudit({ personas: this.personas, facts: this.facts, passes: this.passes, now });
     this.people = new PeopleService({ store, personas: this.personas, receipts: this.receipts, now });
     this.disclosures = new DisclosureService({
       store, personas: this.personas, facts: this.facts, keys: this.keys, receipts: this.receipts, now

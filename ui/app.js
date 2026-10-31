@@ -140,7 +140,8 @@ async function openDetail(p) {
     detailSection('stack', stackBody),
     detailSection('ai tools', aiBody),
     detailSection('sets', setsBody),
-    detailSection('who can read', permBody)
+    detailSection('who can read', permBody),
+    detailSection('inference check', '<div class="meta">measuring what each connected agent could infer…</div><div id="leaks"></div>')
   ].join('');
 
   const addBtn = $('#detail-body').querySelector('.add-person');
@@ -160,6 +161,24 @@ async function openDetail(p) {
       await openDetail({ id: d.persona.id });
     } catch (err) { status(`person not added: ${err.message}`, true); }
   });
+
+  // inference check runs after paint: one audit per agent holding a pass
+  (async () => {
+    const agents = [...new Set(d.passes.map((x) => x.clientId))];
+    const box = $('#leaks');
+    if (!box) return;
+    if (!agents.length) { box.innerHTML = '<div class="meta">nobody is connected, so nothing can leak</div>'; return; }
+    const rows = [];
+    for (const clientId of agents) {
+      try {
+        const a = await api(`/api/leakage?personaId=${encodeURIComponent(d.persona.id)}&clientId=${encodeURIComponent(clientId)}`);
+        rows.push(a.findings.length
+          ? `<li>${esc(clientId)} <span class="meta">${a.findings.length} inferable · ${a.findings.map((f) => f.kind + ' ' + f.score).join(', ')}</span></li>`
+          : `<li>${esc(clientId)} <span class="meta">nothing inferable</span></li>`);
+      } catch { rows.push(`<li>${esc(clientId)} <span class="meta">audit failed</span></li>`); }
+    }
+    box.innerHTML = `<ul>${rows.join('')}</ul><div class="meta">token containment, threshold 0.6. counts, not content.</div>`;
+  })();
 
   for (const btn of $('#detail-body').querySelectorAll('button.x')) {
     btn.addEventListener('click', async (e) => {

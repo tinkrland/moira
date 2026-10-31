@@ -174,6 +174,15 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
   const book = await (await fetch(`${base}/api/people`, { headers: owner })).json();
   assert.equal(book.people.length, 1);
 
+  // inference check over http: owner-gated, content-free, honest when empty
+  assert.equal((await fetch(`${base}/api/leakage?personaId=${persona.id}&clientId=${agentId}`)).status, 401);
+  const leak = await (await fetch(`${base}/api/leakage?personaId=${persona.id}&clientId=${agentId}`, { headers: owner })).json();
+  assert.equal(leak.outcome, 'results');
+  assert.equal(leak.measured, true);
+  assert.ok(Array.isArray(leak.findings));
+  assert.ok(Array.isArray(leak.caveats), 'the report names what it cannot see');
+  assert.equal(JSON.stringify(leak).includes('ships on fridays'), false, 'never quotes content');
+
   // the card kit is compiled in: kit values are pinned (no drift)
   const js = await (await fetch(`${base}/app/app.js`)).text();
   const css = await (await fetch(`${base}/app/ui.css`)).text();

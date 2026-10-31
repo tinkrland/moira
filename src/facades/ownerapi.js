@@ -79,6 +79,14 @@ export class OwnerApi {
     return this.gw.requests.deny({ requestId, reason });
   }
 
+  // inference leakage audit: what could this agent infer, not just read.
+  // read-only, deterministic, and it reports ids/scores - never content.
+  leakageAudit(ctx, { personaId, clientId, threshold } = {}) {
+    this._require(ctx);
+    if (!personaId || !clientId) return { outcome: OUTCOME.DECLINED, reason: 'persona_and_client_required' };
+    return this.gw.leakage.audit({ personaId, clientId, threshold });
+  }
+
   // people: the address book is owner-level, every relationship is
   // (person, persona). circles are soft tags and importance is per persona.
   peopleAdd(ctx, spec) {
