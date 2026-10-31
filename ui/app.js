@@ -173,7 +173,7 @@ async function openDetail(p) {
       try {
         const a = await api(`/api/leakage?personaId=${encodeURIComponent(d.persona.id)}&clientId=${encodeURIComponent(clientId)}`);
         rows.push(a.findings.length
-          ? `<li>${esc(clientId)} <span class="meta">${a.findings.length} inferable · ${a.findings.map((f) => f.kind + ' ' + f.score).join(', ')}</span></li>`
+          ? `<li>${esc(clientId)} <span class="meta">${a.findings.length} inferable · ${a.findings.map((f) => f.kind + ' ' + f.score + ' (' + f.tier + ')').join(', ')}</span></li>`
           : `<li>${esc(clientId)} <span class="meta">nothing inferable</span></li>`);
       } catch { rows.push(`<li>${esc(clientId)} <span class="meta">audit failed</span></li>`); }
     }

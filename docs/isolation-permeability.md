@@ -69,6 +69,18 @@ check catches it, so it gets measurement and, at most, an explicit mitigation:
 
 - measured: `inferred` in the same grade, plus `leakageAudit` with its
   `rung_gap` / `slice_gap` / `cross_persona` findings and scores.
+- **effort, not just overlap.** how inferable something is depends on how much
+  someone is *looking*: a colleague skimming one summary and an agent that
+  ingests everything and diffs it are not the same adversary, and the gap is
+  attention, not permission. so every finding carries `minObservations` - the
+  size of the smallest set of served facts that must be read and **combined** -
+  with a `tier` (`glance` = 1 read, `attentive` = 2-3, `exhaustive` = 4+).
+  `observationBudget` filters to one assumed reader: findings above it move to
+  `latent` with `latentReason: 'above_budget'` rather than vanishing. the cover
+  is greedy, so it is an upper bound on parsimony - stated in `method`, never
+  implied optimal. this also closed a real blind spot: two served facts at 0.5
+  each, union 1.0, previously scored below threshold and reported *nothing*,
+  while an attentive observer saw the whole thing.
 - mitigated, opt-in per persona: the **inference guard**
   (`owner.setInferenceGuard({personaId, mode})`, `off` by default). when a
   served fact collides with a withheld one above threshold, it degrades to its

@@ -40,6 +40,30 @@ export const DEFAULT_THRESHOLD = 0.6;
 // allowed?" only repeats whatever bug the server has.
 //
 // returns null when clean, else { kind, passId, detail }.
+// the minimum evidence shim: how many served facts must be read, and combined,
+// before a withheld one is reconstructible. greedy, so the count is an upper
+// bound on parsimony - a smaller set may exist. reported as such, never implied.
+export function greedyCover(withheldTokens, servedTokenEntries) {
+  const uncovered = new Set(withheldTokens);
+  const total = uncovered.size;
+  if (total === 0) return { count: 0, covered: 0, factIds: [] };
+  const chosen = [];
+  while (uncovered.size > 0 && chosen.length < 64) {
+    let best = null;
+    for (const [id, tokens] of servedTokenEntries) {
+      let gain = 0;
+      for (const t of tokens) if (uncovered.has(t)) gain++;
+      if (gain > 0 && (!best || gain > best.gain)) best = { id, gain, tokens };
+    }
+    if (!best) break;
+    for (const t of best.tokens) uncovered.delete(t);
+    chosen.push(best.id);
+  }
+  return { count: chosen.length, covered: (total - uncovered.size) / total, factIds: chosen };
+}
+
+const tierFor = (n) => (n <= 1 ? 'glance' : n <= 3 ? 'attentive' : 'exhaustive');
+
 export function checkServedAgainstPass(item, pass) {
   if (!pass) return { kind: 'no_pass', passId: null, detail: 'served without a pass' };
   if (item.personaId !== pass.personaId) {
@@ -124,7 +148,7 @@ export class LeakageAudit {
   }
 
   // the audit. owner-initiated, read-only, and it never quotes content.
-  audit({ personaId, clientId, threshold = DEFAULT_THRESHOLD }) {
+  audit({ personaId, clientId, threshold = DEFAULT_THRESHOLD, observationBudget = null }) {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: 'unavailable', reason: 'persona_not_found' };
     const activePasses = this._activePasses(clientId, personaId);
@@ -137,6 +161,8 @@ export class LeakageAudit {
     const withheld = all.filter((f) => !served.has(f.id) && !f.locked);
 
     const findings = [];
+    // every served fact's distinctive tokens, once: the evidence an observer has
+    const servedTokens = new Map([...served].map(([id, s]) => [id, distinctiveTokens(s.text)]));
 
     // 1. rung gap: a served rung reproduces the fuller text of the same fact
     for (const [factId, s] of served) {
@@ -147,7 +173,8 @@ export class LeakageAudit {
       if (score >= threshold) {
         findings.push({
           kind: 'rung_gap', withheldFactId: factId, servedFactId: factId,
-          category: fact.category, score: round(score), threshold
+          category: fact.category, score: round(score), threshold,
+          minObservations: 1, tier: 'glance', combination: false
         });
       }
     }
@@ -162,7 +189,23 @@ export class LeakageAudit {
       if (best && best.score >= threshold && best.servedFactId !== w.id) {
         findings.push({
           kind: 'slice_gap', withheldFactId: w.id, servedFactId: best.servedFactId,
-          category: w.category, score: round(best.score), threshold
+          category: w.category, score: round(best.score), threshold,
+          minObservations: 1, tier: 'glance', combination: false
+        });
+        continue;
+      }
+      // no single served fact gives it away, but the SET of them might. this is
+      // the observer who reads several notes and puts them together - real
+      // effort, and previously reported as nothing at all.
+      const wTokens = distinctiveTokens(w.content);
+      if (!wTokens.length) continue;
+      const cover = greedyCover(wTokens, servedTokens);
+      if (cover.count >= 2 && cover.covered >= threshold) {
+        findings.push({
+          kind: 'slice_gap', withheldFactId: w.id, servedFactId: cover.factIds[0],
+          servedFactIds: cover.factIds, category: w.category,
+          score: round(cover.covered), combinedScore: round(cover.covered), threshold,
+          minObservations: cover.count, tier: tierFor(cover.count), combination: true
         });
       }
     }
@@ -182,7 +225,8 @@ export class LeakageAudit {
         findings.push({
           kind: 'cross_persona', servedFactId, withheldFactId: hit.id,
           otherPersonaId: other.id, otherFactId: hit.id,
-          category: hit.category, score: 1, threshold
+          category: hit.category, score: 1, threshold,
+          minObservations: 1, tier: 'glance', combination: false
         });
         break;
       }
@@ -191,7 +235,8 @@ export class LeakageAudit {
     return {
       outcome: 'results',
       measured: true,
-      method: 'distinctive-token containment, stopwords dropped, threshold ' + threshold,
+      method: 'distinctive-token containment, stopwords dropped, threshold ' + threshold
+        + '; effort = greedy minimum observation set (upper bound, not optimal)',
       threshold,
       personaId,
       clientId,
@@ -202,7 +247,13 @@ export class LeakageAudit {
         'people notes are served by people_get, not as facts, and are also outside this scan',
         'this measures reconstruction from text overlap only; it does not model common knowledge or outside data'
       ],
-      findings: findings.sort((a, b) =>
+      observationBudget,
+      latent: observationBudget === null ? [] : findings
+        .filter((f) => (f.minObservations ?? 1) > observationBudget)
+        .map((f) => ({ ...f, latentReason: 'above_budget' })),
+      findings: findings
+        .filter((f) => observationBudget === null || (f.minObservations ?? 1) <= observationBudget)
+        .sort((a, b) =>
         b.score - a.score || a.kind.localeCompare(b.kind) || a.withheldFactId.localeCompare(b.withheldFactId))
     };
   }

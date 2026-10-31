@@ -81,10 +81,10 @@ export class OwnerApi {
 
   // inference leakage audit: what could this agent infer, not just read.
   // read-only, deterministic, and it reports ids/scores - never content.
-  leakageAudit(ctx, { personaId, clientId, threshold } = {}) {
+  leakageAudit(ctx, { personaId, clientId, threshold, observationBudget } = {}) {
     this._require(ctx);
     if (!personaId || !clientId) return { outcome: OUTCOME.DECLINED, reason: 'persona_and_client_required' };
-    return this.gw.leakage.audit({ personaId, clientId, threshold });
+    return this.gw.leakage.audit({ personaId, clientId, threshold, observationBudget: observationBudget ?? null });
   }
 
   // traces: one unit of work, one chain. begin, do, end, read it back.
@@ -121,10 +121,14 @@ export class OwnerApi {
 
   // direct vs inferred leakage, graded. direct must be empty: it means a
   // serving bug. inferred is a risk with a number attached.
-  leakageGrade(ctx, { personaId, clientId, threshold } = {}) {
+  leakageGrade(ctx, { personaId, clientId, threshold, observationBudget } = {}) {
     this._require(ctx);
     if (!personaId || !clientId) return { outcome: OUTCOME.DECLINED, reason: 'persona_and_client_required' };
-    return this.gw.leakage.grade({ personaId, clientId, ...(threshold ? { threshold } : {}) });
+    return this.gw.leakage.grade({
+      personaId, clientId,
+      ...(threshold ? { threshold } : {}),
+      ...(observationBudget ? { observationBudget } : {})
+    });
   }
 
   // the inference guard is opt-in per persona. off = plain serving (default).

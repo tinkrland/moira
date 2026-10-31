@@ -91,7 +91,8 @@ export function createMoiraServer({
         const personaId = u.searchParams.get('personaId');
         const clientId = u.searchParams.get('clientId');
         if (!personaId || !clientId) return json(res, 400, { error: 'persona_and_client_required' });
-        return json(res, 200, moira.owner.leakageGrade(ctx, { personaId, clientId }));
+        const budget = u.searchParams.get('budget');
+        return json(res, 200, moira.owner.leakageGrade(ctx, { personaId, clientId, ...(budget ? { observationBudget: Number(budget) } : {}) }));
       }
 
       // the inference guard is opt-in per persona: off (default) or coarsen
@@ -109,9 +110,11 @@ export function createMoiraServer({
         const personaId = url.searchParams.get('personaId');
         const clientId = url.searchParams.get('clientId');
         const threshold = url.searchParams.get('threshold');
+        const budget = url.searchParams.get('budget');
         const out = moira.owner.leakageAudit(owner, {
           personaId, clientId,
-          ...(threshold ? { threshold: Number(threshold) } : {})
+          ...(threshold ? { threshold: Number(threshold) } : {}),
+          ...(budget ? { observationBudget: Number(budget) } : {})
         });
         return json(res, out.outcome === 'results' ? 200 : 400, out);
       }
