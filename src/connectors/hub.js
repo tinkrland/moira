@@ -23,6 +23,38 @@ import { adapterFor } from './adapters.js';
 const SEAL_CTX = 'moira-connector-v1'
 const DEFAULT_ACCOUNT = 'default';
 
+const INVALID_SLUG = Symbol('invalid_slug');
+const INVALID_CAPS = Symbol('invalid_caps');
+const SLUG_RE = /^[a-z0-9][a-z0-9_-]{0,40}$/;
+
+// a project is an internal bucket name, so it is validated the way set names
+// are: lowercase, short, no surprises
+function normalizeSlug(value) {
+  if (value == null || value === '') return null;
+  if (typeof value !== 'string') return INVALID_SLUG;
+  const s = value.trim().toLowerCase();
+  return SLUG_RE.test(s) ? s : INVALID_SLUG;
+}
+
+// capabilities are declared scope LABELS as the owner reads them off the token
+// screen ("workflow:write", "repo:read"). we never introspect a token: a PAT
+// does not announce its scopes, so the declaration is the honest interface.
+function normalizeCapabilities(value) {
+  if (value == null) return [];
+  if (!Array.isArray(value)) return INVALID_CAPS;
+  const out = [];
+  for (const raw of value) {
+    if (typeof raw !== 'string') return INVALID_CAPS;
+    const s = raw.trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9:_-]{0,60}$/.test(s)) return INVALID_CAPS;
+    if (!out.includes(s)) out.push(s);
+  }
+  return out;
+}
+
+// covers = does this credential satisfy everything the pass asked for?
+const covers = (identityCaps, wanted) => wanted.every((w) => (identityCaps ?? []).includes(w));
+
 // a fingerprint of the credential material: comparable, never reversible. it
 // answers exactly one question - "is this the same secret?" - which is the
 // question linkage needs and nothing else.
@@ -45,7 +77,7 @@ export class ConnectorHub {
 
   // owner authorizes one provider account for one persona. credentials are
   // sealed immediately; the identity record holds only the sealed envelope.
-  authorize(ctx, { personaId, connectorId, credentials, label = null, account = null, workspace = null, acknowledgeLinkage = false }) {
+  authorize(ctx, { personaId, connectorId, credentials, label = null, account = null, workspace = null, project = null, credential = null, capabilities = null, acknowledgeLinkage = false }) {
     if (!ctx || ctx.kind !== 'owner_context' || typeof ctx.ownerRef !== 'string') {
       return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
     }
@@ -60,6 +92,14 @@ export class ConnectorHub {
     if (!credentials || typeof credentials !== 'object') {
       return { outcome: OUTCOME.DECLINED, reason: 'credentials_required' };
     }
+    // a project is OURS (an internal bucket: "atlas", "beacon"); a workspace is
+    // THEIRS (a tenant on the provider). both are dimensions, never synonyms.
+    const projectKey = normalizeSlug(project);
+    if (projectKey === INVALID_SLUG) return { outcome: OUTCOME.DECLINED, reason: 'project_invalid' };
+    const credentialKey = normalizeSlug(credential) ?? 'default';
+    if (credentialKey === INVALID_SLUG) return { outcome: OUTCOME.DECLINED, reason: 'credential_slug_invalid' };
+    const caps = normalizeCapabilities(capabilities);
+    if (caps === INVALID_CAPS) return { outcome: OUTCOME.DECLINED, reason: 'capabilities_invalid' };
     // linkage: one credential, two personas, means the provider sees one human
     // wearing two hats - which is the thing persona separation exists to deny.
     // the check is a fingerprint over the credentials (never the value), it
@@ -74,13 +114,39 @@ export class ConnectorHub {
       this._recordLink({ fingerprint, connectorId, personaIds: [...linked, personaId] });
     }
 
-    // one live identity per (persona, connector, account, WORKSPACE):
-    // re-authorizing replaces only that workspace; other workspaces stay live.
+    // the slot: (persona, connector, PROJECT, workspace, account, CREDENTIAL).
+    // re-authorizing replaces only that slot; a second token in the same project
+    // is a second identity, because fine-grained tokens are fine-grained.
     const accountKey = account ?? DEFAULT_ACCOUNT;
-    const existing = this.store.list('connectorIdentities',
+    // peers = same account, so distinct accounts stay distinct without needing
+    // capability declarations (a work login and a personal login are not
+    // ambiguous). capability only disambiguates two tokens on the SAME account.
+    const inProject = this.store.list('connectorIdentities',
       (x) => x.personaId === personaId && x.connectorId === connectorId && !x.revoked
-        && x.account === accountKey && (x.workspace ?? null) === (workspace ?? null),
+        && (x.project ?? null) === projectKey && (x.workspace ?? null) === (workspace ?? null)
+        && x.account === accountKey,
       { personaId, connectorId, account: accountKey });
+    const others = inProject.filter((x) => (x.credential ?? 'default') !== credentialKey);
+    // stingy: when two credentials share a slot, each must say what it can do.
+    // guessing which token is which is how the wrong permission gets used.
+    if (others.length > 0) {
+      // the NEWCOMER must say what it can do: an undeclared second token is a
+      // coin flip, and the wrong permission is worse than a refusal. an older
+      // undeclared credential is grandfathered as the plain fallback - it can
+      // serve capability-free reads, and can never claim a capability-scoped one.
+      if (caps.length === 0) {
+        return {
+          outcome: OUTCOME.DECLINED,
+          reason: 'capabilities_required_for_multiple_credentials',
+          undeclared: [credentialKey]
+        };
+      }
+      const signatures = new Set([...others, { capabilities: caps }].map((x) => (x.capabilities ?? []).slice().sort().join('|')));
+      if (signatures.size !== others.length + 1) {
+        return { outcome: OUTCOME.DECLINED, reason: 'capabilities_indistinguishable' };
+      }
+    }
+    const existing = inProject.filter((x) => (x.credential ?? 'default') === credentialKey);
     for (const x of existing) {
       this.store.update('connectorIdentities', x.id, (r) => ({ ...r, revoked: true }));
     }
@@ -90,6 +156,9 @@ export class ConnectorHub {
       connectorId,
       account: accountKey,
       workspace: workspace ?? null,
+      project: projectKey,
+      credential: credentialKey,
+      capabilities: caps,
       label,
       fingerprint,
       sealed: seal(this.keys.personaKey(personaId), JSON.stringify(credentials), `${SEAL_CTX}:${connectorId}`),
@@ -100,7 +169,10 @@ export class ConnectorHub {
     };
     this.store.put('connectorIdentities', identity.id, identity);
     this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.CONNECTOR, reason: `authorized:${connectorId}` });
-    return { outcome: OUTCOME.RESULTS, identityId: identity.id, connectorId };
+    return {
+      outcome: OUTCOME.RESULTS, identityId: identity.id, connectorId,
+      project: projectKey, credential: credentialKey, capabilities: caps
+    };
   }
 
   revoke(ctx, { identityId }) {
@@ -120,7 +192,7 @@ export class ConnectorHub {
 
   // connector pass grant: separate from memory passes by construction -
   // different collection, different verifier, different dimensions.
-  grantPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration = PASS_DURATION.SESSION, ttlMs = null, uses = null, account = null, workspace = null, acknowledgeStanding = false }) {
+  grantPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration = PASS_DURATION.SESSION, ttlMs = null, uses = null, account = null, workspace = null, project = null, credential = null, capabilities = null, acknowledgeStanding = false }) {
     if (!ctx || ctx.kind !== 'owner_context' || typeof ctx.ownerRef !== 'string') {
       return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
     }
@@ -133,7 +205,15 @@ export class ConnectorHub {
     if (duration === PASS_DURATION.PERMANENT && acknowledgeStanding !== true) {
       return { outcome: OUTCOME.DECLINED, reason: 'standing_requires_acknowledgement' };
     }
-    const identity = this._identity(personaId, connectorId, account, workspace);
+    const wanted = normalizeCapabilities(capabilities);
+    if (wanted === INVALID_CAPS) return { outcome: OUTCOME.DECLINED, reason: 'capabilities_invalid' };
+    const projectKey = normalizeSlug(project);
+    if (projectKey === INVALID_SLUG) return { outcome: OUTCOME.DECLINED, reason: 'project_invalid' };
+    const credentialKey = normalizeSlug(credential);
+    if (credentialKey === INVALID_SLUG) return { outcome: OUTCOME.DECLINED, reason: 'credential_slug_invalid' };
+    const identity = this._identity(personaId, connectorId, {
+      account, workspace, project: projectKey, credential: credentialKey, capabilities: wanted
+    });
     if (!identity) return { outcome: OUTCOME.UNAVAILABLE, reason: 'no_active_identity' };
     const pass = {
       id: randomId('cpass'),
@@ -144,6 +224,9 @@ export class ConnectorHub {
       // explicit act rather than a side effect of authorization order.
       account: account ?? null,
       workspace: workspace ?? null,
+      project: projectKey,
+      credential: credentialKey,
+      capabilities: wanted,
       duration,
       usesLeft: duration === PASS_DURATION.ONE_TIME ? 1 : uses,
       createdAt: this.now(),
@@ -181,19 +264,38 @@ export class ConnectorHub {
 
   // the read gate: agent context (client, persona) + connector pass + active
   // identity. io goes through the adapter; results come back untrusted-tagged.
-  async read({ clientId, personaId }, { connectorId, operation, params = {}, purpose, scope, account = null, workspace = null }) {
+  async read({ clientId, personaId }, { connectorId, operation, params = {}, purpose, scope, account = null, workspace = null, project = null, credential = null, capabilities = null }) {
     const def = connectorDef(connectorId);
     if (!def || def.status !== CONNECTOR_STATUS.ACTIVE || def.kind !== CONNECTOR_KIND.CONNECTED) {
       return { outcome: OUTCOME.DECLINED, reason: 'connector_not_active' };
     }
     // account targeting: an explicit account reads exactly that account's
     // identity; no account resolves the first-authorized (deterministic).
-    const identity = this._identity(personaId, connectorId, account, workspace);
-    if (!identity) return { outcome: OUTCOME.DECLINED, reason: 'no_active_identity' };
-    const pass = this._pass(
-      clientId, personaId, connectorId, scope, purpose,
-      account ?? identity.account, workspace ?? identity.workspace ?? null
-    );
+    const wanted = normalizeCapabilities(capabilities);
+    if (wanted === INVALID_CAPS) return { outcome: OUTCOME.DECLINED, reason: 'capabilities_invalid' };
+    const projectKey = normalizeSlug(project);
+    const credentialKey = normalizeSlug(credential);
+    const identity = this._identity(personaId, connectorId, {
+      account, workspace, project: projectKey, credential: credentialKey, capabilities: wanted ?? []
+    });
+    if (!identity) {
+      // name the reason: a missing capability is not the same as a missing
+      // connection, and an agent should be told which one it hit
+      const inSlot = this.store.list('connectorIdentities', (x) => x.personaId === personaId
+        && x.connectorId === connectorId && !x.revoked
+        && (projectKey == null || (x.project ?? null) === projectKey), { personaId, connectorId });
+      if (inSlot.length > 0 && (wanted ?? []).length > 0 && !inSlot.some((x) => covers(x.capabilities ?? [], wanted))) {
+        return { outcome: OUTCOME.DECLINED, reason: 'capability_not_covered', capabilities: wanted };
+      }
+      return { outcome: OUTCOME.DECLINED, reason: 'no_active_identity' };
+    }
+    const pass = this._pass(clientId, personaId, connectorId, scope, purpose, {
+      account: account ?? identity.account,
+      workspace: workspace ?? identity.workspace ?? null,
+      project: projectKey,
+      credential: credentialKey,
+      capabilities: wanted ?? []
+    });
     if (!pass) return { outcome: OUTCOME.DECLINED, reason: 'no_connector_pass' };
 
     let creds;
@@ -356,27 +458,46 @@ export class ConnectorHub {
     return link;
   }
 
-  _identity(personaId, connectorId, account = null, workspace = null) {
+  // resolve the identity a read should use. when the caller does not pin a
+  // credential, the LEAST capable one that covers the asked capabilities wins:
+  // a narrow token is preferred whenever it is enough.
+  _identity(personaId, connectorId, { account = null, workspace = null, project = null, credential = null, capabilities = [] } = {}) {
     const live = this.store.list('connectorIdentities',
       (x) => x.personaId === personaId && x.connectorId === connectorId && !x.revoked,
       { personaId, connectorId });
     const match = (x) => (account == null || x.account === account)
-      && (workspace == null || (x.workspace ?? null) === workspace);
-    if (account != null || workspace != null) return live.find(match) ?? null;
+      && (workspace == null || (x.workspace ?? null) === workspace)
+      && (project == null || (x.project ?? null) === project)
+      && (credential == null || (x.credential ?? 'default') === credential)
+      && covers(x.capabilities ?? [], capabilities ?? []);
+    const narrowed = account != null || workspace != null || project != null || credential != null || (capabilities ?? []).length > 0;
+    if (narrowed) {
+      const candidates = live.filter(match);
+      if (candidates.length === 0) return null;
+      // least capability first, then oldest (deterministic)
+      return candidates.sort((a, b) => (a.capabilities ?? []).length - (b.capabilities ?? []).length
+        || (a.createdAt ?? 0) - (b.createdAt ?? 0)
+        || String(a.id).localeCompare(String(b.id)))[0];
+    }
     // no account given: deterministic default = first authorized. the sort
     // is stable, so same-millisecond creations keep their insertion order
     // (never the random id - that would make the default nondeterministic).
     return [...live].sort((a, b) => a.createdAt - b.createdAt)[0] ?? null;
   }
 
-  _pass(clientId, personaId, connectorId, scope, purpose, account = null, workspace = null) {
+  _pass(clientId, personaId, connectorId, scope, purpose, { account = null, workspace = null, project = null, credential = null, capabilities = [] } = {}) {
     const now = this.now();
     return this.store.list('connectorPasses',
       (p) => p.clientId === clientId && p.personaId === personaId && p.connectorId === connectorId &&
         p.scope === scope && p.purpose === purpose && !p.revoked,
       { clientId, personaId, connectorId, scope, purpose })
       .filter((p) => (p.account == null || p.account === account)
-        && ((p.workspace ?? null) == null || (p.workspace ?? null) === workspace) &&
-        (p.expiresAt === null || p.expiresAt > now) && (p.usesLeft === null || p.usesLeft > 0))[0] ?? null;
+        && ((p.workspace ?? null) == null || (p.workspace ?? null) === workspace)
+        // a pass granted for one project is not a pass for another, and a pass
+        // granted without a capability cannot authorise a capability-scoped read
+        && ((p.project ?? null) == null || (p.project ?? null) === (project ?? null))
+        && ((p.credential ?? null) == null || (p.credential ?? null) === (credential ?? null))
+        && covers(p.capabilities ?? [], capabilities ?? [])
+        && (p.expiresAt === null || p.expiresAt > now) && (p.usesLeft === null || p.usesLeft > 0))[0] ?? null;
   }
 }

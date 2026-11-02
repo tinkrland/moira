@@ -148,3 +148,50 @@ honest limits: rotation is a call, not a daemon - someone (a host, a cron, an
 owner) has to make it. nothing here re-negotiates with the provider, so a
 rotated credential is only as real as the value supplied. live oauth adapter
 verification remains the stated gap.
+
+
+## api keys, projects, and two tokens in one place (2026-11-02)
+
+app-level oauth is not the only shape. a persona with api keys has internal
+**projects** - self-created buckets like `atlas` and `beacon` - and a project
+may hold several credentials for the same provider, because fine-grained tokens
+are fine-grained: one github PAT with workflow and runners permission, one
+without. some projects have one of each, some have a second token for a narrow
+job.
+
+so an identity slot is
+**(persona, connector, project, workspace, account, credential)**:
+
+- a **project is ours**, a **workspace is theirs**. both dimensions, never
+  synonyms: one google account can hold two workspaces, one persona can hold two
+  projects, and neither collapses into the other.
+- a second token on the same account in the same project is a **second
+  identity**, not a replacement. re-authorizing replaces only its own slot.
+- a pass names the project it belongs to. a pass for `atlas` is not a pass for
+  `beacon`.
+
+**capability is the declaration, not an introspection.** a PAT does not announce
+its scopes, so the owner reads them off the token screen and states them
+(`capabilities: ['repo:read', 'workflow:write']`). the hub never infers them.
+
+stingy by construction, in three places:
+
+1. **an undeclared second token is refused.** joining a slot that already holds
+   another credential requires declaring what you can do
+   (`capabilities_required_for_multiple_credentials`), and two credentials with
+   the same capability signature are refused as indistinguishable. an older
+   undeclared credential is grandfathered as the plain fallback and can never
+   claim a capability-scoped pass.
+2. **the least capable credential that covers the pass is what goes out.** ask
+   for `repo:read` and the narrow token is used even when a broad one is
+   connected; the broad token is reserved for passes that actually need it.
+3. **no coverage is a named refusal**, `capability_not_covered`, with the wanted
+   list. never a silent substitution and never a fallback to a wider token.
+
+capability lists stay owner-side: `listConnectors` carries project and credential
+slugs (the agent needs to target the right one) but no capabilities, so an agent
+cannot enumerate what the owner's tokens are permitted to do.
+
+honest limit: capability labels are the owner's declaration, not a provider
+check. a token whose real scopes are wider than declared will behave wider, and
+that is a declaration bug this layer cannot detect.

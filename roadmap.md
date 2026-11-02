@@ -54,6 +54,15 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## projects, credentials, capability (2026-11-02)
+
+identity slot is (persona, connector, project, workspace, account, credential).
+api keys get internal projects, several fine-grained tokens per project, and
+declared capabilities that (a) must disambiguate a shared slot, (b) select the
+least capable credential that covers a pass, (c) refuse with
+capability_not_covered rather than substituting. capability lists stay
+owner-side. see docs/connections.md.
+
 ## connections are places and permissions (2026-11-02)
 
 workspace as a first-class dimension (platform + workspace + account), cross
