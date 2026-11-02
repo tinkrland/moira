@@ -195,3 +195,38 @@ cannot enumerate what the owner's tokens are permitted to do.
 honest limit: capability labels are the owner's declaration, not a provider
 check. a token whose real scopes are wider than declared will behave wider, and
 that is a declaration bug this layer cannot detect.
+
+
+## rotation on a calendar vs rotation on quiet (2026-11-02)
+
+two different questions, so two schedule kinds.
+
+**calendar** - `{ kind: 'every', every: '1w' | '1mo' | '30d' | ms }` or
+`{ kind: 'at', at: <timestamp or ISO date> }`. an interval is measured from the
+last rotation, or from when the schedule was **set** if it has never rotated
+(setting "every month" today means a month from today, not a month from when the
+connection was authorized). a month is 30 days here: calendar months are not
+modelled, and pretending otherwise would make a rotation date quietly wrong. a
+dated rotation is **one-shot**: after it fires, `scheduleComplete: true` and the
+calendar is empty rather than silently re-armed to the same instant.
+
+**activity** - `{ kind: 'idle', idleGraceMs, idleAfterMs, maxAgeMs }`. fires
+`idleAfterMs` after the connection has been quiet for `idleGraceMs`. this is the
+shape of a hosted database pausing an unused project - except the purpose is
+inverted: pausing a project saves resources, while rotating a credential exists
+so an old secret does not live forever. that inversion is why the ceiling is not
+optional:
+
+- **`maxAgeMs` is mandatory in spirit**, and a schedule whose ceiling is shorter
+  than its own quiet window is refused (`schedule_max_age_too_short`). without a
+  ceiling, a credential in constant use would never come due - the busiest
+  connections would keep the oldest secrets, which is exactly backwards.
+- the earliest trigger wins, and `dueRotations()` reports **why**:
+  `interval` | `scheduled` | `quiet` | `max_age`, with `overdueByMs`.
+
+**what counts as activity.** moira sees its own reads, and a read moves the
+quiet clock. it cannot see a human pushing to the repo or CI running, so the host
+reports those with `touchConnection({ identityId, at })`, owner-only, and a
+future timestamp is clamped to now. idle means "quiet as far as this system can
+see", never "quiet in the world" - an activity-driven rotation that assumes
+omniscience would be guessing about the one thing it cannot observe.

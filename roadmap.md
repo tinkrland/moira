@@ -54,6 +54,14 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## rotation schedules (2026-11-02)
+
+calendar (`every` with 1w/1mo shorthand or ms, `at` as a one-shot date) and
+activity (`idle`: quiet for a grace window then idleAfter, with a mandatory-ish
+maxAge ceiling so constant use cannot make a credential immortal). dueRotations
+reports the reason (interval/scheduled/quiet/max_age) and overdueByMs; reads
+count as activity, touchConnection lets a host report what moira cannot see.
+
 ## projects, credentials, capability (2026-11-02)
 
 identity slot is (persona, connector, project, workspace, account, credential).

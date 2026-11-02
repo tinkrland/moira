@@ -52,6 +52,83 @@ function normalizeCapabilities(value) {
   return out;
 }
 
+const DAY_MS = 24 * 3600 * 1000;
+const DEFAULT_IDLE_GRACE_MS = 7 * DAY_MS;
+const DEFAULT_MAX_AGE_MS = 30 * DAY_MS;
+
+// "1w" / "1mo" / "30d" / "24h" / "30m" or a number of ms. a month is 30 days
+// here on purpose: calendar months are not modelled and pretending otherwise
+// would make a rotation date quietly wrong.
+export function parseInterval(value) {
+  if (Number.isFinite(value) && value > 0) return value;
+  if (typeof value !== 'string') return null;
+  const m = /^(\d+)\s*(m|h|d|w|mo)$/i.exec(value.trim());
+  if (!m) return null;
+  const n = Number(m[1]);
+  const unit = m[2].toLowerCase();
+  const factor = unit === 'm' ? 60 * 1000 : unit === 'h' ? 3600 * 1000 : unit === 'd' ? DAY_MS : unit === 'w' ? 7 * DAY_MS : 30 * DAY_MS;
+  const ms = n * factor;
+  return ms > 0 ? ms : null;
+}
+
+function normalizeSchedule(input) {
+  if (!input || typeof input !== 'object') return { ok: false, reason: 'schedule_required' };
+  const kind = input.kind;
+  if (kind === 'every') {
+    const everyMs = parseInterval(input.everyMs ?? input.every);
+    if (!everyMs) return { ok: false, reason: 'schedule_invalid' };
+    return { ok: true, schedule: { kind: 'every', everyMs } };
+  }
+  if (kind === 'at') {
+    const at = typeof input.at === 'string' ? Date.parse(input.at) : input.at;
+    if (!Number.isFinite(at)) return { ok: false, reason: 'schedule_invalid' };
+    return { ok: true, schedule: { kind: 'at', at } };
+  }
+  if (kind === 'idle') {
+    const idleGraceMs = input.idleGraceMs == null ? DEFAULT_IDLE_GRACE_MS : parseInterval(input.idleGraceMs);
+    const idleAfterMs = input.idleAfterMs == null ? 0 : parseInterval(input.idleAfterMs);
+    const maxAgeMs = input.maxAgeMs == null ? DEFAULT_MAX_AGE_MS : parseInterval(input.maxAgeMs);
+    if (idleGraceMs == null || idleAfterMs == null || maxAgeMs == null) return { ok: false, reason: 'schedule_invalid' };
+    // the ceiling is not optional in spirit: without it, a credential in
+    // constant use would never rotate, which is the opposite of the point.
+    if (maxAgeMs <= idleGraceMs + idleAfterMs) {
+      return { ok: false, reason: 'schedule_max_age_too_short' };
+    }
+    return { ok: true, schedule: { kind: 'idle', idleGraceMs, idleAfterMs, maxAgeMs } };
+  }
+  return { ok: false, reason: 'schedule_invalid' };
+}
+
+// the earliest trigger wins; null means nothing is pending (a dated rotation
+// that already fired, or no schedule at all)
+function nextRotationAtFor(identity, now) {
+  const p = identity.policy ?? {};
+  const s = p.schedule;
+  if (!s) return null;
+  const lastRotated = p.lastRotatedAt ?? p.scheduleSetAt ?? identity.createdAt ?? now;
+  if (s.kind === 'every') return lastRotated + s.everyMs;
+  if (s.kind === 'at') return p.scheduleComplete ? null : s.at;
+  if (s.kind === 'idle') {
+    const lastActivity = p.lastActivityAt ?? p.scheduleSetAt ?? identity.createdAt ?? now;
+    const quietDue = lastActivity + s.idleGraceMs + s.idleAfterMs;
+    const maxAgeDue = lastRotated + s.maxAgeMs;
+    return Math.min(quietDue, maxAgeDue);
+  }
+  return null;
+}
+
+function dueReasonFor(identity, now) {
+  const p = identity.policy ?? {};
+  const s = p.schedule;
+  if (!s) return 'unscheduled';
+  if (s.kind === 'every') return 'interval';
+  if (s.kind === 'at') return 'scheduled';
+  const lastActivity = p.lastActivityAt ?? identity.createdAt ?? now;
+  const quietDue = lastActivity + s.idleGraceMs + s.idleAfterMs;
+  const maxAgeDue = (p.lastRotatedAt ?? identity.createdAt ?? now) + s.maxAgeMs;
+  return maxAgeDue <= quietDue ? 'max_age' : 'quiet';
+}
+
 // covers = does this credential satisfy everything the pass asked for?
 const covers = (identityCaps, wanted) => wanted.every((w) => (identityCaps ?? []).includes(w));
 
@@ -305,6 +382,16 @@ export class ConnectorHub {
       return { outcome: OUTCOME.DECLINED, reason: 'credential_unseal_failed' };
     }
 
+    // a read is activity: it moves an idle schedule's quiet clock forward.
+    // one signal, not the truth - the host can report more via touchConnection.
+    if (identity.policy?.schedule?.kind === 'idle') {
+      this.store.update('connectorIdentities', identity.id, (r) => {
+        const draft = { ...r, policy: { ...(r.policy ?? {}), lastActivityAt: this.now() } };
+        draft.policy.nextRotationAt = nextRotationAtFor(draft, this.now());
+        return draft;
+      });
+    }
+
     const adapter = adapterFor(connectorId, this.io);
     let raw;
     try {
@@ -346,39 +433,65 @@ export class ConnectorHub {
     if (!ctx || ctx.kind !== 'owner_context') return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
     const identity = this.store.get('connectorIdentities', identityId);
     if (!identity) return { outcome: OUTCOME.UNAVAILABLE, reason: 'identity_not_found' };
-    const p = identity.policy ?? { mode: 'revocable', rotationEveryMs: null, lastRotatedAt: null, nextRotationAt: null, rotationCount: 0 };
+    const p = identity.policy ?? {};
     return {
       outcome: OUTCOME.RESULTS, identityId,
-      connectorId: identity.connectorId, account: identity.account, workspace: identity.workspace ?? null,
-      mode: p.mode, rotationEveryMs: p.rotationEveryMs,
-      lastRotatedAt: p.lastRotatedAt, nextRotationAt: p.nextRotationAt, rotationCount: p.rotationCount ?? 0,
+      connectorId: identity.connectorId, account: identity.account,
+      workspace: identity.workspace ?? null, project: identity.project ?? null,
+      mode: p.mode ?? 'revocable',
+      schedule: p.schedule ?? null,
+      scheduleComplete: p.scheduleComplete === true,
+      rotationEveryMs: p.rotationEveryMs ?? null,
+      lastRotatedAt: p.lastRotatedAt ?? null,
+      lastActivityAt: p.lastActivityAt ?? identity.createdAt ?? null,
+      nextRotationAt: p.nextRotationAt ?? null,
+      rotationCount: p.rotationCount ?? 0,
       revocable: true
     };
   }
 
-  setConnectionPolicy(ctx, { identityId, mode, everyMs = null }) {
+  // the schedule is either a CALENDAR (every / on a date) or ACTIVITY (quiet
+  // for a while, with a max-age ceiling so a busy credential is not immortal)
+  setConnectionPolicy(ctx, { identityId, mode, everyMs = null, schedule = null }) {
     if (!ctx || ctx.kind !== 'owner_context') return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
     const identity = this.store.get('connectorIdentities', identityId);
     if (!identity) return { outcome: OUTCOME.UNAVAILABLE, reason: 'identity_not_found' };
     if (!['revocable', 'rotating'].includes(mode)) return { outcome: OUTCOME.DECLINED, reason: 'mode_invalid' };
-    if (mode === 'rotating' && !(Number.isFinite(everyMs) && everyMs > 0)) {
-      return { outcome: OUTCOME.DECLINED, reason: 'rotation_interval_required' };
+
+    let normal = null;
+    if (mode === 'rotating') {
+      // legacy shape: { everyMs } means "every", so old callers keep working
+      const input = schedule ?? (everyMs ? { kind: 'every', everyMs } : null);
+      const parsed = normalizeSchedule(input);
+      if (!parsed.ok) return { outcome: OUTCOME.DECLINED, reason: parsed.reason };
+      normal = parsed.schedule;
     }
+
+    const now = this.now();
     const next = this.store.update('connectorIdentities', identityId, (r) => {
-      const prev = r.policy ?? { rotationCount: 0, lastRotatedAt: null };
-      return {
+      const prev = r.policy ?? {};
+      const draft = {
         ...r,
         policy: {
           mode,
-          rotationEveryMs: mode === 'rotating' ? everyMs : null,
+          schedule: normal,
+          scheduleSetAt: now,
+          scheduleComplete: false,
+          rotationEveryMs: normal?.kind === 'every' ? normal.everyMs : null,
           lastRotatedAt: prev.lastRotatedAt ?? null,
-          nextRotationAt: mode === 'rotating' ? this.now() + everyMs : null,
+          lastActivityAt: prev.lastActivityAt ?? r.createdAt ?? now,
+          nextRotationAt: null,
           rotationCount: prev.rotationCount ?? 0
         }
       };
+      draft.policy.nextRotationAt = nextRotationAtFor(draft, now);
+      return draft;
     });
-    this.receipts.write({ actor: 'owner', personaId: identity.personaId, op: RECEIPT_OP.CONNECTOR, reason: `policy:${identity.connectorId}:${mode}` });
-    return { outcome: OUTCOME.RESULTS, identityId, mode: next.policy.mode };
+    this.receipts.write({ actor: 'owner', personaId: identity.personaId, op: RECEIPT_OP.CONNECTOR, reason: `policy:${identity.connectorId}:${mode}:${normal?.kind ?? 'none'}` });
+    return {
+      outcome: OUTCOME.RESULTS, identityId, mode,
+      schedule: normal, nextRotationAt: next.policy.nextRotationAt
+    };
   }
 
   // rotation replaces the sealed material and keeps the identity, so live
@@ -392,21 +505,48 @@ export class ConnectorHub {
     if (policy.mode !== 'rotating') return { outcome: OUTCOME.DECLINED, reason: 'not_a_rotating_connection' };
     if (!credentials || typeof credentials !== 'object') return { outcome: OUTCOME.DECLINED, reason: 'credentials_required' };
 
+    const now = this.now();
     const count = (policy.rotationCount ?? 0) + 1;
-    const next = this.store.update('connectorIdentities', identityId, (r) => ({
-      ...r,
-      sealed: seal(this.keys.personaKey(identity.personaId), JSON.stringify(credentials), `${SEAL_CTX}:${identity.connectorId}`),
-      fingerprint: hmacFingerprint(canonicalJson(credentials)),
-      policy: {
-        ...(r.policy ?? {}),
-        mode: 'rotating',
-        lastRotatedAt: this.now(),
-        nextRotationAt: policy.rotationEveryMs ? this.now() + policy.rotationEveryMs : null,
-        rotationCount: count
-      }
-    }));
+    const next = this.store.update('connectorIdentities', identityId, (r) => {
+      const draft = {
+        ...r,
+        sealed: seal(this.keys.personaKey(identity.personaId), JSON.stringify(credentials), `${SEAL_CTX}:${identity.connectorId}`),
+        fingerprint: hmacFingerprint(canonicalJson(credentials)),
+        policy: {
+          ...(r.policy ?? {}),
+          mode: 'rotating',
+          lastRotatedAt: now,
+          rotationCount: count,
+          // a dated rotation is one-shot; intervals and quiet schedules re-arm
+          scheduleComplete: r.policy?.schedule?.kind === 'at',
+          nextRotationAt: null
+        }
+      };
+      draft.policy.nextRotationAt = nextRotationAtFor(draft, now);
+      return draft;
+    });
     this.receipts.write({ actor: 'owner', personaId: identity.personaId, op: RECEIPT_OP.CONNECTOR, reason: `rotated:${identity.connectorId}` });
-    return { outcome: OUTCOME.RESULTS, identityId, rotationCount: count, nextRotationAt: next.policy.nextRotationAt };
+    return {
+      outcome: OUTCOME.RESULTS, identityId, rotationCount: count,
+      nextRotationAt: next.policy.nextRotationAt,
+      scheduleComplete: next.policy.scheduleComplete === true
+    };
+  }
+
+  // the host reporting activity moira cannot see: a push, CI, a human using the
+  // token outside this system. idle means "quiet as far as we can see".
+  touch(ctx, { identityId, at = null }) {
+    if (!ctx || ctx.kind !== 'owner_context') return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
+    const identity = this.store.get('connectorIdentities', identityId);
+    if (!identity) return { outcome: OUTCOME.UNAVAILABLE, reason: 'identity_not_found' };
+    const now = this.now();
+    const when = Math.min(Number.isFinite(at) ? at : now, now); // no future activity
+    const next = this.store.update('connectorIdentities', identityId, (r) => {
+      const draft = { ...r, policy: { ...(r.policy ?? {}), lastActivityAt: when } };
+      draft.policy.nextRotationAt = nextRotationAtFor(draft, now);
+      return draft;
+    });
+    return { outcome: OUTCOME.RESULTS, identityId, lastActivityAt: when, nextRotationAt: next.policy.nextRotationAt };
   }
 
   // what is due, so a host can rotate on a schedule it owns
@@ -415,13 +555,16 @@ export class ConnectorHub {
     const now = this.now();
     const identities = this.store.list('connectorIdentities', (x) => !x.revoked
       && x.policy?.mode === 'rotating'
-      && (x.policy?.nextRotationAt ?? 0) <= now, {})
+      && (x.policy?.nextRotationAt ?? Infinity) <= now, {})
       .map((x) => ({
         identityId: x.id, personaId: x.personaId, connectorId: x.connectorId,
-        account: x.account, workspace: x.workspace ?? null,
-        nextRotationAt: x.policy.nextRotationAt, rotationCount: x.policy.rotationCount ?? 0
+        account: x.account, workspace: x.workspace ?? null, project: x.project ?? null,
+        nextRotationAt: x.policy.nextRotationAt,
+        overdueByMs: now - x.policy.nextRotationAt,
+        reason: dueReasonFor(x, now),
+        rotationCount: x.policy.rotationCount ?? 0
       }));
-    return { outcome: OUTCOME.RESULTS, identities };
+    return { outcome: OUTCOME.RESULTS, now, identities };
   }
 
   // owner-only: which credentials are shared across personas, and the fix

@@ -408,8 +408,13 @@ export class OwnerApi {
     return this.gw.connectors.connectionPolicy(ctx, { identityId });
   }
 
-  setConnectionPolicy(ctx, { identityId, mode, everyMs = null }) {
-    return this.gw.connectors.setConnectionPolicy(ctx, { identityId, mode, everyMs });
+  setConnectionPolicy(ctx, { identityId, mode, everyMs = null, schedule = null }) {
+    return this.gw.connectors.setConnectionPolicy(ctx, { identityId, mode, everyMs, schedule });
+  }
+
+  // the host reporting activity moira cannot see: a push, CI, a human
+  touchConnection(ctx, { identityId, at = null }) {
+    return this.gw.connectors.touch(ctx, { identityId, at });
   }
 
   rotateConnection(ctx, { identityId, credentials }) {
