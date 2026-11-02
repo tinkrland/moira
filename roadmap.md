@@ -54,6 +54,15 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## connections are places and permissions (2026-11-02)
+
+workspace as a first-class dimension (platform + workspace + account), cross
+persona credential linkage refused by default via a non-reversible fingerprint,
+connector passes defaulting to session, and a per-identity policy that is
+revocable always and rotating on request (dueRotations + rotateConnection keep
+the identity and its passes alive). see docs/connections.md. next: the owner
+surface control for policy mode, and a scheduler that calls dueRotations.
+
 ## outbound target guard (2026-10-31)
 
 from the agent-vault read: directed disclosure checked `https://` and nothing

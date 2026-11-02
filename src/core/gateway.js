@@ -120,7 +120,9 @@ export class Moira {
     // the two facades (spec section 6). there is no third surface.
     this.core = new CoreService({ store: this.store, keys: this.keys, personas: this.personas, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
     this.switching = new SwitchService({ store: this.store, keys: this.keys, agents: this.agents, personas: this.personas, sessions: this.sessions, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
-    this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: () => this._nowMs(), io });
+    // the injected clock, so rotation schedules are testable and a host can
+    // drive time. falls back to the wall clock when none was supplied.
+    this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: this.now, io });
     this.vault = new VaultService({ store: this.store, personas: this.personas, keys: this.keys, receipts: this.receipts, now: () => this._nowMs() });
     this.sets.vault = this.vault; // one set vocabulary spans declared context, facts and the vault
     this.agent = new AgentApi(this);

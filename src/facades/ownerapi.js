@@ -374,9 +374,11 @@ export class OwnerApi {
 
   // --- connectors (section 14) ------------------------------------------------
 
-  connectConnector(ctx, { personaId, connectorId, credentials, label = null, account = null }) {
+  connectConnector(ctx, { personaId, connectorId, credentials, label = null, account = null, workspace = null, acknowledgeLinkage = false }) {
     this._require(ctx);
-    return this.gw.connectors.authorize(ctx, { personaId, connectorId, credentials, label, account });
+    return this.gw.connectors.authorize(ctx, {
+      personaId, connectorId, credentials, label, account, workspace, acknowledgeLinkage
+    });
   }
 
   revokeConnector(ctx, { identityId }) {
@@ -384,9 +386,35 @@ export class OwnerApi {
     return this.gw.connectors.revoke(ctx, { identityId });
   }
 
-  grantConnectorPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses, account = null }) {
+  grantConnectorPass(ctx, {
+    clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses,
+    account = null, workspace = null, acknowledgeStanding = false
+  }) {
     this._require(ctx);
-    return this.gw.connectors.grantPass(ctx, { clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses, account });
+    return this.gw.connectors.grantPass(ctx, {
+      clientId, personaId, connectorId, scope, purpose, duration, ttlMs, uses, account, workspace, acknowledgeStanding
+    });
+  }
+
+  // connection policy: revocable by default, rotating on request
+  connectionPolicy(ctx, { identityId }) {
+    return this.gw.connectors.connectionPolicy(ctx, { identityId });
+  }
+
+  setConnectionPolicy(ctx, { identityId, mode, everyMs = null }) {
+    return this.gw.connectors.setConnectionPolicy(ctx, { identityId, mode, everyMs });
+  }
+
+  rotateConnection(ctx, { identityId, credentials }) {
+    return this.gw.connectors.rotate(ctx, { identityId, credentials });
+  }
+
+  dueRotations(ctx) {
+    return this.gw.connectors.dueRotations(ctx);
+  }
+
+  listConnectionLinks(ctx) {
+    return this.gw.connectors.listConnectionLinks(ctx);
   }
 
   revokeConnectorPass(ctx, { passId }) {

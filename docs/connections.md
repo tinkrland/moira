@@ -106,3 +106,45 @@ moira's dials, in the same spirit but not field-addressed:
 none of these change the shape: moira's model is a superset of ego.ist's
 consent loop minus the hosted surface, with per-persona sealing and rungs
 as the differentiators.
+
+
+## a connection is a place, and a permission that can end (2026-11-02)
+
+three things were wrong with "connect google drive": it collapsed workspaces, it
+could link two personas through one credential, and it granted standing access
+by default. all three are now structural.
+
+**platform + workspace + account.** one google account can hold two work
+spaces; one slack login can reach two teams. keying an identity on
+(persona, connector, account) silently merged them, which is how the wrong
+workspace gets read. identities are keyed on all four, a pass may pin a
+workspace, and re-authorizing replaces only that one pair. a pass records what
+the owner *chose* to pin: `null` means unpinned, and pinning later is an
+explicit act, never a side effect of authorization order.
+
+**no cross-persona credential reuse.** if two personas authorize the same
+credential, the provider sees one human wearing two hats, which is exactly what
+persona separation denies. authorization fingerprints the credentials (HMAC over
+canonical json, never the value, never reversible) and, on a match under another
+persona, refuses with `approval_required` / `credential_linkage` before the
+identity exists. an owner may override with `acknowledgeLinkage: true`, which
+writes a permanent link record readable only through
+`owner.listConnectionLinks` - never on any surface an agent can reach.
+
+**fine-grained by default.** a connector pass now defaults to `session` with an
+expiry, not a standing grant; `permanent` requires
+`acknowledgeStanding: true`. the same rule memory passes already followed.
+
+**revocable always, rotating on request.** every identity carries a policy,
+default `{ mode: 'revocable' }`. `setConnectionPolicy({ mode: 'rotating',
+everyMs })` schedules rotation; `dueRotations()` lists what a host should
+rotate; `rotateConnection({ identityId, credentials })` replaces the sealed
+material in place, keeps the identity and its live passes working, bumps
+`rotationCount`, and overwrites the old secret rather than archiving it.
+rotation is never a reason to lose revocability: `revokeConnector` kills the
+identity and its passes regardless of policy.
+
+honest limits: rotation is a call, not a daemon - someone (a host, a cron, an
+owner) has to make it. nothing here re-negotiates with the provider, so a
+rotated credential is only as real as the value supplied. live oauth adapter
+verification remains the stated gap.
