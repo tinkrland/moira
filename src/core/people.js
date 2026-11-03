@@ -23,6 +23,31 @@ import { OUTCOME, RECEIPT_OP } from '../model/constants.js';
 
 const normTag = (tag) => String(tag).trim().replace(/\s+/g, ' ');
 
+// an email or a phone is a key; anything else is not a handle we can dedupe on
+function normalizeHandle(value) {
+  if (typeof value !== 'string') return null;
+  const s = value.trim().toLowerCase();
+  if (!s) return null;
+  if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s)) return s.slice(0, 200);
+  const digits = s.replace(/[^0-9+]/g, '');
+  if (/^\+?[0-9]{7,15}$/.test(digits)) return digits;
+  return null;
+}
+
+// a captured name is untrusted TEXT: links and @handles are not part of a name,
+// and stripping them is not the same as trusting what is left
+function sanitizeName(value) {
+  if (typeof value !== 'string') return null;
+  const cleaned = value
+    .replace(/https?:\/\/\S+/gi, ' ')
+    .replace(/@[a-z0-9_.-]+/gi, ' ')
+    .replace(/[<>\[\]{}|\\^~`]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
+  return cleaned || null;
+}
+
 export class PeopleService {
   constructor({ store, personas, receipts, now = Date.now }) {
     this.store = store;
@@ -52,6 +77,115 @@ export class PeopleService {
     this.store.put('people', person.id, person);
     this.receipts.write({ actor: 'owner', personaId: null, op: RECEIPT_OP.PEOPLE, reason: 'person_added' });
     return { outcome: OUTCOME.RESULTS, person };
+  }
+
+  // --- capture: signals arrive as proposals, never as people -----------------
+  //
+  // a calendar says someone attended a meeting. that is a signal, not a
+  // relationship, and a connector cannot vouch for a human. so captured handles
+  // land in a proposal list, counted and deduped, and only an owner accept
+  // creates a person and a per-persona profile.
+
+  ingest({ events = [], source = {} } = {}) {
+    if (!Array.isArray(events)) return { outcome: OUTCOME.DECLINED, reason: 'events_required' };
+    const accepted = [];
+    const rejected = [];
+    for (const ev of events.slice(0, 500)) {
+      const handle = normalizeHandle(ev?.handle);
+      if (!handle) { rejected.push({ handle: ev?.handle ?? null, reason: 'handle_unusable' }); continue; }
+      const name = sanitizeName(ev?.name);
+      const at = Number.isFinite(ev?.at) ? ev.at : this.now();
+      const existing = this.store.list('peopleProposals', (p) => p.key === handle && !p.declined && !p.closed, {})[0];
+      if (existing) {
+        const names = new Set(existing.nameCandidates ?? []);
+        if (name) names.add(name);
+        this.store.update('peopleProposals', existing.id, (p) => ({
+          ...p,
+          nameCandidates: [...names],
+          sightings: (p.sightings ?? 1) + 1,
+          lastSeenAt: Math.max(p.lastSeenAt ?? 0, at),
+          kinds: [...new Set([...(p.kinds ?? []), String(ev?.kind ?? 'unknown').slice(0, 40)])]
+        }));
+        accepted.push(existing.id);
+        continue;
+      }
+      const proposal = {
+        id: randomId('ppp'),
+        key: handle,
+        nameCandidates: name ? [name] : [],
+        kinds: [String(ev?.kind ?? 'unknown').slice(0, 40)],
+        // provenance, and an explicit statement that it is not a claim
+        source: { connectorId: source?.connectorId ?? null, project: source?.project ?? null },
+        untrusted: true,
+        sightings: 1,
+        firstSeenAt: at,
+        lastSeenAt: at,
+        acceptedBy: [],
+        declined: false,
+        closed: false,
+        createdAt: this.now()
+      };
+      this.store.put('peopleProposals', proposal.id, proposal);
+      accepted.push(proposal.id);
+    }
+    this.receipts.write({ actor: 'connector', personaId: null, op: RECEIPT_OP.PEOPLE, reason: `captured:${accepted.length}` });
+    return { outcome: OUTCOME.RESULTS, proposed: accepted.length, rejected: rejected.length, proposalIds: accepted };
+  }
+
+  proposals({ includeDeclined = false } = {}) {
+    const list = this.store.list('peopleProposals', (p) => includeDeclined || (!p.declined && !p.closed), {})
+      .map((p) => ({
+        id: p.id, key: p.key, nameCandidates: p.nameCandidates ?? [],
+        sightings: p.sightings ?? 1, kinds: p.kinds ?? [],
+        source: p.source ?? { connectorId: null, project: null },
+        untrusted: true, firstSeenAt: p.firstSeenAt, lastSeenAt: p.lastSeenAt,
+        acceptedBy: p.acceptedBy ?? []
+      }))
+      .sort((a, b) => (b.sightings - a.sightings) || (b.lastSeenAt - a.lastSeenAt));
+    return { outcome: OUTCOME.RESULTS, proposals: list };
+  }
+
+  // accepting is the owner's judgement, and it is per persona: the person may
+  // already exist (same human, another hat), so this reuses the record and only
+  // adds a profile - with the circles and importance the OWNER chose here.
+  acceptProposal({ proposalId, personaId, circles = null, importance = null, note = null, name = null }) {
+    const p = this.store.get('peopleProposals', proposalId);
+    if (!p) return { outcome: OUTCOME.UNAVAILABLE, reason: 'proposal_not_found' };
+    if (p.declined || p.closed) return { outcome: OUTCOME.DECLINED, reason: 'proposal_closed' };
+    if (!this.personas.get(personaId)) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    if ((p.acceptedBy ?? []).includes(personaId)) return { outcome: OUTCOME.DECLINED, reason: 'already_accepted' };
+
+    const chosen = sanitizeName(name) ?? p.nameCandidates?.[0] ?? p.key;
+    const handleKind = p.key.includes('@') ? 'email' : (/^\+?[0-9]+$/.test(p.key) ? 'phone' : null);
+    // reuse an existing human matched by the captured handle, else create one
+    let person = this.store.list('people').find((x) => handleKind && x.handles?.[handleKind]
+      && String(x.handles[handleKind]).toLowerCase() === p.key);
+    if (!person) {
+      const created = this.addPerson({ name: chosen, handles: handleKind ? { [handleKind]: p.key } : {} });
+      if (created.outcome !== OUTCOME.RESULTS) {
+        // name collision: attach the handle to the person that already has it
+        person = this.store.list('people').find((x) => x.name.toLowerCase() === String(chosen).toLowerCase());
+        if (!person) return created;
+      } else {
+        person = created.person;
+      }
+    }
+    const profiled = this.setProfile({ personaId, personId: person.id, circles, importance, note });
+    if (profiled.outcome !== OUTCOME.RESULTS) return profiled;
+
+    const acceptedBy = [...new Set([...(p.acceptedBy ?? []), personaId])];
+    const closed = acceptedBy.length >= 2 ? true : p.closed;
+    this.store.update('peopleProposals', proposalId, (x) => ({ ...x, acceptedBy, closed }));
+    this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.PEOPLE, reason: 'capture_accepted' });
+    return { outcome: OUTCOME.RESULTS, personId: person.id, personaId, reused: !!person.createdAt && (p.acceptedBy ?? []).length > 0 };
+  }
+
+  declineProposal({ proposalId }) {
+    const p = this.store.get('peopleProposals', proposalId);
+    if (!p) return { outcome: OUTCOME.UNAVAILABLE, reason: 'proposal_not_found' };
+    this.store.update('peopleProposals', proposalId, (x) => ({ ...x, declined: true, declinedAt: this.now() }));
+    this.receipts.write({ actor: 'owner', personaId: null, op: RECEIPT_OP.PEOPLE, reason: 'capture_declined' });
+    return { outcome: OUTCOME.RESULTS, proposalId };
   }
 
   getPerson(personId) {

@@ -160,6 +160,37 @@ export function createMoiraServer({
         return json(res, 404, { error: 'not_found' });
       }
 
+      // connector-fed capture: signals in, proposals out. an ingest never puts
+      // a person in the book; the accept below is where judgement lives.
+      if (path === '/api/people/ingest' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        const out = moira.owner.peopleIngest(owner, { events: body.events ?? [], source: body.source ?? {} });
+        return json(res, out.outcome === 'results' ? 200 : 400, out);
+      }
+
+      if (path === '/api/people/proposals' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.peopleProposals(owner, { includeDeclined: url.searchParams.get('declined') === '1' });
+        return json(res, 200, out);
+      }
+
+      if (path === '/api/people/proposal' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        const out = body.action === 'decline'
+          ? moira.owner.peopleProposalDecline(owner, { proposalId: body.proposalId })
+          : moira.owner.peopleProposalAccept(owner, {
+            proposalId: body.proposalId, personaId: body.personaId,
+            circles: body.circles ?? null, importance: body.importance ?? null,
+            note: body.note ?? null, name: body.name ?? null
+          });
+        return json(res, out.outcome === 'results' ? 200 : 400, out);
+      }
+
       if (path === '/api/people' && req.method === 'POST') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

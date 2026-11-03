@@ -192,6 +192,28 @@ export class OwnerApi {
     return { outcome: OUTCOME.RESULTS, people: this.gw.people.all() };
   }
 
+  // connector-fed capture: signals become proposals, and only an accept makes
+  // a person. nothing here writes to the book on its own.
+  peopleIngest(ctx, { events = [], source = {} } = {}) {
+    this._require(ctx);
+    return this.gw.people.ingest({ events, source });
+  }
+
+  peopleProposals(ctx, { includeDeclined = false } = {}) {
+    this._require(ctx);
+    return this.gw.people.proposals({ includeDeclined });
+  }
+
+  peopleProposalAccept(ctx, { proposalId, personaId, circles = null, importance = null, note = null, name = null } = {}) {
+    this._require(ctx);
+    return this.gw.people.acceptProposal({ proposalId, personaId, circles, importance, note, name });
+  }
+
+  peopleProposalDecline(ctx, { proposalId } = {}) {
+    this._require(ctx);
+    return this.gw.people.declineProposal({ proposalId });
+  }
+
   peopleList(ctx, { personaId, circles = null } = {}) {
     this._require(ctx);
     if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_id_required' };

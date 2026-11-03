@@ -54,6 +54,15 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## connector-fed capture for people (2026-11-03)
+
+signals become proposals, not people: peopleIngest dedupes by normalized handle,
+counts sightings, keeps disagreeing names as candidates, strips links and
+handles from captured text, and marks everything untrusted. accept puts a person
+on ONE persona with its own circles/importance; decline closes it. capture mints
+no facts. docs/people.md. still open: a host-side adapter that actually reads a
+calendar or mailbox, and shared rooms / group context.
+
 ## connect codes: people, linked by consent (2026-11-03)
 
 invite -> accept -> share -> revoke, owner-only, sealed per recipient persona.
