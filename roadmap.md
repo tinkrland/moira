@@ -54,6 +54,12 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## two axes for people (2026-11-04)
+
+importance (judgement) and interaction (contact) as independent per-persona
+axes, no composite, ordering names its criterion, both never inherited, and
+capture leaves both null because a sighting is not a rating. docs/people.md.
+
 ## capture wiring (2026-11-03)
 
 adapter listPeopleSignals -> hub captureSignals (unseal, call, normalize, no

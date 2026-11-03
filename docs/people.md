@@ -74,3 +74,34 @@ twice" are different facts and the caller should not have to infer which.
 (cron, a workflow, a button). building a watcher would decide standing mailbox
 access on the owner's behalf, which is the one decision this layer refuses to
 make.
+
+
+## two axes, per persona (2026-11-04)
+
+a relationship is not one number. each profile carries two independent axes:
+
+- **importance** (1..5) - a judgement: how much this person matters to *this*
+  persona.
+- **interaction** (0..5) - contact: how much this persona actually deals with
+  them.
+
+the worksona's boss is high on both; the private layer's view of the same human
+is low on both, and neither is the "real" one. the axes also come apart *inside*
+one persona: a parent can be importance 5, interaction 1. no validation ties them
+together, because the whole point is that they disagree.
+
+**there is no composite, deliberately.** averaging the two would let a busy
+acquaintance outrank a parent, and "who matters most" is not "who you deal with
+most". ordering names its criterion instead: `peopleList({ order: 'importance' })`
+(default) or `{ order: 'interaction' }`, each sorting high-to-low with unrated
+profiles last and a name tie-break so the result is deterministic. an unknown
+order is refused (`order_invalid`) rather than defaulted silently.
+
+both axes are **never inherited**: the same person is rated separately by every
+persona that knows them, and a persona that has never met them does not see them
+at all. `peopleCircles` sums both axes per circle, so a circle reads as "3 people,
+importance 11, interaction 9" - a shape, not a verdict.
+
+**capture cannot rate anyone.** a calendar sighting may become a proposal, but
+accepting one leaves both axes `null`: a connector cannot claim someone matters,
+and it cannot claim the contact meant anything either.

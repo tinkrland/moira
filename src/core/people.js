@@ -158,7 +158,7 @@ export class PeopleService {
   // accepting is the owner's judgement, and it is per persona: the person may
   // already exist (same human, another hat), so this reuses the record and only
   // adds a profile - with the circles and importance the OWNER chose here.
-  acceptProposal({ proposalId, personaId, circles = null, importance = null, note = null, name = null }) {
+  acceptProposal({ proposalId, personaId, circles = null, importance = null, interaction = null, note = null, name = null }) {
     const p = this.store.get('peopleProposals', proposalId);
     if (!p) return { outcome: OUTCOME.UNAVAILABLE, reason: 'proposal_not_found' };
     if (p.declined || p.closed) return { outcome: OUTCOME.DECLINED, reason: 'proposal_closed' };
@@ -180,7 +180,7 @@ export class PeopleService {
         person = created.person;
       }
     }
-    const profiled = this.setProfile({ personaId, personId: person.id, circles, importance, note });
+    const profiled = this.setProfile({ personaId, personId: person.id, circles, importance, interaction, note });
     if (profiled.outcome !== OUTCOME.RESULTS) return profiled;
 
     const acceptedBy = [...new Set([...(p.acceptedBy ?? []), personaId])];
@@ -208,7 +208,10 @@ export class PeopleService {
       const profiles = this.store.list('personaPeople', (p) => p.personId === person.id);
       return {
         ...person,
-        personas: profiles.map((p) => ({ personaId: p.personaId, importance: p.importance, circles: p.circles }))
+        personas: profiles.map((p) => ({
+          personaId: p.personaId, importance: p.importance,
+          interaction: p.interaction ?? null, circles: p.circles
+        }))
       };
     });
   }
@@ -228,7 +231,7 @@ export class PeopleService {
 
   // sets the persona's profile of a human. omitted fields are left alone; an
   // explicit null clears (importance null = unrated, note null = no note).
-  setProfile({ personaId, personId, circles, importance, note }) {
+  setProfile({ personaId, personId, circles, importance, interaction, note }) {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
     const person = this.getPerson(personId);
@@ -237,6 +240,14 @@ export class PeopleService {
     if (importance !== undefined && importance !== null) {
       if (!Number.isInteger(importance) || importance < 1 || importance > 5) {
         return { outcome: OUTCOME.DECLINED, reason: 'importance_out_of_range' };
+      }
+    }
+    // the second axis: how much contact this persona actually has with them.
+    // validated on its own, never derived from importance (and vice versa):
+    // a parent you speak to twice a month outranks the person you sit beside.
+    if (interaction !== undefined && interaction !== null) {
+      if (!Number.isInteger(interaction) || interaction < 0 || interaction > 5) {
+        return { outcome: OUTCOME.DECLINED, reason: 'interaction_out_of_range' };
       }
     }
     let tags = null;
@@ -269,6 +280,7 @@ export class PeopleService {
       personId,
       circles: nextCircles,
       importance: importance === undefined ? (existing?.importance ?? null) : importance,
+      interaction: interaction === undefined ? (existing?.interaction ?? null) : interaction,
       note: note === undefined ? (existing?.note ?? null) : (note === null ? null : String(note).slice(0, 2000)),
       createdAt: existing?.createdAt ?? this.now(),
       updatedAt: this.now()
@@ -299,7 +311,7 @@ export class PeopleService {
   }
 
   // one persona's people: only the humans IT knows, richest first
-  list({ personaId, circles = null } = {}) {
+  list({ personaId, circles = null, order = 'importance' } = {}) {
     const persona = this.personas.get(personaId);
     if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
     const wanted = Array.isArray(circles) && circles.length
@@ -316,10 +328,16 @@ export class PeopleService {
           handles: person?.handles ?? {},
           circles: p.circles,
           importance: p.importance,
+          interaction: p.interaction ?? null,
           note: p.note
         };
-      })
-      .sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0) || String(a.name).localeCompare(String(b.name)));
+      });
+    // ordering names one axis at a time. there is no composite, deliberately:
+    // averaging importance and interaction would let a busy acquaintance
+    // outrank a parent, and "who matters" is not "who you deal with".
+    const key = order === 'interaction' ? 'interaction' : order === 'importance' ? 'importance' : null;
+    if (!key) return { outcome: OUTCOME.DECLINED, reason: 'order_invalid' };
+    rows.sort((a, b) => (b[key] ?? 0) - (a[key] ?? 0) || String(a.name).localeCompare(String(b.name)));
     return { outcome: OUTCOME.RESULTS, people: rows };
   }
 
@@ -331,9 +349,10 @@ export class PeopleService {
     for (const profile of this.store.list('personaPeople', (p) => p.personaId === personaId)) {
       for (const tag of profile.circles) {
         const key = tag.toLowerCase();
-        const entry = byTag.get(key) ?? { name: tag, count: 0, importance: 0 };
+        const entry = byTag.get(key) ?? { name: tag, count: 0, importance: 0, interaction: 0 };
         entry.count += 1;
         entry.importance += profile.importance ?? 0;
+        entry.interaction += profile.interaction ?? 0;
         byTag.set(key, entry);
       }
     }

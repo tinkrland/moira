@@ -222,10 +222,10 @@ export class OwnerApi {
     return this.gw.people.declineProposal({ proposalId });
   }
 
-  peopleList(ctx, { personaId, circles = null } = {}) {
+  peopleList(ctx, { personaId, circles = null, order = 'importance' } = {}) {
     this._require(ctx);
     if (!personaId) return { outcome: OUTCOME.DECLINED, reason: 'persona_id_required' };
-    return this.gw.people.list({ personaId, circles });
+    return this.gw.people.list({ personaId, circles, order });
   }
 
   peopleCircles(ctx, { personaId } = {}) {

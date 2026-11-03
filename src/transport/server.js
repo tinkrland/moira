@@ -124,7 +124,7 @@ export function createMoiraServer({
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
         const personaId = url.searchParams.get('personaId');
         if (!personaId) return json(res, 200, moira.owner.peopleAll(owner));
-        const out = moira.owner.peopleList(owner, { personaId, circles: url.searchParams.getAll('circle') });
+        const out = moira.owner.peopleList(owner, { personaId, circles: url.searchParams.getAll('circle'), order: url.searchParams.get('order') ?? 'importance' });
         const circles = moira.owner.peopleCircles(owner, { personaId });
         return json(res, out.outcome === 'results' ? 200 : 404, { ...out, circles: circles.circles ?? [] });
       }
