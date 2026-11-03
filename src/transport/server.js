@@ -128,6 +128,38 @@ export function createMoiraServer({
         const circles = moira.owner.peopleCircles(owner, { personaId });
         return json(res, out.outcome === 'results' ? 200 : 404, { ...out, circles: circles.circles ?? [] });
       }
+      // person-to-person connections: owner-only by construction. no agent tool
+      // reaches this surface, because an agent learning its human is connected
+      // to someone is exactly the cross-persona fact this design keeps out.
+      if (path.startsWith('/api/connections')) {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const u = new URL(req.url, 'http://127.0.0.1');
+        if (path === '/api/connections' && req.method === 'GET') {
+          const out = moira.owner.connections(owner, { personaId: u.searchParams.get('personaId') });
+          return json(res, out.outcome === 'results' ? 200 : 400, out);
+        }
+        if (path === '/api/connections/inbox' && req.method === 'GET') {
+          const out = moira.owner.connectionInbox(owner, { personaId: u.searchParams.get('personaId') });
+          return json(res, out.outcome === 'results' ? 200 : 400, out);
+        }
+        if (req.method === 'POST') {
+          const body = await readBody(req);
+          const route = {
+            '/api/connections/invite': () => moira.owner.connectionInvite(owner, body),
+            '/api/connections/accept': () => moira.owner.connectionAccept(owner, body),
+            '/api/connections/share': () => moira.owner.shareToConnection(owner, body),
+            '/api/connections/open': () => moira.owner.openDelivery(owner, body),
+            '/api/connections/revoke': () => moira.owner.revokeConnection(owner, body)
+          }[path];
+          if (route) {
+            const out = route();
+            return json(res, out.outcome === 'results' ? 200 : out.outcome === 'approval_required' ? 202 : 400, out);
+          }
+        }
+        return json(res, 404, { error: 'not_found' });
+      }
+
       if (path === '/api/people' && req.method === 'POST') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

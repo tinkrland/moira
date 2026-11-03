@@ -143,6 +143,43 @@ export class OwnerApi {
     return { outcome: OUTCOME.RESULTS, personaId, mode };
   }
 
+  // --- person-to-person connections (cresca-style, as an authorization flow) --
+
+  connectionInvite(ctx, { personaId, label = null, ttlMs = null } = {}) {
+    this._require(ctx);
+    return this.gw.connect.invite(ctx, { personaId, label, ...(ttlMs ? { ttlMs } : {}) });
+  }
+
+  connectionAccept(ctx, { code, personaId } = {}) {
+    this._require(ctx);
+    return this.gw.connect.accept(ctx, { code, personaId });
+  }
+
+  connections(ctx, { personaId } = {}) {
+    this._require(ctx);
+    return this.gw.connect.connections(ctx, { personaId });
+  }
+
+  shareToConnection(ctx, { connectionId, personaId, kind = 'note', payload } = {}) {
+    this._require(ctx);
+    return this.gw.connect.share(ctx, { connectionId, personaId, kind, payload });
+  }
+
+  connectionInbox(ctx, { personaId } = {}) {
+    this._require(ctx);
+    return this.gw.connect.inbox(ctx, { personaId });
+  }
+
+  openDelivery(ctx, { personaId, deliveryId } = {}) {
+    this._require(ctx);
+    return this.gw.connect.open(ctx, { personaId, deliveryId });
+  }
+
+  revokeConnection(ctx, { connectionId, personaId } = {}) {
+    this._require(ctx);
+    return this.gw.connect.revoke(ctx, { connectionId, personaId });
+  }
+
   // people: the address book is owner-level, every relationship is
   // (person, persona). circles are soft tags and importance is per persona.
   peopleAdd(ctx, spec) {

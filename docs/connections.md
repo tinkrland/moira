@@ -230,3 +230,47 @@ reports those with `touchConnection({ identityId, at })`, owner-only, and a
 future timestamp is clamped to now. idle means "quiet as far as this system can
 see", never "quiet in the world" - an activity-driven rotation that assumes
 omniscience would be guessing about the one thing it cannot observe.
+
+
+## people, connecting: the social half as an authorization flow (2026-11-03)
+
+the address book keeps a persona's people private. the other direction, borrowed
+from cresca, is a consented link between two humans made through the personas
+they choose. that is authorization, not ingestion, so it is built like one.
+
+**the code is a bearer secret.** `connectionInvite({personaId, label})` mints a
+readable code (`abcd-efgh`, no 0/o/1/l/i), returns it once, and stores only an
+HMAC of it. unknown, expired and already-spent codes are refused with the same
+`invite_unusable` - a distinguishable refusal is a guessing oracle.
+`connectionAccept({code, personaId})` consumes it: one code, one use, one
+persona.
+
+**the invite declares what the recipient may learn.** `label` is the only thing
+that crosses about the inviter. omit it and the peer shows as `null` rather than
+as an inferred name, and the accept payload never carries the inviter's other
+personas.
+
+**a share is a discrete act.** `shareToConnection({connectionId, personaId,
+kind, payload})` seals the payload to the *recipient persona key*, records a
+`disclosure` receipt that says something moved and not what, and puts an
+envelope in `connectionInbox`. `openDelivery` returns the payload exactly once
+(`already_opened` after), and opening requires the connection to still be
+active.
+
+**revocation is unilateral.** either side revokes; unopened deliveries are
+cancelled rather than left waiting, because consent withdrawn is not consent
+pending. both sides see `state: 'revoked'`.
+
+two honest limits, stated rather than papered over:
+
+- **personas belong to the instance today** (every record reads
+  `ownerRef: 'owner'`), so per-person ownership cannot be enforced inside one
+  instance. the real boundary is the ownerRef on the invite, and the
+  `same_owner` guard refuses linking two personas of the same owner - that is an
+  alias, not a connection. two humans on two instances is what a code is for.
+- **connections are owner-only.** no agent tool reaches them, and `moira_status`
+  carries nothing about them: an agent learning that its human is connected to
+  someone is exactly the cross-persona fact this whole design keeps out.
+
+surface: `GET /api/connections`, `GET /api/connections/inbox`,
+`POST /api/connections/{invite,accept,share,open,revoke}`.

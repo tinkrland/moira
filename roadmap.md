@@ -54,6 +54,15 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## connect codes: people, linked by consent (2026-11-03)
+
+invite -> accept -> share -> revoke, owner-only, sealed per recipient persona.
+hashed single-use codes with one indistinguishable refusal, opt-in label as the
+only peer disclosure, deliveries opened once and killed by revocation, and a
+same_owner guard because two hats of one person are an alias, not a connection.
+docs/connections.md. still open in this phase: shared rooms and group context,
+and connector-fed capture so the address book fills itself.
+
 ## rotation schedules (2026-11-02)
 
 calendar (`every` with 1w/1mo shorthand or ms, `at` as a one-shot date) and
@@ -222,7 +231,8 @@ phase 3, activates with evie.
 
 ## later, deliberately not built yet
 
-- **persona-wise people connections** (cresca.ai-style): relationships
+- **persona-wise people connections** (cresca.ai-style) - SHIPPED as the connect-code flow 2026-11-03 (docs/connections.md); shared rooms / group context still open.
+- ~~**persona-wise people connections**~~ (cresca.ai-style): relationships
   tracked per persona - the people your founder hat knows are not the
   people your student hat studies with, and they never get confused. friend
   follows, shared rooms, group context (the social side the tracker apps
