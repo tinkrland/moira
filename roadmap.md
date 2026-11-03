@@ -103,6 +103,14 @@ least capable credential that covers a pass, (c) refuse with
 capability_not_covered rather than substituting. capability lists stay
 owner-side. see docs/connections.md.
 
+## people: two axes, loops, briefs (2026-11-04)
+
+importance and interaction are independent per persona (boss is 4/5 at work,
+2/1 in private) with no composite score; open loops (promises) with a pull-based
+due list; a brief that composes and names its gaps. cresca review and what was
+refused is in docs/people.md. next: groups as shared memory, sightings attached
+to people.
+
 ## connections are places and permissions (2026-11-02)
 
 workspace as a first-class dimension (platform + workspace + account), cross

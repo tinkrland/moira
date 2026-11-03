@@ -337,8 +337,144 @@ export class PeopleService {
     // outrank a parent, and "who matters" is not "who you deal with".
     const key = order === 'interaction' ? 'interaction' : order === 'importance' ? 'importance' : null;
     if (!key) return { outcome: OUTCOME.DECLINED, reason: 'order_invalid' };
-    rows.sort((a, b) => (b[key] ?? 0) - (a[key] ?? 0) || String(a.name).localeCompare(String(b.name)));
+    // a rated 0 means "never", an unrated person means "unknown": they must not
+    // sort as the same thing. nulls last, then high-to-low, then name.
+    const rank = (row) => (row[key] === null || row[key] === undefined ? null : row[key]);
+    rows.sort((a, b) => {
+      const av = rank(a);
+      const bv = rank(b);
+      if (av === null && bv === null) return String(a.name).localeCompare(String(b.name));
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return bv - av || String(a.name).localeCompare(String(b.name));
+    });
     return { outcome: OUTCOME.RESULTS, people: rows };
+  }
+
+  // --- open loops -----------------------------------------------------------
+  // a promise is the thing you said you would do for a human. it belongs to
+  // (person, persona) like every other relationship fact, it is owner-declared
+  // (capture can propose people, never obligations), and nothing notifies:
+  // due() is a pull, so moira cannot become a nag. == cresca's gentle nudge,
+  // with the nudge left to the owner.
+
+  addPromise({ personaId, personId, text, dueAt = null }) {
+    const persona = this.personas.get(personaId);
+    if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    const person = this.getPerson(personId);
+    if (!person) return { outcome: OUTCOME.UNAVAILABLE, reason: 'person_not_found' };
+    // you cannot owe something to someone this persona has never met
+    const profile = this.store.list('personaPeople',
+      (p) => p.personaId === personaId && p.personId === personId)[0];
+    if (!profile) return { outcome: OUTCOME.DECLINED, reason: 'person_not_in_this_persona' };
+
+    const clean = String(text ?? '').trim();
+    if (!clean) return { outcome: OUTCOME.DECLINED, reason: 'promise_text_required' };
+    if (clean.length > 280) return { outcome: OUTCOME.DECLINED, reason: 'promise_text_too_long' };
+    if (dueAt !== null && dueAt !== undefined && !Number.isFinite(dueAt)) {
+      return { outcome: OUTCOME.DECLINED, reason: 'promise_due_invalid' };
+    }
+
+    const promise = {
+      id: randomId('prm'),
+      personaId,
+      personId,
+      text: clean,
+      dueAt: dueAt ?? null,
+      state: 'open',
+      createdAt: this.now(),
+      closedAt: null
+    };
+    this.store.put('personPromises', promise.id, promise);
+    this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.PEOPLE, reason: 'promise_open' });
+    return { outcome: OUTCOME.RESULTS, promise };
+  }
+
+  promises({ personaId, includeClosed = false } = {}) {
+    if (!this.personas.get(personaId)) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    const rows = this.store.list('personPromises', (p) => p.personaId === personaId)
+      .filter((p) => includeClosed || p.state === 'open')
+      .map((p) => ({ ...p, personName: this.getPerson(p.personId)?.name ?? null }))
+      .sort((a, b) => (a.dueAt ?? Infinity) - (b.dueAt ?? Infinity) || String(a.personName).localeCompare(String(b.personName)));
+    return { outcome: OUTCOME.RESULTS, promises: rows };
+  }
+
+  due({ personaId, now = this.now() } = {}) {
+    if (!this.personas.get(personaId)) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    const owed = this.store.list('personPromises',
+      (p) => p.personaId === personaId && p.state === 'open' && p.dueAt !== null && p.dueAt <= now)
+      .map((p) => ({
+        ...p,
+        personName: this.getPerson(p.personId)?.name ?? null,
+        overdueByMs: now - p.dueAt
+      }))
+      .sort((a, b) => a.dueAt - b.dueAt || String(a.personName).localeCompare(String(b.personName)));
+    return { outcome: OUTCOME.RESULTS, promises: owed };
+  }
+
+  closePromise({ promiseId, state }) {
+    const promise = this.store.get('personPromises', promiseId);
+    if (!promise) return { outcome: OUTCOME.UNAVAILABLE, reason: 'promise_not_found' };
+    if (promise.state !== 'open') return { outcome: OUTCOME.DECLINED, reason: 'promise_already_closed' };
+    this.store.update('personPromises', promiseId, (p) => ({ ...p, state, closedAt: this.now() }));
+    // a receipt records that a loop closed, never what was promised in it
+    this.receipts.write({
+      actor: 'owner', personaId: promise.personaId, op: RECEIPT_OP.PEOPLE,
+      reason: state === 'kept' ? 'promise_kept' : 'promise_dropped'
+    });
+    return { outcome: OUTCOME.RESULTS, promise: this.store.get('personPromises', promiseId) };
+  }
+
+  // --- the brief ------------------------------------------------------------
+  // composed from what is stored. it lists what it does not know instead of
+  // inventing a warm sentence, because a brief that guesses is worse than none.
+
+  brief({ personaId, personId }) {
+    const persona = this.personas.get(personaId);
+    if (!persona) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    const person = this.getPerson(personId);
+    if (!person) return { outcome: OUTCOME.UNAVAILABLE, reason: 'person_not_found' };
+    const profile = this.store.list('personaPeople',
+      (p) => p.personaId === personaId && p.personId === personId)[0];
+    if (!profile) return { outcome: OUTCOME.DECLINED, reason: 'person_not_in_this_persona' };
+
+    const openPromises = this.store.list('personPromises',
+      (p) => p.personaId === personaId && p.personId === personId && p.state === 'open')
+      .sort((a, b) => (a.dueAt ?? Infinity) - (b.dueAt ?? Infinity))
+      .map((p) => ({ text: p.text, dueAt: p.dueAt }));
+
+    const importance = profile.importance ?? null;
+    const interaction = profile.interaction ?? null;
+    const unknown = [];
+    if (interaction === null) unknown.push('no interaction recorded');
+    if (!profile.note) unknown.push('no note yet');
+    if (!person.handles?.email && !person.handles?.phone) unknown.push('no handle');
+    unknown.push('no capture history'); // true until sightings are attached to people
+
+    const bits = [
+      person.name,
+      profile.circles.length ? profile.circles.join(' + ') : 'no circles',
+      `importance ${importance === null ? 'unrated' : importance}`,
+      `interaction ${interaction === null ? 'unrated' : interaction}`,
+      openPromises.length ? `${openPromises.length} open promise${openPromises.length === 1 ? '' : 's'}` : 'nothing owed'
+    ];
+    const summary = [bits.join(' · '), profile.note ? `note: ${profile.note}` : null]
+      .filter(Boolean).join(' | ');
+
+    return {
+      outcome: OUTCOME.RESULTS,
+      personId,
+      name: person.name,
+      aliases: person.aliases ?? [],
+      handles: person.handles ?? {},
+      circles: profile.circles,
+      importance,
+      interaction,
+      note: profile.note ?? null,
+      openPromises,
+      unknown,
+      summary
+    };
   }
 
   // circles are implicit and soft: derived from profiles, never a table

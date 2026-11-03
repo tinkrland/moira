@@ -239,6 +239,38 @@ export class OwnerApi {
     return this.gw.people.setProfile(spec);
   }
 
+  // open loops: owner-declared, per persona, pulled rather than pushed
+  peoplePromiseAdd(ctx, spec) {
+    this._require(ctx);
+    return this.gw.people.addPromise(spec);
+  }
+
+  peoplePromises(ctx, { personaId, includeClosed = false } = {}) {
+    this._require(ctx);
+    const out = this.gw.people.promises({ personaId, includeClosed });
+    return out.outcome === OUTCOME.RESULTS ? out : out;
+  }
+
+  peopleDue(ctx, { personaId, now = null } = {}) {
+    this._require(ctx);
+    return this.gw.people.due({ personaId, ...(now === null ? {} : { now }) });
+  }
+
+  peoplePromiseKeep(ctx, { promiseId }) {
+    this._require(ctx);
+    return this.gw.people.closePromise({ promiseId, state: 'kept' });
+  }
+
+  peoplePromiseDrop(ctx, { promiseId }) {
+    this._require(ctx);
+    return this.gw.people.closePromise({ promiseId, state: 'dropped' });
+  }
+
+  peopleBrief(ctx, { personaId, personId } = {}) {
+    this._require(ctx);
+    return this.gw.people.brief({ personaId, personId });
+  }
+
   peopleCircleAdd(ctx, spec) {
     this._require(ctx);
     return this.gw.people.addCircle(spec);

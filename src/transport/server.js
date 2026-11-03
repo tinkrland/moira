@@ -160,6 +160,35 @@ export function createMoiraServer({
         return json(res, 404, { error: 'not_found' });
       }
 
+      // open loops with people: pull what is owed, compose a brief
+      if (path === '/api/people/due' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const personaId = url.searchParams.get('personaId');
+        if (!personaId) return json(res, 400, { error: 'personaId_required' });
+        const since = url.searchParams.get('now');
+        return json(res, 200, moira.owner.peopleDue(owner, { personaId, now: since ? Number(since) : null }));
+      }
+
+      if (path === '/api/people/promise' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = readBody(req);
+        if (!body) return json(res, 400, { error: 'body_required' });
+        if (body.action === 'keep') return json(res, 200, moira.owner.peoplePromiseKeep(owner, { promiseId: body.promiseId }));
+        if (body.action === 'drop') return json(res, 200, moira.owner.peoplePromiseDrop(owner, { promiseId: body.promiseId }));
+        return json(res, 200, moira.owner.peoplePromiseAdd(owner, body));
+      }
+
+      if (path === '/api/people/brief' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const personaId = url.searchParams.get('personaId');
+        const personId = url.searchParams.get('personId');
+        if (!personaId || !personId) return json(res, 400, { error: 'personaId_and_personId_required' });
+        return json(res, 200, moira.owner.peopleBrief(owner, { personaId, personId }));
+      }
+
       // connector-fed capture: signals in, proposals out. an ingest never puts
       // a person in the book; the accept below is where judgement lives.
       // the wiring: pull people signals from a connected adapter and propose

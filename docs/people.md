@@ -105,3 +105,39 @@ importance 11, interaction 9" - a shape, not a verdict.
 **capture cannot rate anyone.** a calendar sighting may become a proposal, but
 accepting one leaves both axes `null`: a connector cannot claim someone matters,
 and it cannot claim the contact meant anything either.
+
+## open loops and briefs, taken from cresca (2026-11-04)
+
+cresca's site (read 2026-11-04) is a personal assistant for people: capture
+anything, file it automatically, and bring it back before you meet someone. its
+real thesis is not the address book - every personal crm has one - it is that a
+relationship carries **open loops** (the thing you said you would do) and that
+the loop should surface before it goes cold.
+
+**taken:**
+- **promises** are loops with a human, owned by (person, persona): `promiseAdd`,
+  `promises`, `due`, `promiseKeep`, `promiseDrop`. undated promises are open,
+  not due. `due` reports `overdueByMs` as an age, not a scolding, and it is a
+  *pull* - nothing notifies, so moira cannot become a nag.
+- **the brief** composes from what is stored: circles, both axes, note, open
+  promises. it lists what it does *not* know (`unknown`) instead of writing a
+  warm sentence, because a brief that guesses is worse than none. a rated
+  interaction of 0 is knowledge ("never"), so it is not reported as a gap;
+  unrated is.
+- **capture-anything** was already the shape here (vault + capture proposals).
+
+**refused, on purpose:** nfc cards and event badges (a hardware funnel, not a
+model problem), gifting and affiliate links (commerce in the relationship
+layer), bill splitting, and model-written messages. cresca says "the words stay
+yours"; moira goes further and writes no words at all - summarising a person
+into prose is exactly the fabrication `unknown` exists to prevent.
+
+**already aligned, structurally:** private by default, never trained on, no
+paid rankings. cresca's "ai assists, never pretends, never speaks as you" is a
+promise they make; in moira it is a property - an agent acts under a pass, its
+reads are receipted, and there is no code path where an agent speaks as a
+persona.
+
+**still open:** groups as shared memory (cresca's strongest remaining idea - "a
+group is a shared memory for the people you do things with"), and attaching
+capture sightings to people so `unknown` can lose its "no capture history".
