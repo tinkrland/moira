@@ -326,6 +326,57 @@ export class ConnectorHub {
     return { outcome: OUTCOME.RESULTS };
   }
 
+  // --- owner side: feeding people capture -------------------------------------
+  //
+  // the owner may ask a connected adapter for people signals (calendar
+  // attendees, mail senders). credentials never leave this method: the adapter
+  // is called here and only normalized rows go back, so no downstream layer can
+  // leak a token it never held.
+  async captureSignals({ personaId, connectorId, project = null, workspace = null, account = null, params = {} } = {}) {
+    const identity = this._identity(personaId, connectorId, { account, workspace, project });
+    if (!identity) return { outcome: OUTCOME.UNAVAILABLE, reason: 'no_active_identity' };
+
+    let creds;
+    try {
+      creds = JSON.parse(open(this.keys.personaKey(personaId), identity.sealed, `${SEAL_CTX}:${connectorId}`));
+    } catch {
+      return { outcome: OUTCOME.DECLINED, reason: 'credential_unseal_failed' };
+    }
+
+    const adapter = adapterFor(connectorId, this.io);
+    // "could not look" must never read like "found nothing"
+    if (typeof adapter.listPeopleSignals !== 'function') {
+      return { outcome: OUTCOME.UNAVAILABLE, reason: 'adapter_cannot_feed_people' };
+    }
+
+    // a capture is activity, same as a read
+    if (identity.policy?.schedule?.kind === 'idle') {
+      this.store.update('connectorIdentities', identity.id, (r) => {
+        const draft = { ...r, policy: { ...(r.policy ?? {}), lastActivityAt: this.now() } };
+        draft.policy.nextRotationAt = nextRotationAtFor(draft, this.now());
+        return draft;
+      });
+    }
+
+    let raw;
+    try {
+      raw = await adapter.listPeopleSignals(creds, params, this.io);
+    } catch (e) {
+      this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.CONNECTOR, reason: `error:${connectorId}:people` });
+      return { outcome: OUTCOME.DECLINED, reason: 'connector_request_failed', detail: String(e.message).slice(0, 200) };
+    }
+    if (raw?.outcome === 'not_implemented') return { outcome: OUTCOME.DECLINED, reason: raw.reason };
+
+    const rows = (raw?.rows ?? []).map((r) => ({
+      kind: String(r?.kind ?? 'unknown').slice(0, 40),
+      handle: typeof r?.handle === 'string' ? r.handle : null,
+      name: typeof r?.name === 'string' ? r.name : null,
+      at: Number.isFinite(r?.at) ? r.at : this.now()
+    }));
+    this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.CONNECTOR, reason: `people_signals:${connectorId}:${rows.length}` });
+    return { outcome: OUTCOME.RESULTS, rows, connectorId, project: identity.project ?? null };
+  }
+
   // --- agent side --------------------------------------------------------------
 
   // what the persona has connected (no credential material ever included)

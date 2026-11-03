@@ -199,6 +199,14 @@ export class OwnerApi {
     return this.gw.people.ingest({ events, source });
   }
 
+  // the wiring: a connected adapter yields people signals, which become
+  // proposals. owner-only by construction - no pass turns an agent into a
+  // calendar reader for the address book.
+  peopleCaptureFromConnector(ctx, { personaId, connectorId, project = null, workspace = null, account = null, params = {} } = {}) {
+    this._require(ctx);
+    return this.gw.peoplefeed.capture({ personaId, connectorId, project, workspace, account, params });
+  }
+
   peopleProposals(ctx, { includeDeclined = false } = {}) {
     this._require(ctx);
     return this.gw.people.proposals({ includeDeclined });

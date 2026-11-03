@@ -162,6 +162,20 @@ export function createMoiraServer({
 
       // connector-fed capture: signals in, proposals out. an ingest never puts
       // a person in the book; the accept below is where judgement lives.
+      // the wiring: pull people signals from a connected adapter and propose
+      // them. owner-only, and the response says the book is still empty.
+      if (path === '/api/people/capture' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        const out = await moira.owner.peopleCaptureFromConnector(owner, {
+          personaId: body.personaId, connectorId: body.connectorId,
+          project: body.project ?? null, workspace: body.workspace ?? null,
+          account: body.account ?? null, params: body.params ?? {}
+        });
+        return json(res, out.outcome === 'results' ? 200 : 400, out);
+      }
+
       if (path === '/api/people/ingest' && req.method === 'POST') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });

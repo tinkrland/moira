@@ -89,6 +89,7 @@ export class PeopleService {
   ingest({ events = [], source = {} } = {}) {
     if (!Array.isArray(events)) return { outcome: OUTCOME.DECLINED, reason: 'events_required' };
     const accepted = [];
+    const created = [];
     const rejected = [];
     for (const ev of events.slice(0, 500)) {
       const handle = normalizeHandle(ev?.handle);
@@ -127,9 +128,18 @@ export class PeopleService {
       };
       this.store.put('peopleProposals', proposal.id, proposal);
       accepted.push(proposal.id);
+      created.push(proposal.id);
     }
     this.receipts.write({ actor: 'connector', personaId: null, op: RECEIPT_OP.PEOPLE, reason: `captured:${accepted.length}` });
-    return { outcome: OUTCOME.RESULTS, proposed: accepted.length, rejected: rejected.length, proposalIds: accepted };
+    // a repeat sighting is not a new proposal: the caller needs to be able to
+    // tell "found two people" from "saw the same person twice"
+    return {
+      outcome: OUTCOME.RESULTS,
+      proposed: created.length,
+      repeated: accepted.length - created.length,
+      rejected: rejected.length,
+      proposalIds: accepted
+    };
   }
 
   proposals({ includeDeclined = false } = {}) {

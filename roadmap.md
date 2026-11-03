@@ -54,6 +54,14 @@ without the owner's call. main knows the other two only as pointers
 below. if either engine starts, it merges in the way the owner directs,
 not by drift.
 
+## capture wiring (2026-11-03)
+
+adapter listPeopleSignals -> hub captureSignals (unseal, call, normalize, no
+credential downstream) -> peopleFeed.capture -> proposals. adapter without the
+method refuses as adapter_cannot_feed_people; counts split proposed/repeated so
+"two people" and "same person twice" are distinguishable. POST
+/api/people/capture. still a host-owned clock: no watcher is built.
+
 ## connector-fed capture for people (2026-11-03)
 
 signals become proposals, not people: peopleIngest dedupes by normalized handle,
