@@ -298,6 +298,16 @@ export class OwnerApi {
     return this.gw.rooms.timeline({ roomId, personaId });
   }
 
+  roomAttend(ctx, { roomId, personaId, personIds = [], share = false, at = null } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.attend({ roomId, personaId, personIds, share, at });
+  }
+
+  roomBrief(ctx, { roomId, personaId } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.brief({ roomId, personaId });
+  }
+
   roomSummary(ctx, { roomId, personaId } = {}) {
     this._require(ctx);
     return this.gw.rooms.summary({ roomId, personaId });

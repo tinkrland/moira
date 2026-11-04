@@ -190,6 +190,18 @@ export function createMoiraServer({
       }
       // rooms: shared memory between consented members. no agent path: a room is
       // a human surface, and membership is re-checked per request.
+      if (path === '/api/rooms/attend' && req.method === 'POST') {
+        const body = await readBody(req);
+        const out = moira.owner.roomAttend(owner, body);
+        return send(res, out.outcome === 'results' ? 200 : 400, out);
+      }
+      if (path === '/api/rooms/brief' && req.method === 'GET') {
+        const out = moira.owner.roomBrief(owner, {
+          roomId: url.searchParams.get('roomId'),
+          personaId: url.searchParams.get('personaId')
+        });
+        return send(res, out.outcome === 'results' ? 200 : 404, out);
+      }
       if (path === '/api/rooms' && req.method === 'POST') {
         const body = await readBody(req);
         send(res, 200, moira.owner.roomCreate(owner, {

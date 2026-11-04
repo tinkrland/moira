@@ -175,3 +175,31 @@ version is that history belongs to everyone who was there.
 and the limit under that one: sealing protects the *store*, not a running
 service. per-member cryptography would be a stronger claim than this build makes,
 so the doc does not make it.
+
+### attendance and the group brief (2026-11-04)
+
+a room can record who was actually there, and it does so without importing the
+thing it refuses to import. `roomAttend({roomId, personaId, personIds, share})`
+takes people the acting persona already holds a profile for - a room cannot
+invent a person, and `person_not_in_this_persona` is what says so. One person
+attending five times is one row that counts up, with `firstAt` and `lastAt`, not
+five rows.
+
+the stingy default is the point: **a count crosses, a name does not.**
+attendance is recorded with `share: false` unless the owner says otherwise, so a
+member's brief reads "3 people attended" while the room's owner sees who. Sharing
+a participant later is a deliberate act (`share: true`) that flips the flag and
+stamps who shared it and when.
+
+`roomBrief` is counts, member states, participation and the gaps:
+
+    { items, kinds: {note: 1, decision: 1}, latestAt, members, attendance,
+      participation: [{personId, name, count, firstAt, lastAt}], unknown }
+
+`unknown` names what the brief cannot say, and says it differently for different
+readers: `no attendance recorded` when the room has none, `attendance not shared`
+when a member is looking at attendance that exists but was not shared with them.
+Nothing in the brief is prose about the room, and nothing in it reads a persona's
+importance, interaction or circles - the same prohibition the timeline carries,
+re-asserted here because attendance is the feature most likely to smuggle it in
+("you met nina four times, so she must matter").

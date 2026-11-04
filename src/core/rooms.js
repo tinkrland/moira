@@ -163,6 +163,95 @@ export class RoomService {
     };
   }
 
+  // attendance: who was actually there. recorded by an active member, for a
+  // person that member's persona already holds - the room cannot invent people.
+  // `share` decides whether the NAME crosses to members or only the count.
+  attend({ roomId, personaId, personIds = [], share = false, at = null }) {
+    const room = this.store.get('rooms', roomId);
+    if (!room) return { outcome: OUTCOME.UNAVAILABLE, reason: 'room_not_found' };
+    if (!this._isActive(roomId, personaId)) {
+      return { outcome: OUTCOME.DECLINED, reason: 'not_a_room_member' };
+    }
+    const ids = Array.isArray(personIds) ? personIds.filter((x) => typeof x === 'string' && x) : [];
+    if (ids.length === 0) return { outcome: OUTCOME.DECLINED, reason: 'person_ids_required' };
+    if (ids.length > 50) return { outcome: OUTCOME.DECLINED, reason: 'too_many_people' };
+
+    for (const personId of ids) {
+      const profile = this.store.get('personaPeople', `${personId}:${personaId}`)
+        ?? this.store.list('personaPeople', (x) => x.personId === personId && x.personaId === personaId)[0];
+      if (!profile) return { outcome: OUTCOME.DECLINED, reason: 'person_not_in_this_persona', personId };
+    }
+
+    const stamp = Number.isFinite(at) ? at : this.now();
+    for (const personId of ids) {
+      const key = `${roomId}:${personId}`;
+      const existing = this.store.get('roomSightings', key);
+      if (existing) {
+        const shared = existing.shared || share === true;
+        this.store.update('roomSightings', key, (r) => ({
+          ...r,
+          count: r.count + 1,
+          lastAt: stamp,
+          shared,
+          sharedAt: shared && !r.shared ? stamp : r.sharedAt,
+          sharedBy: shared && !r.shared ? personaId : r.sharedBy
+        }));
+      } else {
+        this.store.put('roomSightings', key, {
+          id: key, roomId, personId, count: 1, firstAt: stamp, lastAt: stamp,
+          shared: share === true, sharedAt: share === true ? stamp : null,
+          sharedBy: share === true ? personaId : null
+        });
+      }
+    }
+    this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.PEOPLE, reason: `room_attendance:${ids.length}` });
+    return { outcome: OUTCOME.RESULTS, attended: ids.length };
+  }
+
+  // the group brief: counts, member states, who was there - and the gaps.
+  // no prose about the room, and nothing here reads a persona's judgement.
+  brief({ roomId, personaId }) {
+    const room = this.store.get('rooms', roomId);
+    if (!room) return { outcome: OUTCOME.UNAVAILABLE, reason: 'room_not_found' };
+    if (!this._isActive(roomId, personaId)) {
+      return { outcome: OUTCOME.DECLINED, reason: 'not_a_room_member' };
+    }
+    const items = this.store.list('roomItems', (x) => x.roomId === roomId, { roomId });
+    const kinds = {};
+    for (const item of items) kinds[item.kind] = (kinds[item.kind] ?? 0) + 1;
+
+    const sightings = this.store.list('roomSightings', (x) => x.roomId === roomId, { roomId });
+    // the owner of the room sees every name. a member sees a name only when it
+    // was shared; otherwise the person is a count.
+    const owner = room.ownerPersonaId === personaId;
+    const participation = sightings
+      .filter((x) => owner || x.shared)
+      .map((x) => ({
+        personId: x.personId,
+        name: this.people.getPerson(x.personId)?.name ?? null,
+        count: x.count,
+        firstAt: x.firstAt,
+        lastAt: x.lastAt
+      }))
+      .sort((a, b) => b.lastAt - a.lastAt || String(a.name).localeCompare(String(b.name)));
+
+    const unknown = [];
+    if (sightings.length === 0) unknown.push('no attendance recorded');
+    else if (!owner && participation.length === 0) unknown.push('attendance not shared');
+
+    return {
+      outcome: OUTCOME.RESULTS,
+      roomId,
+      items: items.length,
+      kinds,
+      latestAt: items.length ? Math.max(...items.map((x) => x.at)) : null,
+      members: this._members(roomId),
+      attendance: sightings.length,
+      participation,
+      unknown
+    };
+  }
+
   // --- internals --------------------------------------------------------------
 
   // sealed at rest, derived from the instance key so it survives a restart.

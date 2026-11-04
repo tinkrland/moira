@@ -120,6 +120,13 @@ the room without pretending to unshare it. next here: group-level brief (counts
 already exist), and attaching sightings so a room can show who was actually
 there.
 
+## rooms, attendance and group briefs (2026-11-04)
+
+rooms as shared memory (append-only items, consent-gated membership, sealed at
+rest, owner-only), then attendance and the group brief on top of them: a count
+crosses to members while a name only does when the owner shares it explicitly,
+and one person attending many times is one row. docs/people.md has the shape.
+
 ## connections are places and permissions (2026-11-02)
 
 workspace as a first-class dimension (platform + workspace + account), cross
