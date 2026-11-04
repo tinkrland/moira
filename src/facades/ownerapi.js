@@ -1,3 +1,4 @@
+import { shareHint } from '../connectors/scopes.js';
 // owner surface (spec sections 6, 16, 17, 11, 22.4).
 //
 // every method takes an OwnerContext capability minted by
@@ -523,13 +524,24 @@ export class OwnerApi {
   connectConnector(ctx, {
     personaId, connectorId, credentials, label = null, account = null,
     workspace = null, project = null, credential = null, capabilities = null,
-    acknowledgeLinkage = false
+    acknowledgeLinkage = false, sharedWith = null
   }) {
     this._require(ctx);
     return this.gw.connectors.authorize(ctx, {
       personaId, connectorId, credentials, label, account, workspace,
-      project, credential, capabilities, acknowledgeLinkage
+      project, credential, capabilities, acknowledgeLinkage, sharedWith
     });
+  }
+
+  // the classification, for the surface: what can be shared and what cannot.
+  // advisory only - sharing still requires connectConnector({sharedWith}).
+  connectorSharing(ctx) {
+    this._require(ctx);
+    const ids = [...new Set(REGISTRY.flatMap((b) => (b.providers ?? []).map((p) => p.id)))];
+    return {
+      outcome: OUTCOME.RESULTS,
+      providers: ids.map((id) => shareHint(id))
+    };
   }
 
   revokeConnector(ctx, { identityId }) {

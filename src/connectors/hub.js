@@ -22,6 +22,7 @@ import { adapterFor } from './adapters.js';
 
 const SEAL_CTX = 'moira-connector-v1'
 const DEFAULT_ACCOUNT = 'default';
+const MAX_SHARED_PERSONAS = 12; // a share list is a decision, not a policy engine
 
 const INVALID_SLUG = Symbol('invalid_slug');
 const INVALID_CAPS = Symbol('invalid_caps');
@@ -154,7 +155,7 @@ export class ConnectorHub {
 
   // owner authorizes one provider account for one persona. credentials are
   // sealed immediately; the identity record holds only the sealed envelope.
-  authorize(ctx, { personaId, connectorId, credentials, label = null, account = null, workspace = null, project = null, credential = null, capabilities = null, acknowledgeLinkage = false }) {
+  authorize(ctx, { personaId, connectorId, credentials, label = null, account = null, workspace = null, project = null, credential = null, capabilities = null, acknowledgeLinkage = false, sharedWith = null }) {
     if (!ctx || ctx.kind !== 'owner_context' || typeof ctx.ownerRef !== 'string') {
       return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
     }
@@ -168,6 +169,24 @@ export class ConnectorHub {
     }
     if (!credentials || typeof credentials !== 'object') {
       return { outcome: OUTCOME.DECLINED, reason: 'credentials_required' };
+    }
+
+    // sharing: one credential, several hats. refusing this outright just taught
+    // the owner to paste the same key twice, which produces the exact linkage
+    // the guard exists to prevent - only with no record of it. a declared share
+    // is a record; the pass stays per persona.
+    let shared = [];
+    if (sharedWith !== null && sharedWith !== undefined) {
+      if (!Array.isArray(sharedWith) || sharedWith.length === 0 ||
+          !sharedWith.every((x) => typeof x === 'string' && x.trim() !== '') ||
+          sharedWith.some((x) => x === personaId) ||
+          new Set(sharedWith).size !== sharedWith.length) {
+        return { outcome: OUTCOME.DECLINED, reason: 'shared_with_invalid' };
+      }
+      if (sharedWith.length > MAX_SHARED_PERSONAS) {
+        return { outcome: OUTCOME.DECLINED, reason: 'shared_with_too_many' };
+      }
+      shared = [...sharedWith];
     }
     // a project is OURS (an internal bucket: "atlas", "beacon"); a workspace is
     // THEIRS (a tenant on the provider). both are dimensions, never synonyms.
@@ -232,6 +251,8 @@ export class ConnectorHub {
       personaId,
       connectorId,
       account: accountKey,
+      shareScope: shared.length ? 'shared' : 'persona',
+      sharedWith: shared,
       workspace: workspace ?? null,
       project: projectKey,
       credential: credentialKey,
@@ -248,7 +269,9 @@ export class ConnectorHub {
     this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.CONNECTOR, reason: `authorized:${connectorId}` });
     return {
       outcome: OUTCOME.RESULTS, identityId: identity.id, connectorId,
-      project: projectKey, credential: credentialKey, capabilities: caps
+      project: projectKey, credential: credentialKey, capabilities: caps,
+      shareScope: identity.shareScope ?? 'persona',
+      sharedWithCount: (identity.sharedWith ?? []).length
     };
   }
 
@@ -338,7 +361,10 @@ export class ConnectorHub {
 
     let creds;
     try {
-      creds = JSON.parse(open(this.keys.personaKey(personaId), identity.sealed, `${SEAL_CTX}:${connectorId}`));
+      // sealed under the AUTHORING persona's key, so a borrower unwraps the
+      // owner's envelope rather than expecting a copy under its own key. the
+      // receipt still names the persona that read, not the one that connected.
+      creds = JSON.parse(open(this.keys.personaKey(identity.personaId), identity.sealed, `${SEAL_CTX}:${connectorId}`));
     } catch {
       return { outcome: OUTCOME.DECLINED, reason: 'credential_unseal_failed' };
     }
@@ -382,10 +408,17 @@ export class ConnectorHub {
   // what the persona has connected (no credential material ever included)
   listForPersona(personaId) {
     const identities = this.store.list('connectorIdentities',
-      (x) => x.personaId === personaId && !x.revoked, { personaId })
+      (x) => (x.personaId === personaId
+        || (x.shareScope === 'shared' && Array.isArray(x.sharedWith) && x.sharedWith.includes(personaId))) && !x.revoked,
+      { personaId })
       .map((x) => ({
         identityId: x.id, connectorId: x.connectorId, account: x.account,
-        workspace: x.workspace ?? null, label: x.label, createdAt: x.createdAt
+        workspace: x.workspace ?? null, project: x.project ?? null,
+        credential: x.credential ?? 'default', label: x.label, createdAt: x.createdAt,
+        // a borrower is told the credential is shared; it is NOT told with whom,
+        // and it never learns another persona's id from this surface.
+        shared: (x.shareScope ?? 'persona') === 'shared',
+        mine: x.personaId === personaId
       }));
     return { outcome: OUTCOME.RESULTS, connectors: identities };
   }
@@ -428,7 +461,10 @@ export class ConnectorHub {
 
     let creds;
     try {
-      creds = JSON.parse(open(this.keys.personaKey(personaId), identity.sealed, `${SEAL_CTX}:${connectorId}`));
+      // sealed under the AUTHORING persona's key, so a borrower unwraps the
+      // owner's envelope rather than expecting a copy under its own key. the
+      // receipt still names the persona that read, not the one that connected.
+      creds = JSON.parse(open(this.keys.personaKey(identity.personaId), identity.sealed, `${SEAL_CTX}:${connectorId}`));
     } catch {
       return { outcome: OUTCOME.DECLINED, reason: 'credential_unseal_failed' };
     }
@@ -618,6 +654,20 @@ export class ConnectorHub {
     return { outcome: OUTCOME.RESULTS, now, identities };
   }
 
+  // a shared identity still has ONE authoring persona. changing it (revoke,
+  // rotate) is the author's call, not a borrower's: sharing lends use, never
+  // control. get() is exposed so callers can check rather than guess.
+  ownerOf({ identityId }) {
+    const identity = this.store.get('connectorIdentities', identityId);
+    if (!identity) return { outcome: OUTCOME.UNAVAILABLE, reason: 'identity_not_found' };
+    return {
+      outcome: OUTCOME.RESULTS,
+      personaId: identity.personaId,
+      shareScope: identity.shareScope ?? 'persona',
+      sharedWithCount: (identity.sharedWith ?? []).length
+    };
+  }
+
   // owner-only: which credentials are shared across personas, and the fix
   listConnectionLinks(ctx) {
     if (!ctx || ctx.kind !== 'owner_context') return { outcome: OUTCOME.DECLINED, reason: 'owner_context_required' };
@@ -656,8 +706,13 @@ export class ConnectorHub {
   // credential, the LEAST capable one that covers the asked capabilities wins:
   // a narrow token is preferred whenever it is enough.
   _identity(personaId, connectorId, { account = null, workspace = null, project = null, credential = null, capabilities = [] } = {}) {
+    // an identity belongs to its authoring persona; a DECLARED shared one is
+    // also usable by the personas on its list. the list is the only way in -
+    // there is no "same owner" shortcut.
     const live = this.store.list('connectorIdentities',
-      (x) => x.personaId === personaId && x.connectorId === connectorId && !x.revoked,
+      (x) => x.connectorId === connectorId && !x.revoked
+        && (x.personaId === personaId
+          || (x.shareScope === 'shared' && Array.isArray(x.sharedWith) && x.sharedWith.includes(personaId))),
       { personaId, connectorId });
     const match = (x) => (account == null || x.account === account)
       && (workspace == null || (x.workspace ?? null) === workspace)

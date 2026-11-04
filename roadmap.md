@@ -127,6 +127,15 @@ rest, owner-only), then attendance and the group brief on top of them: a count
 crosses to members while a name only does when the owner shares it explicitly,
 and one person attending many times is one row. docs/people.md has the shape.
 
+## isolated by default, shared on purpose (2026-11-05)
+
+declared credential sharing (one sealed secret, authoring persona keeps control,
+borrowers told shared-but-not-with-whom), a classification of buckets by auth
+style with unknown failing closed, and the read half of usage-is-not-liking
+(basis filters: liking / constraint / availability / inferred). see
+docs/connections.md. next: surface both as owner controls (sharing + basis) in
+the panel, and extend the independent leakage verifier to check basis scope.
+
 ## connections are places and permissions (2026-11-02)
 
 workspace as a first-class dimension (platform + workspace + account), cross

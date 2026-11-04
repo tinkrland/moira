@@ -17,6 +17,31 @@ import { randomId } from '../util/crypto.js';
 import { FACT_STATUS, RUNG, OUTCOME, BASIS, PREFERENCE_CATEGORIES, CORE_PERSONA_ID, PERSONA_STATUS } from '../model/constants.js';
 import { derivePolicy, serveRung, nameToRank, decideWrite } from './policy.js';
 
+// a basis group is a question, not a synonym list: asking what someone LIKES
+// must never be answered with what work mandates or what is merely free to use.
+const BASIS_GROUPS = {
+  liking: [BASIS.STATED, BASIS.CHOSEN_FREELY],
+  constraint: [BASIS.CHOSEN_UNDER_CONSTRAINT],
+  availability: [BASIS.AVAILABILITY_DRIVEN],
+  inferred: [BASIS.INFERRED]
+};
+
+// invalid input THROWS: this is a caller bug, not a policy refusal, and a
+// silently ignored filter would serve more than was asked for.
+function expandBasis(basis) {
+  const allowed = new Set(Object.values(BASIS));
+  const raw = Array.isArray(basis) ? basis : [basis];
+  const out = new Set();
+  for (const entry of raw) {
+    const key = String(entry).trim().toLowerCase();
+    if (BASIS_GROUPS[key]) { for (const b of BASIS_GROUPS[key]) out.add(b); continue; }
+    if (!allowed.has(key)) throw new Error(`basis_invalid: ${entry}`);
+    out.add(key);
+  }
+  if (out.size === 0) throw new Error('basis_invalid: empty');
+  return out;
+}
+
 export class FactService {
   constructor({ store, keys, personas = null, now = Date.now }) {
     this.store = store;
@@ -194,7 +219,11 @@ export class FactService {
 
   // search within one persona only. facts whose rung cannot be served under the
   // cap are reported as skipped, never served above their max_rung.
-  serve(personaId, { categories = null, predicate = null, capRank = RUNG.FULL, purpose = null, sets = null, fields = null }) {
+  serve(personaId, { categories = null, predicate = null, capRank = RUNG.FULL, purpose = null, sets = null, fields = null, basis = null }) {
+    // why a fact is believed, as a read filter. 'usage is not liking' was only
+    // half enforced: BASIS recorded the reason, but serve() handed a liking ask
+    // the work-mandated tool and the free-credit service as if they were taste.
+    const basisScope = basis === null ? null : expandBasis(basis);
     const setScope = Array.isArray(sets) && sets.length > 0
       ? new Set(sets.map((s) => String(s).trim().toLowerCase()))
       : null;
@@ -205,6 +234,7 @@ export class FactService {
       : null;
     const facts = this.active(personaId).filter((f) =>
       (categories === null || categories.includes(f.category)) &&
+      (!basisScope || basisScope.has(f.preferenceBasis ?? BASIS.STATED)) &&
       (!setScope || (f.sets ?? []).some((s) => setScope.has(String(s).trim().toLowerCase()))) &&
       (!fieldScope || (f.fields ?? []).some((x) => fieldScope.has(`${f.category}.${x}`.toLowerCase()))));
     // shared core: personas with inheritsCore read core facts by reference

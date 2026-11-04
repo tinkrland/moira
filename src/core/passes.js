@@ -20,7 +20,7 @@ export class PassService {
 
   // owner grants. connect codes and consent screens call into this after
   // owner authentication; agents can never reach it directly.
-  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = RUNG.FULL, uses = null, sets = null, acknowledgeFull = false, fields = null }) {
+  grant({ clientId, personaId, category, purpose, duration = PASS_DURATION.PERMANENT, ttlMs = null, maxRung = RUNG.FULL, uses = null, sets = null, acknowledgeFull = false, fields = null, basis = null }) {
     const agent = this.agents.get(clientId);
     if (!agent) return { outcome: OUTCOME.UNAVAILABLE, reason: 'unknown_agent' };
 
@@ -68,6 +68,9 @@ export class PassService {
       ...(duration === PASS_DURATION.PERMANENT ? { standing: true } : {}),
       scope: scopedSets ? 'sets' : 'full',
       fields: scopedFields,
+      // the question this pass is allowed to ask (liking / constraint /
+      // availability / inferred, or explicit BASIS values). null = no filter.
+      basis: basis === null ? null : (Array.isArray(basis) ? basis.map((x) => String(x).trim().toLowerCase()) : String(basis).trim().toLowerCase()),
       revoked: false,
       // context sets shared at connection time (null = whole persona
       // context). normalized names; the read path filters entries by these.

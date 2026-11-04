@@ -274,3 +274,67 @@ two honest limits, stated rather than papered over:
 
 surface: `GET /api/connections`, `GET /api/connections/inbox`,
 `POST /api/connections/{invite,accept,share,open,revoke}`.
+
+## isolated by default, shared on purpose (2026-11-05)
+
+the same decision appears at two layers, and this build makes both of them
+explicit instead of accidental.
+
+### a credential: persona-scoped, or declared shared
+
+every identity is sealed under its AUTHORING persona's key. that stays true even
+when it is shared: a borrower unwraps the owner's envelope rather than getting a
+copy under its own key, so there is exactly one secret at rest and one place to
+revoke it.
+
+`connectConnector({ sharedWith: [personaId] })` is the only way a credential
+crosses. it exists because the linkage guard, left alone, taught the owner to
+paste the same key twice - producing the very link it was preventing, minus the
+record. sharing is a record: `shareScope: 'shared'`, a bounded list, and:
+
+- **sharing a credential is not sharing a permission.** each persona still needs
+  its own connector pass; the identity is usable, not readable.
+- **a borrower cannot change it.** revoke and rotate belong to the authoring
+  persona; `ownerOf({identityId})` exists so a caller checks instead of guessing.
+- **a borrower is told it is shared, never with whom.** `listConnectors` returns
+  `shared: true, mine: false` and never another persona's id, so the surface
+  cannot become a map of the owner's hats.
+- **revocation is one act for everyone**, because it is one secret.
+- `sharedWith` must be a non-empty, duplicate-free list that does not contain the
+  author: `shared_with_invalid`, capped at 12 (`shared_with_too_many`).
+
+### a bucket: which tools can even be shared
+
+src/connectors/scopes.js answers "which tool buckets, mcps, apis and oauths"
+from the credential's nature, not from taste:
+
+| what it is | example | scope | why |
+|---|---|---|---|
+| oauth account | google drive, notion, linear | persona | the credential IS an account with a face; sharing joins the hats at the provider |
+| session key | mega | persona | same, signed in |
+| mcp server | any mcp endpoint | persona | the server config is the owner's own secrets and tools |
+| ingest | substack, medium | persona | reads what is already public; nothing to share |
+| api key | claude, chatgpt, firecrawl | shareable | a key identifies a plan, not a person; one key across hats is billing, not disclosure |
+
+this is a HINT. nothing in it shares anything, and an unclassified provider
+returns `scope: 'unknown'`, which callers must treat as persona - guessing
+"shareable" is the one mistake that cannot be taken back. `owner.connectorSharing`
+serves the table so the surface can say why, not just what.
+
+### context: liking vs availability vs constraint
+
+the "usage is not liking" rule had a write half only: `BASIS` recorded *why* a
+fact was believed, and `serve()` ignored it, so an ask about taste could be
+answered with a work-mandated tool or a free-credit service. reads now filter:
+
+- `basis: 'liking'` -> `stated`, `chosen_freely`
+- `basis: 'constraint'` -> `chosen_under_constraint` (work pays, family plan)
+- `basis: 'availability'` -> `availability_driven` (free credits, free tier)
+- `basis: 'inferred'` -> `inferred` (saving is not liking)
+
+an explicit list of BASIS values works too; an unknown one THROWS rather than
+being ignored, because a dropped filter serves more than was asked. a pass may
+carry `basis`, and the agent read path honours it; a pass with no basis still
+sees everything, which keeps the old behaviour available as a choice rather than
+a silent default. an inferred fact never satisfies a liking ask even when its
+content says "likes".
