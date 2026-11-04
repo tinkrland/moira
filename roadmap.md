@@ -111,6 +111,15 @@ due list; a brief that composes and names its gaps. cresca review and what was
 refused is in docs/people.md. next: groups as shared memory, sightings attached
 to people.
 
+## rooms / shared memory (2026-11-04)
+
+a room is a shared memory, not a pooled persona: items only, closed kind
+vocabulary, invited-then-accepted membership, per-request membership checks,
+sealed at rest, and no read path into anyone's private judgement. leaving stops
+the room without pretending to unshare it. next here: group-level brief (counts
+already exist), and attaching sightings so a room can show who was actually
+there.
+
 ## connections are places and permissions (2026-11-02)
 
 workspace as a first-class dimension (platform + workspace + account), cross

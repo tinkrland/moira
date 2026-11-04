@@ -47,6 +47,7 @@ import { TraceService } from './traces.js';
 import { PeopleService } from './people.js';
 import { ConnectionService } from './connect.js';
 import { PeopleFeedService } from './peoplefeed.js';
+import { RoomService } from './rooms.js';
 import { LeakageAudit } from './leakage.js';
 
 function defaultStore() {
@@ -127,6 +128,9 @@ export class Moira {
     // drive time. falls back to the wall clock when none was supplied.
     this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: this.now, io });
     this.vault = new VaultService({ store: this.store, personas: this.personas, keys: this.keys, receipts: this.receipts, now: () => this._nowMs() });
+    // rooms read people only to keep it out of rooms: no room payload may carry
+    // circles, importance or notes. constructed here so people exists already.
+    this.rooms = new RoomService({ store: this.store, personas: this.personas, people: this.people, keys: this.keys, receipts: this.receipts, now: this.now });
     // wiring sits last: it reads connectors + people, both already built
     this.peoplefeed = new PeopleFeedService({ connectors: this.connectors, people: this.people, now: this.now });
     this.sets.vault = this.vault; // one set vocabulary spans declared context, facts and the vault

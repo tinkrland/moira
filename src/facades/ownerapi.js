@@ -266,6 +266,43 @@ export class OwnerApi {
     return this.gw.people.closePromise({ promiseId, state: 'dropped' });
   }
 
+  // rooms: shared memory between consented members, owned by a persona.
+  // a room never reads a persona's judgement: see src/core/rooms.js.
+  roomCreate(ctx, { personaId, name, connectionId = null } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.create({ personaId, name, connectionId });
+  }
+
+  roomInvite(ctx, { roomId, personaId, connectionId } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.invite({ roomId, personaId, connectionId });
+  }
+
+  roomAccept(ctx, { roomId, personaId } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.accept({ roomId, personaId });
+  }
+
+  roomLeave(ctx, { roomId, personaId } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.leave({ roomId, personaId });
+  }
+
+  roomPost(ctx, { roomId, personaId, kind, body } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.post({ roomId, personaId, kind, body });
+  }
+
+  roomTimeline(ctx, { roomId, personaId } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.timeline({ roomId, personaId });
+  }
+
+  roomSummary(ctx, { roomId, personaId } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.summary({ roomId, personaId });
+  }
+
   peopleBrief(ctx, { personaId, personId } = {}) {
     this._require(ctx);
     return this.gw.people.brief({ personaId, personId });

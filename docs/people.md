@@ -141,3 +141,37 @@ persona.
 **still open:** groups as shared memory (cresca's strongest remaining idea - "a
 group is a shared memory for the people you do things with"), and attaching
 capture sightings to people so `unknown` can lose its "no capture history".
+
+## rooms: a shared memory that is not a shared persona (2026-11-04)
+
+cresca's last good idea, and the one that needs the most care in moira: "a group
+is a shared memory - it remembers things as one, like a person or a topic".
+
+the danger is obvious. a room full of people who each hold private judgements is
+a machine for laundering them: importance, circles, notes, who owes whom, all
+pooled into a single score. so a room here is deliberately dumb:
+
+- **nothing enters except an item a member posted.** a room has no read path into
+  facts, notes, circles, importance or interactions. `roomTimeline` returns
+  `{itemId, kind, from, at, body}` and nothing else, and a test fails if the
+  word `importance` or a circle tag ever appears in that payload.
+- **kind is declared, not inferred**: `note`, `link`, `decision`, `file`. the
+  vocabulary is closed so a room cannot become free-text gossip that later gets
+  read as a claim.
+- **a room item is not a fact.** posting does not touch the fact ledger, and
+  nothing in a room can be promoted into one by a connector.
+- **membership is consented and re-checked.** a connected persona is *invited*
+  (an invite grants no read) and must accept. every read re-checks the row, so a
+  right is per-request rather than cached.
+- **items are sealed at rest** with a key derived from the instance key and the
+  room id.
+
+the honest limit, stated in the code and not just here: leaving stops the room,
+it does not unshare it. `leave()` records `leftAt` and stops future reads, and
+the summary keeps counting the history for the members who remain. a shared
+memory whose past could be withdrawn would be a lie about consent; the truthful
+version is that history belongs to everyone who was there.
+
+and the limit under that one: sealing protects the *store*, not a running
+service. per-member cryptography would be a stronger claim than this build makes,
+so the doc does not make it.

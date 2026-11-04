@@ -188,6 +188,42 @@ export function createMoiraServer({
         if (!personaId || !personId) return json(res, 400, { error: 'personaId_and_personId_required' });
         return json(res, 200, moira.owner.peopleBrief(owner, { personaId, personId }));
       }
+      // rooms: shared memory between consented members. no agent path: a room is
+      // a human surface, and membership is re-checked per request.
+      if (path === '/api/rooms' && req.method === 'POST') {
+        const body = await readBody(req);
+        send(res, 200, moira.owner.roomCreate(owner, {
+          personaId: body.personaId, name: body.name, connectionId: body.connectionId ?? null
+        }));
+        return;
+      }
+      if (path === '/api/rooms/join' && req.method === 'POST') {
+        const body = await readBody(req);
+        const fn = body.action === 'leave' ? 'roomLeave' : body.action === 'invite' ? 'roomInvite' : 'roomAccept';
+        send(res, 200, moira.owner[fn](owner, {
+          roomId: body.roomId, personaId: body.personaId, connectionId: body.connectionId ?? null
+        }));
+        return;
+      }
+      if (path === '/api/rooms/item' && req.method === 'POST') {
+        const body = await readBody(req);
+        send(res, 200, moira.owner.roomPost(owner, {
+          roomId: body.roomId, personaId: body.personaId, kind: body.kind, body: body.body
+        }));
+        return;
+      }
+      if (path === '/api/rooms/timeline' && req.method === 'GET') {
+        send(res, 200, moira.owner.roomTimeline(owner, {
+          roomId: url.searchParams.get('roomId'), personaId: url.searchParams.get('personaId')
+        }));
+        return;
+      }
+      if (path === '/api/rooms/summary' && req.method === 'GET') {
+        send(res, 200, moira.owner.roomSummary(owner, {
+          roomId: url.searchParams.get('roomId'), personaId: url.searchParams.get('personaId')
+        }));
+        return;
+      }
 
       // connector-fed capture: signals in, proposals out. an ingest never puts
       // a person in the book; the accept below is where judgement lives.
