@@ -1,3 +1,4 @@
+import { expandBasis } from './policy.js';
 // access requests: the app-initiated half of consent.
 //
 // the pass is the owner's mint; a request is the app's ask. an agent names the
@@ -121,6 +122,27 @@ export class AccessRequestService {
       sets = [...new Set(sets.map((s) => String(s).trim()))];
     }
 
+    // basis addressing: the owner may narrow what a pass can see by WHY a fact
+    // is believed ("liking only"), because "what I like" and "what work pays
+    // for" are different context. narrowing only: an ask that named a basis
+    // cannot be widened by the approval.
+    let basis = req.basis ?? null;
+    if (edits.basis !== undefined && edits.basis !== null) {
+      let wanted;
+      try {
+        wanted = [...expandBasis(edits.basis)];
+      } catch {
+        return { outcome: OUTCOME.DECLINED, reason: 'basis_invalid' };
+      }
+      if (req.basis !== null && req.basis !== undefined) {
+        const asked = new Set(expandBasis(req.basis));
+        if (!wanted.every((b) => asked.has(b))) {
+          return { outcome: OUTCOME.DECLINED, reason: 'edits_widen_the_request' };
+        }
+      }
+      basis = wanted;
+    }
+
     // field addressing: the owner may cut fields, never add them, and cannot
     // turn an addressed ask back into a category-wide one.
     let fields = req.fields;
@@ -155,6 +177,7 @@ export class AccessRequestService {
         maxRung,
         sets: sets ?? null,
         fields,
+        basis,
         acknowledgeFull: true
       });
       if (res.outcome === OUTCOME.RESULTS) passes.push(res.pass);

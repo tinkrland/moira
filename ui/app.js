@@ -257,6 +257,12 @@ async function loadInbox() {
         <label>for <select name="duration">
           ${['one_time', 'session', 'permanent'].map((d) => `<option value="${d}" ${d === r.duration ? 'selected' : ''}>${d}</option>`).join('')}
         </select></label>
+        <label>basis <select name="basis" title="what the pass may see, by why it is believed">
+          <option value="">everything asked</option>
+          <option value="liking">liking only (stated + freely chosen)</option>
+          <option value="constraint">under constraint only (work-mandated)</option>
+          <option value="availability">availability only (free credits, free tier)</option>
+        </select></label>
       </div>
       <div class="verdict">
         <button class="tiny approve">approve</button>
@@ -286,11 +292,15 @@ async function loadInbox() {
       const sets = card.querySelector('[name=sets]').value.split(',').map((s) => s.trim()).filter(Boolean);
       const fieldsEl = card.querySelector('[name=fields]');
       const fields = fieldsEl ? fieldsEl.value.split(',').map((f) => f.trim()).filter(Boolean) : null;
+      const basisEl = card.querySelector('[name=basis]');
+      const chosenBasis = basisEl ? basisEl.value : '';
       const edits = {
         maxRung: Number(card.querySelector('[name=maxRung]').value),
         duration: card.querySelector('[name=duration]').value,
         ...(sets.length ? { sets } : {}),
-        ...(fields ? { fields } : {})
+        ...(fields ? { fields } : {}),
+        // empty = leave the ask alone; a choice here can only narrow it
+        ...(chosenBasis ? { basis: [chosenBasis] } : {})
       };
       try {
         await api('/api/requests/decide', { method: 'POST', body: JSON.stringify({ requestId: id, action: 'approve', edits }) });

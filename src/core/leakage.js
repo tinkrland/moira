@@ -23,6 +23,8 @@
 // the report carries ids, categories, kinds and scores. never content: a leak
 // report that quotes the secret is itself a leak.
 
+import { expandBasis } from './policy.js';
+
 const STOPWORDS = new Set([
   'the', 'and', 'for', 'with', 'that', 'this', 'from', 'into', 'about', 'was',
   'were', 'are', 'has', 'have', 'had', 'not', 'but', 'you', 'your', 'their',
@@ -83,6 +85,24 @@ export function checkServedAgainstPass(item, pass) {
   const rankOf = (r) => (typeof r === 'number' ? r : ({ nothing: 0, exists: 1, summary: 2, conclusion: 3, full: 4 }[r] ?? 0));
   if (rankOf(item.rung) > (pass.maxRung ?? 0)) {
     return { kind: 'rung_exceeded', passId: pass.id, detail: `${item.rung} above maxRung ${pass.maxRung}` };
+  }
+  // basis scope: a pass that asked for taste is not satisfied by what work pays
+  // for or what happens to be free. unstated basis is not a liking either, so
+  // it fails a described ask - stingy, because the alternative is assuming.
+  if (pass.basis !== undefined && pass.basis !== null) {
+    let allowed;
+    try {
+      allowed = expandBasis(pass.basis);
+    } catch {
+      return { kind: 'pass_basis_invalid', passId: pass.id, detail: 'pass carries an unusable basis' };
+    }
+    const itemBasis = item.basis ?? null;
+    if (itemBasis === null) {
+      return { kind: 'basis_unrecorded', passId: pass.id, detail: 'served item has no basis, pass asked for a described one' };
+    }
+    if (!allowed.has(itemBasis)) {
+      return { kind: 'basis_out_of_scope', passId: pass.id, detail: `${itemBasis} outside ${[...allowed].join(',')}` };
+    }
   }
   if (Array.isArray(pass.fields) && pass.fields.length > 0) {
     const addressed = item.field ?? `${item.category}.`;
@@ -279,7 +299,9 @@ export class LeakageAudit {
           category: s.category,
           sets: fact?.sets ?? null,
           field: s.field ?? null,
-          rung: s.rung
+          rung: s.rung,
+          // the basis the fact was BELIEVED for, not the category's flavour
+          basis: fact?.preferenceBasis ?? null
         }, pass);
         if (violation) direct.push({ ...violation, factId: s.factId, category: s.category, rung: s.rung });
       }
