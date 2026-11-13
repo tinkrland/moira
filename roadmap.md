@@ -46,6 +46,14 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## the owner stops being interrupted (2026-11-13)
+
+standing-rule suggestions exist: three approvals of the same shape become an
+offer, the owner takes it or not, and once taken the ask path serves instead of
+interrupting (`autoApproved: true`, receipted as `standing_rule`). coverage is
+set containment, so a wider ask still comes back. denied shapes are never
+offered.
+
 ## the story became readable (2026-11-13)
 
 traces had a chain in code and no way to see it. now five owner-gated routes

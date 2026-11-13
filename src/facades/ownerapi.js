@@ -9,7 +9,7 @@ import { REGISTRY } from '../connectors/registry.js';
 // way to reach these methods.
 
 import { OwnerContext } from './ownercontext.js';
-import { OUTCOME, VOICE_CATEGORY, STACK_CATEGORY, AI_CATEGORY } from '../model/constants.js';
+import { OUTCOME, VOICE_CATEGORY, STACK_CATEGORY, AI_CATEGORY, RECEIPT_OP } from '../model/constants.js';
 import { randomId } from '../util/crypto.js';
 
 export class OwnerApi {
@@ -94,6 +94,47 @@ export class OwnerApi {
     this._require(ctx);
     if (!personaId || !clientId) return { outcome: OUTCOME.DECLINED, reason: 'persona_and_client_required' };
     return this.gw.leakage.audit({ personaId, clientId, threshold, observationBudget: observationBudget ?? null });
+  }
+
+  // standing rules: a suggestion is a pattern the owner keeps approving. the
+  // owner takes it or ignores it; nothing becomes standing without that act.
+  standingRuleSuggestions(ctx) {
+    this._require(ctx);
+    return this.gw.requests.suggest({ agents: this.gw.agents });
+  }
+
+  standingRuleAccept(ctx, { suggestionId } = {}) {
+    this._require(ctx);
+    if (!suggestionId) return { outcome: OUTCOME.DECLINED, reason: 'suggestion_id_required' };
+    const found = this.gw.requests.suggest({ agents: this.gw.agents }).suggestions.find((x) => x.id === suggestionId);
+    if (!found) return { outcome: OUTCOME.UNAVAILABLE, reason: 'suggestion_not_found' };
+    const agent = this.gw.agents.get(found.agentId);
+    if (!agent) return { outcome: OUTCOME.UNAVAILABLE, reason: 'agent_not_found' };
+
+    const rule = {
+      kind: 'access_request',
+      personaId: found.personaId,
+      categories: found.categories,
+      sets: found.sets ?? null,
+      basedOn: found.approvals,
+      grantedAt: this.gw.now ? this.gw.now() : Date.now(),
+      grantedBy: 'owner'
+    };
+    const next = this.gw.store.update('agents', agent.id, (a) => ({
+      ...a, standingRules: [...(a.standingRules ?? []), rule]
+    }));
+    this.gw.receipts.write({
+      actor: 'owner', personaId: found.personaId, op: RECEIPT_OP.STANDING_RULE,
+      categories: found.categories, reason: `accepted_after_${found.approvals}_approvals`
+    });
+    return { outcome: OUTCOME.RESULTS, agentId: next.id, rule };
+  }
+
+  standingRuleList(ctx, { agentId = null } = {}) {
+    this._require(ctx);
+    const rules = this.gw.store.list('agents', (a) => (agentId ? a.id === agentId : true), {})
+      .flatMap((a) => (a.standingRules ?? []).map((r) => ({ ...r, agentId: a.id })));
+    return { outcome: OUTCOME.RESULTS, rules };
   }
 
   // traces: one unit of work, one chain. begin, do, end, read it back.

@@ -99,6 +99,41 @@ function detailSection(title, body) {
   return `<div class="section"><h3>${esc(title)}</h3>${body}</div>`;
 }
 
+// --- standing rules: what you keep approving, offered back -------------------
+// an owner who approves the same shape three times is being interrupted by a
+// question they have already answered. the suggestion names the pattern; taking
+// it is still their act, and a wider ask still comes back to them.
+
+async function renderStanding(host, personaId) {
+  let suggestions = [];
+  let rules = [];
+  try {
+    suggestions = (await api(`/api/standing-rules/suggestions?personaId=${encodeURIComponent(personaId)}`)).suggestions ?? [];
+    rules = (await api('/api/standing-rules')).rules ?? [];
+  } catch (err) {
+    host.innerHTML = `<div class="meta">standing rules unavailable: ${esc(err.message)}</div>`;
+    return;
+  }
+  const mine = rules.filter((r) => r.personaId === personaId);
+  const sug = suggestions.filter((s) => s.personaId === personaId);
+  host.innerHTML = `
+    ${sug.length ? `<div class="meta">you have answered this shape ${sug[0].approvals} times</div>
+    <ul>${sug.map((s) => `<li>${esc(s.categories.join(', '))}
+      <span class="meta">${esc(s.duration)} · ${s.approvals} approvals · ${esc(s.purpose ?? '')}</span>
+      <button class="tiny standing-take" data-id="${esc(s.id)}">make it standing</button></li>`).join('')}</ul>` : ''}
+    ${mine.length ? `<ul>${mine.map((r) => `<li class="meta">standing: ${esc((r.categories ?? []).join(', '))} · earned by ${esc(String(r.basedOn ?? '?'))} approvals</li>`).join('')}</ul>`
+      : (sug.length ? '' : '<div class="meta">nothing standing, and no pattern worth offering yet</div>')}`;
+
+  host.querySelectorAll('.standing-take').forEach((b) => b.addEventListener('click', async () => {
+    try {
+      const out = await api('/api/standing-rules', { method: 'POST', body: JSON.stringify({ suggestionId: b.dataset.id }) });
+      status(`standing for ${(out.rule?.categories ?? []).join(', ')}. a wider ask still comes to you.`);
+      await renderStanding(host, personaId);
+    } catch (err) { status(`could not make it standing: ${err.message}`, true); }
+  }));
+}
+// --- standing rules end
+
 // --- traces: one unit of work, stitched in order ----------------------------
 // the chain existed and nobody could read it. this is the reading: what work
 // ran, in what order, with what outcome - refusals included, because a refused
@@ -510,7 +545,8 @@ async function openDetail(p) {
     detailSection('sets', setsBody),
     detailSection('who can read', permBody),
     detailSection('inference check', '<div class="meta">measuring what each connected agent could infer…</div><div id="leaks"></div>'),
-    detailSection('traces', '<div class="meta">one unit of work, stitched in order…</div><div id="traces"></div>')
+    detailSection('traces', '<div class="meta">one unit of work, stitched in order…</div><div id="traces"></div>'),
+    detailSection('standing rules', '<div id="standing"></div>')
   ].join('');
 
   const freezeBtn = $('#detail-body').querySelector('.freeze');
@@ -659,6 +695,9 @@ async function openDetail(p) {
       } catch (err) { status(`revoke failed: ${err.message}`, true); }
     });
   }
+
+  const standingHost = $('#standing');
+  if (standingHost) renderStanding(standingHost, d.persona.id).catch(() => {});
 
   const traceHost = $('#traces');
   if (traceHost) renderTraces(traceHost).catch(() => {});

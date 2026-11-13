@@ -10,6 +10,7 @@ import {
 } from '../model/constants.js';
 import { entriesForPass } from '../core/sets.js';
 import { nameToRank } from '../core/policy.js';
+import { standingRuleCovers } from '../core/requests.js';
 import { randomId } from '../util/crypto.js';
 
 export class AgentApi {
@@ -151,9 +152,23 @@ export class AgentApi {
   request_access(accessToken, { categories, purpose, duration, sets = null, fields = null, note = null }) {
     const ctx = this._ctx(accessToken);
     if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
-    return this.gw.requests.request({
+    const made = this.gw.requests.request({
       personaId: ctx.persona.id, clientId: ctx.clientId, categories, purpose, duration, sets, fields, note
     });
+    if (made.outcome !== OUTCOME.RESULTS) return made;
+
+    // a standing rule the owner took answers for them - for the shape it named
+    // and nothing wider. the ask is still recorded and receipted; it is simply
+    // decided at once, so the owner is not interrupted by a question they have
+    // already answered three times.
+    const agent = this.gw.agents.get(ctx.clientId);
+    if (agent && standingRuleCovers(agent, made.request)) {
+      const approved = this.gw.requests.approve({ requestId: made.request.id });
+      if (approved.outcome === OUTCOME.RESULTS) {
+        return { ...approved, autoApproved: true, reason: 'standing_rule', request: approved.request ?? made.request };
+      }
+    }
+    return made;
   }
 
   bridge_request(accessToken, { srcPersonaId, query, purpose, maxRung = null }) {

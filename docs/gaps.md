@@ -220,12 +220,32 @@ related and smaller: `rankFor` takes `burnRateFraction` as an argument.
 nothing learns it, so the "spend forecasting with burn-rate learning" item is
 also open (`burn` in `src/core/` is only this knob).
 
-### 11. standing-rule suggestions
+### 11. standing-rule suggestions — **shipped 2026-11-13**
 
-agents carry `standingRules` and `agents.js` matches them, but nothing
-suggests one. spec v1's "standing-rule suggestions" (the owner approves a
-pattern once and stops being asked) is absent: no proposal kind, no detector
-over repeated asks.
+agents carried `standingRules` and `agents.js` matched them, but nothing
+suggested one: the owner had to know the api to stop being asked.
+
+`requests.suggest()` groups **approved** asks by shape (agent, hat, the sorted
+categories, the duration) and offers a shape at three approvals. the suggestion
+id is derived from the shape, so asking twice does not invent two, and a shape
+already covered by a rule is not offered again. a **denied** shape is never
+suggested: a no three times is still a no.
+
+`standingRuleAccept` appends the rule with `basedOn: <n>` and receipts it as
+`standing_rule`, which is now a receipt op - a standing rule is a consent act,
+so it belongs in the ledger like every other.
+
+**and the ask path consults it.** `request_access` still records and receipts
+the ask, then approves it at once when a rule covers the shape, returning
+`autoApproved: true, reason: 'standing_rule'` with the minted pass. coverage is
+set containment, not equality: a rule for `preferences` answers an ask for
+`preferences`, and an ask for `preferences, health` goes back to the owner. a
+pattern is not a blank cheque.
+
+surface: `GET /api/standing-rules/suggestions`, `GET /api/standing-rules`,
+`POST /api/standing-rules`, owner-gated; a panel section per hat that names the
+pattern ("you have answered this shape 3 times"), offers one act, lists what is
+standing, and says in words that a wider ask still comes back.
 
 ---
 

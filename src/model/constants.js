@@ -108,7 +108,9 @@ export const RECEIPT_OP = {
   LINKAGE: 'linkage',
   PERSONA_FREEZE: 'persona_freeze',
   PERSONA_THAW: 'persona_thaw',
-  VAULT: 'vault'
+  VAULT: 'vault',
+  // a standing rule is a consent act, so it is in the ledger like every other
+  STANDING_RULE: 'standing_rule'
 };
 
 // linkage findings (spec 22): kinds only, never values

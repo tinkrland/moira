@@ -21,6 +21,23 @@ const STATUS = { PENDING: 'pending', APPROVED: 'approved', DENIED: 'denied', EXP
 const ASK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DURATIONS = new Set(Object.values(PASS_DURATION));
 
+// a suggestion is keyed by shape, not by ask: agent, hat, the categories asked
+// for, and how long. a different purpose on the same shape is the same shape.
+const SUGGEST_THRESHOLD = 3;
+const suggestionKey = (row) => [
+  row.clientId, row.personaId, [...row.categories].sort().join('+'), row.duration
+].join('|').replace(/[^a-z0-9|+_-]+/gi, '-').toLowerCase();
+
+// does an existing standing rule already cover this shape? a rule covers an ask
+// when it names every category the ask wants and belongs to the same hat.
+const covers = (agent, row) => (agent.standingRules ?? []).some((r) => {
+  if (r.kind !== 'access_request') return false;
+  if (r.personaId && r.personaId !== row.personaId) return false;
+  const have = new Set((r.categories ?? []).map((c) => String(c).toLowerCase()));
+  return row.categories.every((c) => have.has(String(c).toLowerCase()));
+});
+export const standingRuleCovers = covers;
+
 export class AccessRequestService {
   constructor({ store, personas, agents, passes, receipts, now = Date.now }) {
     this.store = store;
@@ -118,6 +135,47 @@ export class AccessRequestService {
       expired += 1;
     }
     return { outcome: OUTCOME.RESULTS, now: at, expired };
+  }
+
+  // standing-rule suggestions: the owner approves the same shape repeatedly and
+  // is asked again. a pattern is worth naming, but only as a suggestion - the
+  // consent act stays the owner's, which is the whole point.
+  //
+  // deterministic by construction: the id is derived from the shape, so asking
+  // twice does not invent two suggestions, and accepting one retires it.
+  suggest({ threshold = SUGGEST_THRESHOLD, agents = null } = {}) {
+    const groups = new Map();
+    for (const row of this.store.list('accessRequests', (r) => r.status === STATUS.APPROVED, {})) {
+      const key = suggestionKey(row);
+      const g = groups.get(key) ?? { rows: [] };
+      g.rows.push(row);
+      groups.set(key, g);
+    }
+    const out = [];
+    for (const [key, g] of groups) {
+      if (g.rows.length < threshold) continue;
+      const latest = g.rows.reduce((a, b) => (b.decidedAt > a.decidedAt ? b : a));
+      const agent = agents ? agents.get(latest.clientId) : null;
+      // already standing is not a suggestion, and a revoked agent is not worth
+      // offering to trust again
+      if (agent && (agent.revoked || covers(agent, latest))) continue;
+      out.push({
+        id: `sug_${key}`,
+        agentId: latest.clientId,
+        personaId: latest.personaId,
+        categories: [...latest.categories].sort(),
+        duration: latest.duration,
+        sets: latest.sets ?? null,
+        approvals: g.rows.length,
+        firstApprovedAt: g.rows.reduce((a, b) => Math.min(a, b.decidedAt), Infinity),
+        lastApprovedAt: latest.decidedAt,
+        purpose: latest.purpose
+      });
+    }
+    return {
+      outcome: OUTCOME.RESULTS,
+      suggestions: out.sort((a, b) => (b.approvals - a.approvals) || (b.lastApprovedAt - a.lastApprovedAt))
+    };
   }
 
   deny({ requestId, reason = null }) {
