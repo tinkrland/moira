@@ -99,6 +99,72 @@ function detailSection(title, body) {
   return `<div class="section"><h3>${esc(title)}</h3>${body}</div>`;
 }
 
+// --- service rules: egress as a sentence you can read -----------------------
+// "this hat may call exactly this endpoint, with exactly this account". an empty
+// list is not safety and the panel says so: silence narrows nothing, and the
+// moment one rule exists it closes the hat to everything it does not name.
+
+async function renderServiceRules(host, personaId) {
+  let rules = [];
+  let accounts = [];
+  try {
+    rules = (await api(`/api/service-rules?personaId=${encodeURIComponent(personaId)}`)).rules ?? [];
+  } catch (err) {
+    host.innerHTML = `<div class="meta">service rules unavailable: ${esc(err.message)}</div>`;
+    return;
+  }
+  try {
+    accounts = (await api(`/api/personas/${encodeURIComponent(personaId)}`)).accounts ?? [];
+  } catch { accounts = []; }
+
+  const list = rules.length
+    ? `<ul>${rules.map((r) => `<li>
+        <code>${esc(r.host)}${esc(r.pathGlob)}</code>
+        <span class="meta">${esc((r.methods ?? ['any method']).join(', '))} · ${esc(r.authKind)}${r.accountId ? ' · one account' : ''}</span>
+        <button class="x rule-remove" data-id="${esc(r.id)}" title="remove this rule">×</button></li>`).join('')}</ul>`
+    : '<div class="meta">nothing declared: this hat is not narrowed. declare one endpoint and everything else closes.</div>';
+
+  host.innerHTML = `${list}
+    <form id="rule-form" class="form-row">
+      <label>host <input name="host" placeholder="api.anthropic.com" required /></label>
+      <label>path <input name="pathGlob" placeholder="/v1/*" required /></label>
+      <label>methods <input name="methods" placeholder="POST (blank for any)" /></label>
+      <label>account <select name="accountId"><option value="">any</option>
+        ${accounts.map((x) => `<option value="${esc(x.id)}">${esc(x.label ?? x.provider)}</option>`).join('')}
+      </select></label>
+      <button type="submit">declare</button>
+    </form>`;
+
+  host.querySelectorAll('.rule-remove').forEach((b) => b.addEventListener('click', async () => {
+    try {
+      await api(`/api/service-rules/${encodeURIComponent(b.dataset.id)}`, { method: 'DELETE' });
+      status('rule removed. if that was the last one, this hat is unnarrowed again.');
+      await renderServiceRules(host, personaId);
+    } catch (err) { status(`could not remove: ${err.message}`, true); }
+  }));
+
+  host.querySelector('#rule-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const methods = String(f.get('methods') ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+    try {
+      await api('/api/service-rules', {
+        method: 'POST',
+        body: JSON.stringify({
+          personaId,
+          host: String(f.get('host')).trim(),
+          pathGlob: String(f.get('pathGlob')).trim(),
+          methods: methods.length ? methods : null,
+          accountId: String(f.get('accountId') ?? '') || null
+        })
+      });
+      status('declared. calls to anything this does not name are refused at the socket.');
+      await renderServiceRules(host, personaId);
+    } catch (err) { status(`not declared: ${err.message}`, true); }
+  });
+}
+// --- service rules end
+
 // --- standing rules: what you keep approving, offered back -------------------
 // an owner who approves the same shape three times is being interrupted by a
 // question they have already answered. the suggestion names the pattern; taking
@@ -546,7 +612,8 @@ async function openDetail(p) {
     detailSection('who can read', permBody),
     detailSection('inference check', '<div class="meta">measuring what each connected agent could infer…</div><div id="leaks"></div>'),
     detailSection('traces', '<div class="meta">one unit of work, stitched in order…</div><div id="traces"></div>'),
-    detailSection('standing rules', '<div id="standing"></div>')
+    detailSection('standing rules', '<div id="standing"></div>'),
+    detailSection('service rules', '<div id="service-rules"></div>')
   ].join('');
 
   const freezeBtn = $('#detail-body').querySelector('.freeze');
@@ -695,6 +762,9 @@ async function openDetail(p) {
       } catch (err) { status(`revoke failed: ${err.message}`, true); }
     });
   }
+
+  const rulesHost = $('#service-rules');
+  if (rulesHost) renderServiceRules(rulesHost, d.persona.id).catch(() => {});
 
   const standingHost = $('#standing');
   if (standingHost) renderStanding(standingHost, d.persona.id).catch(() => {});

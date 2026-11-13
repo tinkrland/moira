@@ -43,6 +43,7 @@ import { VaultService } from './vault.js';
 import { SwitchService } from './switching.js';
 import { CoreService } from './core.js';
 import { DisclosureService } from './disclosures.js';
+import { ServiceRuleService } from './services.js';
 import { TraceService } from './traces.js';
 import { PeopleService } from './people.js';
 import { ConnectionService } from './connect.js';
@@ -115,6 +116,8 @@ export class Moira {
     this.packs = new PackService({ store, personas: this.personas, facts: this.facts, receipts: this.receipts, keys: this.keys, now });
     this.ledger = new LedgerService({ store, personas: this.personas, keys: this.keys, receipts: this.receipts, now });
     this.linkage = new LinkageService({ store, personas: this.personas, ledger: this.ledger, keys: this.keys, now });
+    // egress declarations: judged at the call, not at the adapter
+    this.services = new ServiceRuleService({ store, personas: this.personas, ledger: this.ledger, receipts: this.receipts, now });
     this.stack = new StackService({ store, personas: this.personas, receipts: this.receipts, now });
     this.aitools = new AIToolsService({ store, personas: this.personas, receipts: this.receipts, now });
     this.sets = new SetsService({ store, personas: this.personas });
@@ -134,6 +137,8 @@ export class Moira {
     // wiring sits last: it reads connectors + people, both already built
     this.peoplefeed = new PeopleFeedService({ connectors: this.connectors, people: this.people, now: this.now });
     this.sets.vault = this.vault; // one set vocabulary spans declared context, facts and the vault
+    this.services.ledger = this.ledger;
+    this.connectors.services = this.services; // adapters dial through the rules, not past them
     this.agent = new AgentApi(this);
     this.owner = new OwnerApi(this);
   }

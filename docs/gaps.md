@@ -35,20 +35,42 @@ the secret from the boot command.
 
 ## buildable now (the seam exists, the code does not)
 
-### 2. service rules as a first-class object
+### 2. service rules as a first-class object — **shipped 2026-11-13**
 
-`docs/agent-vault-review.md` names this as the one thing worth taking from
-agent-vault and it is still absent. moira has persona-level egress labels and
-a per-connector account pin, but no "this persona may call exactly this
-endpoint with exactly this account" object: host + path glob + auth kind,
-reviewable by the owner, enforced at the call.
+`docs/agent-vault-review.md` named this as the one thing worth taking from
+agent-vault. there was no object saying "this hat may call exactly this endpoint
+with exactly this account": the account was a sealed credential and egress was
+implicit in whichever adapter happened to be installed.
 
-evidence: no `serviceRule` / `service_rule` anywhere in `src/`.
+`src/core/services.js` now holds the rule: **host + path glob + methods? +
+authKind + accountId?**, owner-stated (never inferred from traffic, like the
+stack and the ai tools), receipted as `service_rule` on add, remove and every
+refusal.
 
-why it matters: it is the natural home for accounts. right now the account is
-a sealed credential with scopes, and egress is implicit in whichever adapter
-happens to be installed. a service rule makes egress a sentence the owner can
-read.
+**judged where the call happens.** `hub.egressFetch({ personaId, accountId })`
+wraps fetch with `services.match`, and the file adapters now receive that
+wrapper instead of raw fetch, so a call to a host nobody declared is refused
+before the socket opens and the adapter never sees a credential it may not use.
+the refusal is raised as an error with `code: 'egress_not_allowed'` because an
+adapter expects a Response or a throw, never a verdict object.
+
+**two decisions worth stating, because they are arguable:**
+
+- **glob semantics.** `*` stops at a slash, `**` crosses it. `/repos/o/r/*` is
+  the repo; `/repos/o/r/**` is anything inside it. a prefix guess would have
+  made the first form a silent superset.
+- **what "no rules" means.** not "refuse everything" - a hat that never declared
+  anything would have stopped working the day this shipped - but "nothing
+  declared, nothing narrowed", reported as `no_rules_declared`. the moment one
+  rule exists for that hat, egress closes to everything it does not name.
+  declaring a boundary makes it a boundary; silence does not.
+- **account binding** bites when the caller names an account id. a caller that
+  names none is not silently borrowing a forbidden one; the pass/lease seam
+  covers that path, and the adapter path does not yet carry a ledger account id.
+
+surface: `GET /api/service-rules`, `POST /api/service-rules`, `DELETE
+/api/service-rules/:id`, owner-gated, and a panel section per hat that writes
+the sentence in a form and says what an empty list means.
 
 ### 3. approval links with a short read-only token — **expiry shipped 2026-11-13, the link is still open**
 
@@ -291,7 +313,8 @@ says `PLANNED` rather than pretending. the honest inventory:
    from "tested" into "used".
 5. **traces export** (5) and **persona export** (7) - both are routes over
    facades that already compose the answer.
-6. **service rules** (2) - the largest of these, and the one that makes egress
+6. ~~**service rules** (2)~~ shipped: a rule the owner can read, judged at the
+   socket. the largest of these, and the one that makes egress
    reviewable instead of implicit.
 7. **hop-limit honesty** (8) - either enforce or delete; it is a small change
    and it removes a declared guarantee that does not exist.

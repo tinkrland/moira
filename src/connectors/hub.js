@@ -363,6 +363,26 @@ export class ConnectorHub {
 
   // --- owner side: feeding people capture -------------------------------------
   //
+  // egress: adapters get this instead of raw fetch, so a call to a host nobody
+  // declared is refused before the socket opens. serviceRules is injected by the
+  // gateway; when it is absent the hub behaves as before and says so.
+  egressFetch({ personaId, accountId = null } = {}) {
+    const base = { personaId, accountId, fetch: this.io?.fetch ?? (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : null) };
+    if (!this.services) return async (url, opts) => base.fetch(url, opts);
+    const gated = this.services.gate(base);
+    // an adapter expects a Response or a throw, never a verdict object, so the
+    // refusal is raised with a code the caller can map to a sentence
+    return async (url, opts) => {
+      const res = await gated(url, opts);
+      if (res && res.outcome === 'declined') {
+        const err = new Error(`egress refused: ${res.reason}`);
+        err.code = res.reason;
+        throw err;
+      }
+      return res;
+    };
+  }
+
   // the owner may ask a connected adapter for people signals (calendar
   // attendees, mail senders). credentials never leave this method: the adapter
   // is called here and only normalized rows go back, so no downstream layer can
@@ -494,8 +514,9 @@ export class ConnectorHub {
     const adapter = adapterFor(connectorId, this.io);
     let raw;
     try {
-      if (operation === 'list') raw = await adapter.listFiles(creds, params, this.io);
-      else if (operation === 'read') raw = await adapter.readFile(creds, params, this.io);
+      const io = { ...this.io, fetch: this.egressFetch({ personaId, accountId: account?.id ?? null }) };
+      if (operation === 'list') raw = await adapter.listFiles(creds, params, io);
+      else if (operation === 'read') raw = await adapter.readFile(creds, params, io);
       else return { outcome: OUTCOME.DECLINED, reason: 'unknown_operation' };
     } catch (e) {
       this.receipts.write({ actor: clientId, personaId, op: RECEIPT_OP.CONNECTOR, reason: `error:${connectorId}:${operation}` });

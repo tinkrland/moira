@@ -46,6 +46,15 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## egress became a sentence (2026-11-13)
+
+service rules exist: host + path glob + methods + auth kind + optional account,
+owner-stated, receipted on every add, remove and refusal. judging happens at the
+call - adapters receive a fetch wrapper that consults the rules - so a host
+nobody declared is refused before the socket opens. declaring one rule closes
+the hat to everything it does not name; an empty list narrows nothing and the
+panel says so.
+
 ## the owner stops being interrupted (2026-11-13)
 
 standing-rule suggestions exist: three approvals of the same shape become an

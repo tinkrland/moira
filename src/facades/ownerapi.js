@@ -96,6 +96,24 @@ export class OwnerApi {
     return this.gw.leakage.audit({ personaId, clientId, threshold, observationBudget: observationBudget ?? null });
   }
 
+  // service rules: the sentence the owner can read about what a hat may call.
+  // declarations are owner-stated, like the stack and the ai tools - never
+  // inferred from traffic.
+  serviceRuleAdd(ctx, spec = {}) {
+    this._require(ctx);
+    return this.gw.services.add(spec);
+  }
+
+  serviceRuleRemove(ctx, { ruleId } = {}) {
+    this._require(ctx);
+    return this.gw.services.remove({ ruleId });
+  }
+
+  serviceRuleList(ctx, { personaId = null } = {}) {
+    this._require(ctx);
+    return this.gw.services.list({ personaId });
+  }
+
   // standing rules: a suggestion is a pattern the owner keeps approving. the
   // owner takes it or ignores it; nothing becomes standing without that act.
   standingRuleSuggestions(ctx) {

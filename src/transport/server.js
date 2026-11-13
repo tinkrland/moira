@@ -235,6 +235,28 @@ export function createMoiraServer({
         const out = moira.owner.revokeConnector(owner, { identityId: body?.identityId });
         return json(res, out.outcome === 'results' ? 200 : 400, out);
       }
+      // service rules: egress as a sentence the owner can read, and edit.
+      if (path === '/api/service-rules' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        return json(res, 200, moira.owner.serviceRuleList(owner, { personaId: url.searchParams.get('personaId') }));
+      }
+      if (path === '/api/service-rules' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.personaId) return json(res, 400, { outcome: 'declined', reason: 'persona_id_required' });
+        const out = moira.owner.serviceRuleAdd(owner, body);
+        return json(res, out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400, out);
+      }
+      if (path.startsWith('/api/service-rules/') && req.method === 'DELETE') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const ruleId = decodeURIComponent(path.slice('/api/service-rules/'.length));
+        const out = moira.owner.serviceRuleRemove(owner, { ruleId });
+        return json(res, out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400, out);
+      }
+
       // standing rules: what the owner keeps approving, offered back to them as
       // a choice. nothing becomes standing without the accept.
       if (path === '/api/standing-rules/suggestions' && req.method === 'GET') {
