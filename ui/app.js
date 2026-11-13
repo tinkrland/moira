@@ -100,9 +100,12 @@ function detailSection(title, body) {
 }
 
 async function openDetail(p) {
-  const [d, people] = await Promise.all([
+  const [d, people, conns] = await Promise.all([
     api(`/api/persona?id=${encodeURIComponent(p.id)}`),
-    api(`/api/people?personaId=${encodeURIComponent(p.id)}`).catch(() => ({ people: [], circles: [] }))
+    api(`/api/people?personaId=${encodeURIComponent(p.id)}`).catch(() => ({ people: [], circles: [] })),
+    // the connection surface: what this hat holds, and how each provider may be
+    // shared. the classification comes from the api, not from the panel.
+    api(`/api/connectors?personaId=${encodeURIComponent(p.id)}`).catch(() => ({ connectors: [], providers: [] }))
   ]);
   $('#detail').hidden = false;
   $('#detail-name').textContent = `${d.persona.name} · ${d.persona.identity}${d.persona.email ? ' · ' + d.persona.email : ''}`;
@@ -133,8 +136,26 @@ async function openDetail(p) {
        <button class="tiny add-person">+ person</button>`
     : `<div class="meta">nobody known to this persona yet</div><button class="tiny add-person">+ person</button>`;
 
+  const held = conns.connectors ?? [];
+  // every connected provider is listed, but a planned one is disabled: the api
+  // refuses it today, so it is not a button that pretends to work.
+  const connectable = (conns.providers ?? []).filter((x) => x.kind === 'connected');
+  const heldBody = held.length
+    ? `<ul>${held.map((c) => `<li>${esc(c.connectorId)} <span class="meta">${esc(c.account)} · ${c.mine ? 'this hat\'s' : 'borrowed, shared with this hat'} <button class="x revoke" data-id="${esc(c.identityId)}" title="revoke for everyone">×</button></span></li>`).join('')}</ul>`
+    : '<div class="meta">no accounts connected to this hat</div>';
+  const connBody = `${heldBody}
+    <form id="conn-form" class="form-row">
+      <label>provider <select name="connectorId">
+        ${connectable.map((x) => `<option value="${esc(x.id)}"${x.status === 'active' ? '' : ' disabled'}>${esc(x.id)} · ${esc(x.scope === 'shareable' ? 'a key for a plan' : x.scope === 'persona' ? 'an account with a face' : 'unclassified')}${x.status === 'active' ? '' : ' · planned'}</option>`).join('')}
+      </select></label>
+      <label>credential <input name="credentials" placeholder="token or key" autocomplete="off" required /></label>
+      <div class="share-slot"></div>
+      <button type="submit">connect</button>
+    </form>
+    <p id="conn-msg" class="msg" role="status"></p>`;
   $('#detail-body').innerHTML = [
     detailSection(`people · ${(people.people ?? []).length}`, peopleBody),
+    detailSection(`connections · ${held.length}`, connBody),
     detailSection(`facts · ${d.facts.total}`, factBody),
     detailSection(`vault · ${d.vault.items.length}`, vaultBody),
     detailSection('stack', stackBody),
@@ -161,6 +182,80 @@ async function openDetail(p) {
       await openDetail({ id: d.persona.id });
     } catch (err) { status(`person not added: ${err.message}`, true); }
   });
+
+  // connections: connect an account to THIS hat, and offer to share it only
+  // where the classification says sharing is honest - a key for a plan, never
+  // an account with a face. the panel renders the gate the api sends; it does
+  // not decide it.
+  const connForm = $('#conn-form');
+  if (connForm) {
+    const slot = connForm.querySelector('.share-slot');
+    const others = state.personas.filter((x) => x.id !== d.persona.id);
+    const boxes = () => others.map((x) => `<label class="ack"><input type="checkbox" name="sharedWith" value="${esc(x.id)}" /> ${esc(x.name)}</label>`).join('');
+    const paintShare = () => {
+      const providerId = connForm.querySelector('[name=connectorId]').value;
+      const hint = (conns.providers ?? []).find((x) => x.id === providerId) ?? {};
+      if (!others.length) {
+        slot.innerHTML = '<div class="meta">this is the only hat, so there is nobody to share with</div>';
+        return;
+      }
+      if (hint.shareable === true) {
+        slot.innerHTML = `<div class="meta">share this key with</div>${boxes()}
+          <div class="meta">still borrowed per hat: each one needs its own pass</div>`;
+        return;
+      }
+      // an account with a face: the classification says no, so the boxes stay
+      // hidden behind an acknowledgement that names what is being joined. the
+      // owner can still choose it - the hub records the share either way - but
+      // never by accident, which is the whole point of the classification.
+      const aware = slot.querySelector('input[name=shareAnyway]')?.checked === true;
+      slot.innerHTML = `<div class="meta">${esc(hint.reason ?? 'unclassified: assumed to be an account, so not shareable')}</div>
+        <label class="ack"><input type="checkbox" name="shareAnyway"${aware ? ' checked' : ''} />
+          share this account anyway; it joins the hats at ${esc(providerId)}</label>
+        ${aware ? `<div class="meta">share with</div>${boxes()}` : ''}`;
+      slot.querySelector('input[name=shareAnyway]').addEventListener('change', paintShare);
+    };
+    connForm.querySelector('[name=connectorId]').addEventListener('change', paintShare);
+    paintShare();
+    connForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = $('#conn-msg');
+      const raw = String(connForm.querySelector('[name=credentials]').value || '').trim();
+      const shared = [...slot.querySelectorAll('input[name=sharedWith]:checked')].map((el) => el.value);
+      try {
+        await api('/api/connectors/connect', {
+          method: 'POST',
+          body: JSON.stringify({
+            personaId: d.persona.id,
+            connectorId: connForm.querySelector('[name=connectorId]').value,
+            credentials: { token: raw },
+            // an empty list is not "shared with nobody", it is malformed; the
+            // api refuses it. no boxes ticked means no shareScope at all.
+            ...(shared.length ? { sharedWith: shared } : {})
+          })
+        });
+        msg.textContent = shared.length
+          ? 'connected, and declared shared. each hat still needs its own pass.'
+          : 'connected. this hat only.';
+        msg.classList.remove('err');
+        await openDetail({ id: d.persona.id });
+      } catch (err) {
+        msg.textContent = `declined: ${err.message}`;
+        msg.classList.add('err');
+      }
+    });
+  }
+
+  for (const btn of $('#detail-body').querySelectorAll('button.revoke')) {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('revoke this credential? it ends for every hat it was shared with.')) return;
+      try {
+        await api('/api/connectors/revoke', { method: 'POST', body: JSON.stringify({ identityId: btn.dataset.id }) });
+        await openDetail({ id: d.persona.id });
+      } catch (err) { status(`revoke failed: ${err.message}`, true); }
+    });
+  }
 
   // inference check runs after paint: one audit per agent holding a pass
   (async () => {

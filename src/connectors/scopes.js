@@ -20,6 +20,14 @@
 // hub only shares when the owner says sharedWith. an unknown provider is
 // treated as persona (fail closed), because guessing "shareable" is the one
 // mistake that cannot be taken back.
+//
+// the table below is the owner's declaration; the registry is the second
+// source, so a provider already declaring its auth style is classified by
+// what it says it is rather than needing an entry here. a provider that
+// declares nothing stays 'unknown' - unknown is a fact, not a gap to fill by
+// guessing, and the surface simply offers no share control for it.
+
+import { connectorDef } from './registry.js';
 
 const AUTH = { OAUTH: 'oauth', API_KEY: 'api_key', SESSION: 'session', MCP: 'mcp', NONE: 'none' };
 
@@ -44,6 +52,17 @@ const BY_PROVIDER = {
 
 // the buckets named by auth style rather than by provider brand, so a new
 // provider is classified by what it is instead of needing a table entry.
+// auth styles as the registry spells them
+const AUTH_STYLE = {
+  'oauth2-bearer': AUTH.OAUTH,
+  oauth2: AUTH.OAUTH,
+  oauth: AUTH.OAUTH,
+  'session-key': AUTH.SESSION,
+  session: AUTH.SESSION,
+  'api-key': AUTH.API_KEY,
+  api_key: AUTH.API_KEY
+};
+
 const BY_AUTH = {
   [AUTH.OAUTH]: 'persona',
   [AUTH.SESSION]: 'persona',
@@ -65,17 +84,23 @@ const REASON = {
 };
 
 export function shareHint(providerId) {
-  const known = BY_PROVIDER[providerId] ?? null;
+  // the declared table wins; otherwise the registry row answers for itself
+  const def = connectorDef(providerId);
+  const kind = def?.kind ?? null;
+  const style = AUTH_STYLE[def?.auth ?? ''] ?? null;
+  const known = BY_PROVIDER[providerId]
+    ?? (kind === 'ingest' ? { auth: AUTH.NONE, scope: 'persona' } : null)
+    ?? (style ? { auth: style, scope: BY_AUTH[style] ?? 'persona' } : null);
   if (!known) {
     // fail closed: an unknown provider is assumed to be an account
     return {
-      providerId, auth: null, scope: 'unknown', shareable: false,
+      id: providerId, auth: null, scope: 'unknown', shareable: false,
       reason: 'unknown provider: assumed persona-scoped until its auth style is declared'
     };
   }
   const scope = BY_AUTH[known.auth] ?? 'persona';
   return {
-    providerId,
+    id: providerId,
     auth: known.auth,
     scope,
     shareable: scope === 'shareable',

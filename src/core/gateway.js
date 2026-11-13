@@ -126,7 +126,7 @@ export class Moira {
     this.switching = new SwitchService({ store: this.store, keys: this.keys, agents: this.agents, personas: this.personas, sessions: this.sessions, facts: this.facts, receipts: this.receipts, now: () => this._nowMs() });
     // the injected clock, so rotation schedules are testable and a host can
     // drive time. falls back to the wall clock when none was supplied.
-    this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, now: this.now, io });
+    this.connectors = new ConnectorHub({ store: this.store, keys: this.keys, receipts: this.receipts, agents: this.agents, personas: this.personas, now: this.now, io });
     this.vault = new VaultService({ store: this.store, personas: this.personas, keys: this.keys, receipts: this.receipts, now: () => this._nowMs() });
     // rooms read people only to keep it out of rooms: no room payload may carry
     // circles, importance or notes. constructed here so people exists already.

@@ -142,11 +142,14 @@ function hmacFingerprint(text) {
 const FINGERPRINT_SALT = 'moira.connector.linkage.v1'; // account key when the owner names none;
 
 export class ConnectorHub {
-  constructor({ store, keys, receipts, agents, now = Date.now, io = {} }) {
+  constructor({ store, keys, receipts, agents, personas = null, now = Date.now, io = {} }) {
     this.store = store;
     this.keys = keys;
     this.receipts = receipts;
     this.agents = agents;
+    // personas is a lookup only: a share list must name hats that exist, and a
+    // share to a name that does not is a decision about nothing.
+    this.personas = personas;
     this.now = now;
     this.io = io; // { fetch?, adapters? } - test injection for adapter io
   }
@@ -185,6 +188,15 @@ export class ConnectorHub {
       }
       if (sharedWith.length > MAX_SHARED_PERSONAS) {
         return { outcome: OUTCOME.DECLINED, reason: 'shared_with_too_many' };
+      }
+      // a ghost in the list would store a share that grants nothing and reads
+      // as a decision. refuse before the credential is sealed, so a refused
+      // share leaves nothing behind.
+      if (this.personas) {
+        const missing = sharedWith.filter((id) => !this.personas.get(id));
+        if (missing.length > 0) {
+          return { outcome: OUTCOME.DECLINED, reason: 'shared_with_unknown', unknown: missing };
+        }
       }
       shared = [...sharedWith];
     }

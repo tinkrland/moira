@@ -28,9 +28,35 @@ test('unknown providers fail closed instead of being guessed shareable', () => {
   assert.equal(shareScopeFor('some_new_thing'), 'persona');
 });
 
-test('every registered provider has a classification', () => {
-  const ids = [];
-  for (const block of REGISTRY) for (const provider of block.providers ?? []) ids.push(provider.id);
-  const unclassified = ids.filter((id) => shareHint(id).scope === 'unknown');
-  assert.deepEqual(unclassified, [], 'a new provider must be classified, not inherited as unknown');
+test('every connectable provider has a classification', () => {
+  // REGISTRY is already the flat provider list, so walking it a second time as
+  // if it were blocks made this assertion vacuously true. it asserts on ids now.
+  const active = REGISTRY.filter((p) => p.status === 'active').map((p) => p.id);
+  assert.ok(active.length >= 4, 'the registry actually contains active providers');
+  const unclassified = active.filter((id) => shareHint(id).scope === 'unknown');
+  assert.deepEqual(unclassified, [], 'a provider you can connect today must be classified');
+});
+
+test('a provider that declares its auth style is classified by it, not left unknown', () => {
+  // mega is declared in the table, but the point is the fallback: a registry
+  // row carrying an auth style answers without needing a hand-written entry.
+  const mega = shareHint('mega');
+  assert.equal(mega.auth, 'session');
+  assert.equal(mega.scope, 'persona');
+});
+
+test('an ingest provider has no credential, so there is nothing to share', () => {
+  // not in the declared table: the registry's kind is what answers
+  const books = shareHint('goodreads');
+  assert.equal(books.auth, 'none');
+  assert.equal(books.scope, 'persona');
+  assert.equal(books.shareable, false);
+});
+
+test('a planned provider that declares nothing stays unknown rather than guessed', () => {
+  // github is connected but declares no auth style yet, so the honest answer is
+  // "unclassified", not either scope. unknown fails closed at the call site.
+  const gh = shareHint('github');
+  assert.equal(gh.scope, 'unknown');
+  assert.equal(shareScopeFor('github'), 'persona');
 });

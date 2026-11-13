@@ -1,4 +1,5 @@
 import { shareHint } from '../connectors/scopes.js';
+import { REGISTRY } from '../connectors/registry.js';
 // owner surface (spec sections 6, 16, 17, 11, 22.4).
 //
 // every method takes an OwnerContext capability minted by
@@ -537,11 +538,17 @@ export class OwnerApi {
   // advisory only - sharing still requires connectConnector({sharedWith}).
   connectorSharing(ctx) {
     this._require(ctx);
-    const ids = [...new Set(REGISTRY.flatMap((b) => (b.providers ?? []).map((p) => p.id)))];
-    return {
-      outcome: OUTCOME.RESULTS,
-      providers: ids.map((id) => shareHint(id))
-    };
+    // one row per provider, carrying its own status so the panel can tell
+    // "connectable now" from "planned" without a second lookup. the scope is
+    // a hint about the credential, and an unclassified provider says so.
+    const seen = new Set();
+    const providers = [];
+    for (const p of REGISTRY) {
+      if (!p || seen.has(p.id)) continue;
+      seen.add(p.id);
+      providers.push({ ...shareHint(p.id), status: p.status ?? null, kind: p.kind ?? null });
+    }
+    return { outcome: OUTCOME.RESULTS, providers };
   }
 
   revokeConnector(ctx, { identityId }) {

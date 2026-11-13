@@ -136,6 +136,16 @@ style with unknown failing closed, and the read half of usage-is-not-liking
 docs/connections.md. next: surface both as owner controls (sharing + basis) in
 the panel, and extend the independent leakage verifier to check basis scope.
 
+## the sharing control reaches the surface (2026-11-05)
+
+the panel now draws the connection section: what a hat holds (marked mine vs
+borrowed), a connect form, and revoke as one act for everyone. the classification
+travels with the listing, so a key gets checkboxes while an account gets its
+reason plus an acknowledgement that names the join. the routes behind it
+(`GET /api/connectors`, `connect`, `revoke`) are owner-only, and a share list
+naming a persona that does not exist is refused before anything is sealed.
+docs/connections.md has the shape.
+
 ## connections are places and permissions (2026-11-02)
 
 workspace as a first-class dimension (platform + workspace + account), cross

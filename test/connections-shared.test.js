@@ -130,4 +130,23 @@ test('a malformed share list is refused rather than guessed', () => {
     personaId: h.work, connectorId: 'google_drive', credentials: { t: 'k' }, sharedWith: [h.work]
   });
   assert.equal(self.reason, 'shared_with_invalid', 'sharing with yourself is not sharing');
+
+  // an empty list is malformed, not "share with nobody": a caller that means
+  // "no share" omits the field, and a caller that sends [] is confused
+  const empty = h.m.owner.connectConnector(h.ctx, {
+    personaId: h.work, connectorId: 'google_drive', credentials: { t: 'k' }, sharedWith: []
+  });
+  assert.equal(empty.reason, 'shared_with_invalid');
+});
+
+test('a share list naming a hat that does not exist is refused, not stored', () => {
+  const h = setup();
+  const ghost = h.m.owner.connectConnector(h.ctx, {
+    personaId: h.work, connectorId: 'google_drive', credentials: { t: 'ghost-key' }, sharedWith: ['psn_does_not_exist']
+  });
+  assert.equal(ghost.outcome, 'declined');
+  assert.equal(ghost.reason, 'shared_with_unknown');
+  // and nothing was written: a refused share leaves no credential behind
+  const listed = h.m.owner.listConnectors(h.ctx, { personaId: h.work });
+  assert.equal(listed.connectors.length, 0);
 });

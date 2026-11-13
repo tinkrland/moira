@@ -301,7 +301,10 @@ record. sharing is a record: `shareScope: 'shared'`, a bounded list, and:
   cannot become a map of the owner's hats.
 - **revocation is one act for everyone**, because it is one secret.
 - `sharedWith` must be a non-empty, duplicate-free list that does not contain the
-  author: `shared_with_invalid`, capped at 12 (`shared_with_too_many`).
+  author: `shared_with_invalid`, capped at 12 (`shared_with_too_many`), and every
+  id in it must be a persona that exists: `shared_with_unknown`. a share to a
+  name that does not exist is a decision about nothing, and it is refused before
+  the secret is sealed, so a refused share leaves nothing behind.
 
 ### a bucket: which tools can even be shared
 
@@ -320,6 +323,36 @@ this is a HINT. nothing in it shares anything, and an unclassified provider
 returns `scope: 'unknown'`, which callers must treat as persona - guessing
 "shareable" is the one mistake that cannot be taken back. `owner.connectorSharing`
 serves the table so the surface can say why, not just what.
+
+the table is the declaration; the registry is the second source, so a provider
+that already declares its `auth` style is classified by what it says it is
+(`oauth2-bearer` and `session-key` -> persona), and an `ingest` provider has no
+credential at all. nothing is inferred from a brand name. a provider that
+declares nothing stays `unknown` even when it is listed as planned, which is
+why a connectable-now provider must be classified and a planned one may not be.
+
+### the panel: connect, share, revoke
+
+`GET /api/connectors?personaId=`, `POST /api/connectors/connect`,
+`POST /api/connectors/revoke` - owner-only, and the listing carries each
+provider's `status`, `kind` and classification so the surface never has to
+guess. three rules the panel follows:
+
+- **a key gets boxes; an account gets a reason.** a `shareable` provider renders
+  the plain persona list. a persona-scoped one renders the classification reason
+  and no checkboxes until the owner ticks an acknowledgement naming what the
+  share joins ("it joins the hats at google drive"). the hub would accept either,
+  so the acknowledgement is not a lock - it is the difference between choosing a
+  join and tripping over one.
+- **no boxes ticked means no `sharedWith` field at all**, not an empty array,
+  which the hub refuses as malformed.
+- **planned providers are listed but disabled.** offering a provider the hub
+  would refuse is a button that cannot work.
+
+honest state: no api-key provider is `active`, so today the plain share path is
+unreachable from the panel and the acknowledged path is the only one visible. it
+is reached over http either way, which is why the route tests exist beside the
+source-level panel checks.
 
 ### context: liking vs availability vs constraint
 

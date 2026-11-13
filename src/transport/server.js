@@ -190,6 +190,31 @@ export function createMoiraServer({
       }
       // rooms: shared memory between consented members. no agent path: a room is
       // a human surface, and membership is re-checked per request.
+      // connectors: the panel's place to connect with a share list, see what is
+      // connected, and revoke. owner-only, like every route that touches a secret.
+      if (path === '/api/connectors' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const personaId = url.searchParams.get('personaId');
+        if (!personaId) return json(res, 400, { outcome: 'declined', reason: 'persona_id_required' });
+        const listed = moira.owner.listConnectors(owner, { personaId });
+        const sharing = moira.owner.connectorSharing(owner);
+        return json(res, 200, { ...listed, providers: sharing.providers ?? [] });
+      }
+      if (path === '/api/connectors/connect' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        const out = moira.owner.connectConnector(owner, body);
+        return json(res, out.outcome === 'results' ? 200 : 400, out);
+      }
+      if (path === '/api/connectors/revoke' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        const out = moira.owner.revokeConnector(owner, { identityId: body?.identityId });
+        return json(res, out.outcome === 'results' ? 200 : 400, out);
+      }
       if (path === '/api/rooms/attend' && req.method === 'POST') {
         const body = await readBody(req);
         const out = moira.owner.roomAttend(owner, body);
