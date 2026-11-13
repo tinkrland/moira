@@ -234,10 +234,11 @@ async function openDetail(p) {
             ...(shared.length ? { sharedWith: shared } : {})
           })
         });
-        msg.textContent = shared.length
+        // the view re-renders from the store below, so the confirmation goes to
+        // the header line: an inline message would be wiped by the re-render
+        status(shared.length
           ? 'connected, and declared shared. each hat still needs its own pass.'
-          : 'connected. this hat only.';
-        msg.classList.remove('err');
+          : 'connected. this hat only.');
         await openDetail({ id: d.persona.id });
       } catch (err) {
         msg.textContent = `declined: ${err.message}`;
