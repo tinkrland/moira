@@ -97,16 +97,20 @@ view, no export. docs/sandbox-problem.md says "an owner-side trace export
 that stitches one unit of delegated work in order" - the stitching exists in
 code and is unreachable from the surface.
 
-### 6. rooms, attendance and the group brief have no surface
+### 6. rooms, attendance and the group brief have no surface — **shipped 2026-11-13**
 
-the whole rooms layer shipped (`src/core/rooms.js`, eight `/api/rooms*`
-routes, attribution and brief rules pinned by tests). the panel contains zero
-room code: `grep room ui/app.js` returns nothing.
+~~the panel contains zero room code.~~ closed: the persona detail carries a
+rooms section (list, create, join, decline, open), and the room view is a
+timeline plus item and attendance forms with the count-vs-name rule stated
+where the choice is made. `rooms.list({personaId})` was the missing read.
 
-so the most privacy-deliberate feature in the repo is the one a person cannot
-touch from `/app`. it needs: a room list, create, invite/accept, post, a
-timeline, and the attendance/brief views with the count-vs-name rule made
-visible ("3 people attended" for members, names only when shared).
+**and the audit was too kind.** the routes were not merely "HTTP only": every
+`/api/rooms*` handler referenced an `owner` and a `send` that lived in another
+block, so the whole room api answered 500. no test covered the routes because
+the room tests drove the facade. `test/rooms-http.test.js` now drives them, and
+`docs/people.md` keeps the story. the lesson worth carrying: a service test is
+not an endpoint test, and a surface is not decoration - building one is how
+these were found.
 
 ### 7. freeze/thaw, kill switch and persona export are code-only
 

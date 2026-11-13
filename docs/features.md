@@ -73,6 +73,9 @@ branch. nothing here pretends.
 - mcp streamable http server (2025-11-25) exposing the agent surface
 - oidc-shaped auth: pkce s256, rfc 8628 device flow, discovery,
   introspection; jose-signed tokens wrapping opaque sessions
+- browser surface: persona cards, the consent inbox, connector bring-up with
+  the sharing classification, people per hat, and rooms (list, create, join,
+  decline, timeline, attendance, brief) at `/app`
 - cli: the full owner surface from the terminal, over any store
 
 ## connectors (files wave live, rest planned)

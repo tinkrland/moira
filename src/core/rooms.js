@@ -95,10 +95,16 @@ export class RoomService {
     return { outcome: OUTCOME.RESULTS, roomId, members: this._members(roomId) };
   }
 
+  // leaving is also how an invite is refused: an invitation that can only be
+  // accepted is not consent, it is a queue. both acts end in `left`, because
+  // the two have the same consequence (no membership) and a declined invite
+  // must not linger as if it were pending.
   leave({ roomId, personaId }) {
     const member = this.store.get('roomMembers', `${roomId}:${personaId}`);
     if (!member) return { outcome: OUTCOME.DECLINED, reason: 'not_a_room_member' };
-    if (member.state !== 'active') return { outcome: OUTCOME.DECLINED, reason: `already_${member.state}` };
+    if (member.state !== 'active' && member.state !== 'invited') {
+      return { outcome: OUTCOME.DECLINED, reason: `already_${member.state}` };
+    }
     const leftAt = this.now();
     this.store.update('roomMembers', member.id, (row) => ({ ...row, state: 'left', leftAt }));
     this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.PEOPLE, reason: 'room_left' });
@@ -125,6 +131,44 @@ export class RoomService {
     // content-free: the receipt says a room got an item, never what it said
     this.receipts.write({ actor: 'owner', personaId, op: RECEIPT_OP.PEOPLE, reason: `room_item:${kind}` });
     return { outcome: OUTCOME.RESULTS, itemId: item.id, at: item.at };
+  }
+
+  // the panel's question: which rooms is this persona in? one persona at a
+  // time, because membership is per persona and a hat that was invited is not
+  // the same hat as the one in the room.
+  //
+  // an INVITE GRANTS NOTHING, so the listing is graded by state: an active
+  // member sees item and member counts; an invited (or left) persona sees the
+  // room's name and its own state and nothing about what is inside. a name is
+  // the minimum needed to say yes or no to.
+  list({ personaId }) {
+    // an unknown persona is unavailable, not an empty answer: "you are in no
+    // rooms" and "there is no such hat" must not look the same to the surface.
+    if (!this.personas.get(personaId)) return { outcome: OUTCOME.UNAVAILABLE, reason: 'persona_not_found' };
+    const mine = this.store.list('roomMembers', (m) => m.personaId === personaId, { personaId });
+    const rooms = [];
+    for (const member of mine) {
+      const room = this.store.get('rooms', member.roomId);
+      if (!room) continue; // a membership without its room is a store artefact, not a room
+      const active = member.state === 'active';
+      const items = active ? this.store.list('roomItems', (x) => x.roomId === room.id, { roomId: room.id }) : [];
+      rooms.push({
+        roomId: room.id,
+        name: room.name,
+        state: member.state,
+        owner: room.ownerPersonaId === personaId,
+        joinedAt: member.joinedAt ?? null,
+        leftAt: member.leftAt ?? null,
+        // counts only when membership is real: null is "not yours to count"
+        items: active ? items.length : null,
+        latestAt: active && items.length ? Math.max(...items.map((x) => x.at)) : null,
+        memberCount: active ? this._members(room.id).filter((x) => x.state === 'active').length : null
+      });
+    }
+    // active first, then invited, then left; newest activity first inside a state
+    const rank = { active: 0, invited: 1, left: 2 };
+    rooms.sort((x, y) => (rank[x.state] - rank[y.state]) || ((y.latestAt ?? 0) - (x.latestAt ?? 0)) || String(x.name).localeCompare(String(y.name)));
+    return { outcome: OUTCOME.RESULTS, personaId, rooms };
   }
 
   // membership is re-checked here, every time. a room read is not a cached right.

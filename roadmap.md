@@ -46,6 +46,18 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## rooms reach the surface (2026-11-13)
+
+the room api was 500-ing and nobody knew, because the room tests drove the
+facade and the panel had no room code at all. fixed the routes (owner-gated,
+results 200 / missing 404 / refused 400, and a declined act is never a 200),
+added `rooms.list({personaId})` with counts for members and *nothing* for
+invitees, and built the surface: a rooms section per hat, and a room view that
+is a timeline plus item and attendance forms with the sharing choice in words.
+an invite can be declined now (`leave` accepts `invited`), because an
+invitation that can only be accepted is a queue. docs/people.md 'rooms on the
+surface'.
+
 ## what is specced and not built (2026-11-13)
 
 `docs/gaps.md` is the inventory: every spec item with no code behind it, the

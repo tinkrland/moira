@@ -275,6 +275,11 @@ export class OwnerApi {
     return this.gw.rooms.create({ personaId, name, connectionId });
   }
 
+  roomList(ctx, { personaId } = {}) {
+    this._require(ctx);
+    return this.gw.rooms.list({ personaId });
+  }
+
   roomInvite(ctx, { roomId, personaId, connectionId } = {}) {
     this._require(ctx);
     return this.gw.rooms.invite({ roomId, personaId, connectionId });

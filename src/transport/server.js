@@ -60,6 +60,10 @@ export function createMoiraServer({
     res.end(JSON.stringify(body));
   }
 
+  // a room answer carries its own verdict: results 200, a missing room/persona
+  // 404, anything the policy refused 400. "declined" is never a success.
+  const roomStatus = (out) => out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400;
+
   async function readBody(req) {
     let body = '';
     for await (const chunk of req) body += chunk;
@@ -221,51 +225,63 @@ export function createMoiraServer({
         const out = moira.owner.revokeConnector(owner, { identityId: body?.identityId });
         return json(res, out.outcome === 'results' ? 200 : 400, out);
       }
-      if (path === '/api/rooms/attend' && req.method === 'POST') {
-        const body = await readBody(req);
-        const out = moira.owner.roomAttend(owner, body);
-        return send(res, out.outcome === 'results' ? 200 : 400, out);
-      }
-      if (path === '/api/rooms/brief' && req.method === 'GET') {
-        const out = moira.owner.roomBrief(owner, {
-          roomId: url.searchParams.get('roomId'),
-          personaId: url.searchParams.get('personaId')
-        });
-        return send(res, out.outcome === 'results' ? 200 : 404, out);
+      // rooms: shared memory, one persona at a time. every route here is
+      // owner-gated and re-checks membership in the service, so a 401/404/400
+      // below is a real answer rather than the 500 this block used to throw
+      // (it referenced an `owner` and a `send` that lived in another block).
+      if (path === '/api/rooms' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const personaId = url.searchParams.get('personaId');
+        if (!personaId) return json(res, 400, { outcome: 'unavailable', reason: 'persona_required' });
+        const out = moira.owner.roomList(owner, { personaId });
+        return json(res, roomStatus(out), out);
       }
       if (path === '/api/rooms' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
         const body = await readBody(req);
-        send(res, 200, moira.owner.roomCreate(owner, {
-          personaId: body.personaId, name: body.name, connectionId: body.connectionId ?? null
-        }));
-        return;
+        const out = moira.owner.roomCreate(owner, { personaId: body.personaId, name: body.name, connectionId: body.connectionId ?? null });
+        return json(res, roomStatus(out), out);
       }
       if (path === '/api/rooms/join' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
         const body = await readBody(req);
         const fn = body.action === 'leave' ? 'roomLeave' : body.action === 'invite' ? 'roomInvite' : 'roomAccept';
-        send(res, 200, moira.owner[fn](owner, {
-          roomId: body.roomId, personaId: body.personaId, connectionId: body.connectionId ?? null
-        }));
-        return;
+        const out = moira.owner[fn](owner, { roomId: body.roomId, personaId: body.personaId, connectionId: body.connectionId ?? null });
+        return json(res, roomStatus(out), out);
       }
       if (path === '/api/rooms/item' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
         const body = await readBody(req);
-        send(res, 200, moira.owner.roomPost(owner, {
-          roomId: body.roomId, personaId: body.personaId, kind: body.kind, body: body.body
-        }));
-        return;
+        const out = moira.owner.roomPost(owner, { roomId: body.roomId, personaId: body.personaId, kind: body.kind, body: body.body });
+        return json(res, roomStatus(out), out);
       }
       if (path === '/api/rooms/timeline' && req.method === 'GET') {
-        send(res, 200, moira.owner.roomTimeline(owner, {
-          roomId: url.searchParams.get('roomId'), personaId: url.searchParams.get('personaId')
-        }));
-        return;
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.roomTimeline(owner, { roomId: url.searchParams.get('roomId'), personaId: url.searchParams.get('personaId') });
+        return json(res, roomStatus(out), out);
       }
       if (path === '/api/rooms/summary' && req.method === 'GET') {
-        send(res, 200, moira.owner.roomSummary(owner, {
-          roomId: url.searchParams.get('roomId'), personaId: url.searchParams.get('personaId')
-        }));
-        return;
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.roomSummary(owner, { roomId: url.searchParams.get('roomId'), personaId: url.searchParams.get('personaId') });
+        return json(res, roomStatus(out), out);
+      }
+      if (path === '/api/rooms/attend' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.roomAttend(owner, await readBody(req));
+        return json(res, roomStatus(out), out);
+      }
+      if (path === '/api/rooms/brief' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.roomBrief(owner, { roomId: url.searchParams.get('roomId'), personaId: url.searchParams.get('personaId') });
+        return json(res, roomStatus(out), out);
       }
 
       // connector-fed capture: signals in, proposals out. an ingest never puts

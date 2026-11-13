@@ -99,13 +99,200 @@ function detailSection(title, body) {
   return `<div class="section"><h3>${esc(title)}</h3>${body}</div>`;
 }
 
+// --- rooms: shared memory, one hat at a time --------------------------------
+// a room is the one place in moira where several hats see the same thing. the
+// rules are the service's, not the panel's: nothing enters except an item a
+// member posted, every read re-checks membership, and attendance crosses as a
+// count unless the owner shares the name. so the panel has three jobs only -
+// ask, show, and make the sharing choice explicit at the moment it is made.
+
+const whoIs = (personaId) => state.personas.find((x) => x.id === personaId)?.name ?? 'guest';
+const dayOf = (at) => (at ? new Date(at).toISOString().slice(0, 10) : '');
+
+function roomRow(room) {
+  const bits = [room.state];
+  if (room.items !== null) bits.push(`${room.items} item${room.items === 1 ? '' : 's'}`);
+  if (room.memberCount !== null) bits.push(`${room.memberCount} member${room.memberCount === 1 ? '' : 's'}`);
+  if (room.owner) bits.push('opened by this hat');
+  const acts = room.state === 'active'
+    ? `<button class="tiny room-open" data-id="${esc(room.roomId)}" data-name="${esc(room.name)}">open</button>`
+    : room.state === 'invited'
+      ? `<button class="tiny room-accept" data-id="${esc(room.roomId)}">join</button>
+         <button class="tiny room-decline" data-id="${esc(room.roomId)}">decline</button>`
+      : '<span class="meta">left</span>';
+  return `<div class="room-row"><span class="room-name">${esc(room.name)}</span>
+    <span class="meta">${esc(bits.join(' · '))}</span><span class="acts">${acts}</span></div>`;
+}
+
+function roomsSectionHtml(rooms) {
+  const list = rooms.length
+    ? rooms.map(roomRow).join('')
+    : '<div class="meta">no rooms. a room is shared memory for more than one hat.</div>';
+  return `${list}
+    <form id="room-form" class="form-row">
+      <label>new room <input name="name" placeholder="atlas build" maxlength="80" required /></label>
+      <button type="submit">open room</button>
+    </form>
+    <p id="room-msg" class="msg" role="status"></p>`;
+}
+
+function mountRooms(personaId, refresh) {
+  const form = $('#room-form');
+  if (form) form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('#room-msg');
+    try {
+      await api('/api/rooms', {
+        method: 'POST',
+        body: JSON.stringify({ personaId, name: form.querySelector('[name=name]').value })
+      });
+      await refresh();
+    } catch (err) {
+      msg.textContent = `declined: ${err.message}`;
+      msg.classList.add('err');
+    }
+  });
+
+  for (const btn of document.querySelectorAll('.room-open')) {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openRoom(personaId, btn.dataset.id, btn.dataset.name).catch((err) => status(err.message, true));
+    });
+  }
+  for (const btn of document.querySelectorAll('.room-accept, .room-decline')) {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const accept = btn.classList.contains('room-accept');
+      try {
+        // declining an invite is the same act as leaving: it ends membership.
+        // an invitation that could only be accepted would be a queue, not consent.
+        await api('/api/rooms/join', {
+          method: 'POST',
+          body: JSON.stringify({ roomId: btn.dataset.id, personaId, action: accept ? 'accept' : 'leave' })
+        });
+        status(accept ? 'joined. this hat can read the room now.' : 'declined. nothing was joined.');
+        await refresh();
+      } catch (err) { status(`room refused: ${err.message}`, true); }
+    });
+  }
+}
+
+async function openRoom(personaId, roomId, name) {
+  const q = `roomId=${encodeURIComponent(roomId)}&personaId=${encodeURIComponent(personaId)}`;
+  const [tl, brief, people] = await Promise.all([
+    api(`/api/rooms/timeline?${q}`),
+    api(`/api/rooms/brief?${q}`),
+    api(`/api/people?personaId=${encodeURIComponent(personaId)}`).catch(() => ({ people: [] }))
+  ]);
+  $('#room').hidden = false;
+  const active = (brief.members ?? []).filter((m) => m.state === 'active').length;
+  $('#room-name').textContent = `${name} · ${active} member${active === 1 ? '' : 's'}`;
+
+  const kinds = Object.entries(brief.kinds ?? {});
+  const itemsBody = tl.items.length
+    ? `<ul class="timeline">${tl.items.map((i) => `<li class="item"><span class="kind">${esc(i.kind)}</span>${esc(i.body)}
+        <span class="who">${esc(whoIs(i.from))} · ${esc(dayOf(i.at))}</span></li>`).join('')}</ul>`
+    : '<div class="meta">empty. a room remembers only what a member posts.</div>';
+
+  const known = people.people ?? [];
+  const attendBody = known.length
+    ? `<div class="chips">${known.map((x) => `<label class="ack"><input type="checkbox" name="person" value="${esc(x.personId)}" /> ${esc(x.name)}</label>`).join('')}</div>
+       <label class="ack"><input type="checkbox" name="share" />
+         share their names with the room; otherwise they cross as a count</label>
+       <button type="submit" class="tiny">record attendance</button>`
+    : '<div class="meta">this hat knows nobody yet, so there is nobody to attach to the room</div>';
+
+  const seen = brief.participation ?? [];
+  const seenBody = seen.length
+    ? `<ul>${seen.map((x) => `<li>${esc(x.name ?? 'a person')} <span class="meta">×${x.count} · last ${esc(dayOf(x.lastAt))}</span></li>`).join('')}</ul>`
+    : brief.attendance > 0
+      ? '<div class="meta">counted, not named</div>'
+      : '<div class="meta">nobody recorded yet</div>';
+  const gaps = (brief.unknown ?? []).map((u) => `<div class="gap">${esc(u)}</div>`).join('');
+
+  $('#room-body').innerHTML = `
+    <div class="section">
+      <h3>timeline · ${brief.items}</h3>
+      ${itemsBody}
+      <form id="item-form" class="form-row">
+        <label>kind <select name="kind">
+          ${['note', 'link', 'decision', 'file'].map((k) => `<option value="${k}">${k}</option>`).join('')}
+        </select></label>
+        <label>item <input name="body" placeholder="what the room should remember" maxlength="4000" required /></label>
+        <button type="submit">post</button>
+      </form>
+      <p id="item-msg" class="msg" role="status"></p>
+    </div>
+    <div class="section">
+      <h3>attendance · ${brief.attendance}</h3>
+      <form id="attend-form">${attendBody}</form>
+      ${seenBody}
+      ${gaps}
+      <p id="attend-msg" class="msg" role="status"></p>
+    </div>
+    <div class="section">
+      <h3>the room itself</h3>
+      <div class="meta">${kinds.length ? kinds.map(([k, n]) => `${esc(k)} ${n}`).join(' · ') : 'no items yet'}</div>
+      <div class="meta">a room never absorbs facts or notes from a hat. leaving ends future reads; it does not unshare the past.</div>
+      <button id="room-leave" class="tiny">leave this room</button>
+    </div>`;
+
+  const repaint = () => openRoom(personaId, roomId, name);
+
+  $('#item-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const msg = $('#item-msg');
+    try {
+      await api('/api/rooms/item', {
+        method: 'POST',
+        body: JSON.stringify({ roomId, personaId, kind: form.querySelector('[name=kind]').value, body: form.querySelector('[name=body]').value })
+      });
+      await repaint();
+    } catch (err) {
+      msg.textContent = `declined: ${err.message}`;
+      msg.classList.add('err');
+    }
+  });
+
+  $('#attend-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const msg = $('#attend-msg');
+    const personIds = [...form.querySelectorAll('input[name=person]:checked')].map((el) => el.value);
+    const share = form.querySelector('input[name=share]').checked;
+    if (!personIds.length) { msg.textContent = 'pick at least one person.'; msg.classList.add('err'); return; }
+    try {
+      await api('/api/rooms/attend', { method: 'POST', body: JSON.stringify({ roomId, personaId, personIds, share }) });
+      await repaint();
+    } catch (err) {
+      msg.textContent = `declined: ${err.message}`;
+      msg.classList.add('err');
+    }
+  });
+
+  $('#room-leave').addEventListener('click', async () => {
+    if (!confirm('leave this room? future items stop here for this hat; what was read cannot be unread.')) return;
+    try {
+      await api('/api/rooms/join', { method: 'POST', body: JSON.stringify({ roomId, personaId, action: 'leave' }) });
+      $('#room').hidden = true;
+      status('left. the room keeps its history for the members who stayed.');
+      await load();
+    } catch (err) { status(`leave refused: ${err.message}`, true); }
+  });
+}
+// --- rooms end
+
 async function openDetail(p) {
-  const [d, people, conns] = await Promise.all([
+  const [d, people, conns, roomList] = await Promise.all([
     api(`/api/persona?id=${encodeURIComponent(p.id)}`),
     api(`/api/people?personaId=${encodeURIComponent(p.id)}`).catch(() => ({ people: [], circles: [] })),
     // the connection surface: what this hat holds, and how each provider may be
     // shared. the classification comes from the api, not from the panel.
-    api(`/api/connectors?personaId=${encodeURIComponent(p.id)}`).catch(() => ({ connectors: [], providers: [] }))
+    api(`/api/connectors?personaId=${encodeURIComponent(p.id)}`).catch(() => ({ connectors: [], providers: [] })),
+    // rooms are per hat: this persona's membership, with counts only where the
+    // membership is real. an invite shows a name and nothing inside.
+    api(`/api/rooms?personaId=${encodeURIComponent(p.id)}`).catch(() => ({ rooms: [] }))
   ]);
   $('#detail').hidden = false;
   $('#detail-name').textContent = `${d.persona.name} · ${d.persona.identity}${d.persona.email ? ' · ' + d.persona.email : ''}`;
@@ -153,8 +340,10 @@ async function openDetail(p) {
       <button type="submit">connect</button>
     </form>
     <p id="conn-msg" class="msg" role="status"></p>`;
+  const roomRows = roomList.rooms ?? [];
   $('#detail-body').innerHTML = [
     detailSection(`people · ${(people.people ?? []).length}`, peopleBody),
+    detailSection(`rooms · ${roomRows.length}`, roomsSectionHtml(roomRows)),
     detailSection(`connections · ${held.length}`, connBody),
     detailSection(`facts · ${d.facts.total}`, factBody),
     detailSection(`vault · ${d.vault.items.length}`, vaultBody),
@@ -182,6 +371,8 @@ async function openDetail(p) {
       await openDetail({ id: d.persona.id });
     } catch (err) { status(`person not added: ${err.message}`, true); }
   });
+
+  mountRooms(d.persona.id, () => openDetail({ id: d.persona.id }));
 
   // connections: connect an account to THIS hat, and offer to share it only
   // where the classification says sharing is honest - a key for a plan, never
@@ -462,6 +653,7 @@ $('#pass-form').addEventListener('submit', async (e) => {
 
 
 $('#detail-close').addEventListener('click', () => { $('#detail').hidden = true; });
+$('#room-close').addEventListener('click', () => { $('#room').hidden = true; });
 $('#new-persona').addEventListener('click', () => { $('#create').hidden = false; $('#create-msg').textContent = ''; });
 $('#create').addEventListener('submit', async (e) => {
   e.preventDefault();

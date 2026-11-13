@@ -141,3 +141,20 @@ button { cursor: pointer; background: var(--ink); color: #121212; border-color: 
 .ask .form-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .ask input, .ask select { font-size: 10px; padding: 5px 8px; }
 .ask .verdict { display: flex; gap: 8px; margin-top: 4px; }
+
+/* the room view: a shared memory reads like a timeline, not a dashboard */
+.room-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--line); padding: 7px 0; }
+.room-row:last-child { border-bottom: 0; }
+.room-name { font-size: 12px; color: #fff; letter-spacing: .04em; }
+.room-row .meta { color: var(--muted); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.room-row .acts { margin-left: auto; display: flex; gap: 6px; }
+.timeline { margin: 0; padding: 0; }
+.timeline li.item { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 11px; color: rgba(255,255,255,.82); }
+.timeline li.item:last-child { border-bottom: 0; }
+.timeline .kind { font-size: 8px; letter-spacing: .14em; text-transform: uppercase; color: var(--p4); margin-right: 8px; }
+.timeline .who { display: block; color: var(--muted); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; }
+.room-view .form-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin: 8px 0; }
+.room-view .form-row input, .room-view .form-row select { font-size: 10px; padding: 5px 8px; }
+.room-view label.ack { display: flex; gap: 8px; align-items: flex-start; font-size: 10px; color: var(--ink); }
+.room-view label.ack input { width: auto; margin-top: 2px; }
+.room-view .gap { color: var(--muted); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }

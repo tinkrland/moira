@@ -203,3 +203,41 @@ Nothing in the brief is prose about the room, and nothing in it reads a persona'
 importance, interaction or circles - the same prohibition the timeline carries,
 re-asserted here because attendance is the feature most likely to smuggle it in
 ("you met nina four times, so she must matter").
+
+### rooms on the surface (2026-11-13)
+
+the room layer was built and tested before it had a surface, and the missing
+surface was hiding a broken one. every `/api/rooms*` handler referenced an
+`owner` and a `send` that lived in a different block of the request handler, so
+the whole room api answered **500**: rooms existed as a service, a facade and a
+test file, and not as a working endpoint. the panel would have hid it, because
+there was no panel.
+
+fixed, and pinned by `test/rooms-http.test.js`, which drives the routes a panel
+actually calls rather than the facade underneath them: owner-gated on every
+route (401, not a throw), `results` 200, a missing room or persona 404, a
+refused act 400. a *declined* room act is no longer a 200 either.
+
+the panel section is per hat, because membership is per hat: a hat in no room
+lists none, and an *invited* hat sees the room's name and its own state and not
+one item or member count, since an invite grants nothing. the listing says so in
+the payload (`items: null` is "not yours to count", not zero) rather than
+letting a missing number look like an empty room.
+
+`rooms.list({personaId})` is the one new service method, and it exists for that
+asymmetry: counts for members, a name and a state for invitees, nothing for a
+persona that is not in the room at all. an unknown persona is `unavailable`, not
+an empty list - "you are in no rooms" and "there is no such hat" must not look
+the same.
+
+`leave()` also accepts an `invited` member now. an invitation that can only be
+accepted is a queue, not consent, so declining ends in the same `left` state as
+leaving and is recorded rather than forgotten (`already_left` on a later
+accept).
+
+the room view itself is a timeline and two forms, not a dashboard: post an item
+(closed kind vocabulary), record attendance (the people this hat already knows,
+with the share choice stated in words: *otherwise they cross as a count*), and a
+footer that repeats the honest limit - leaving ends future reads, it does not
+unshare the past. `counted, not named` is what a member's brief renders when
+attendance exists and no name was shared.
