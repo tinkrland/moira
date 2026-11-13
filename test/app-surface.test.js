@@ -49,6 +49,19 @@ test('app surface: served, owner-gated, and never silently full', async (t) => {
     assert.equal((await fetch(base + asset)).status, 200, `${asset} served`);
   }
 
+  // the logo: the uploaded mark is the repo's logo.png, served as an image and
+  // used for both the header and the tab icon. a favicon that 404s or arrives
+  // as text/html is the classic way a brand silently disappears.
+  for (const asset of ['/app/logo.png', '/app/logo-mark.png', '/app/logo-256.png']) {
+    const res = await fetch(base + asset);
+    assert.equal(res.status, 200, `${asset} served`);
+    assert.match(res.headers.get('content-type') ?? '', /^image\/png/, `${asset} is an image`);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    assert.deepEqual(bytes.subarray(0, 8), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), `${asset} is a real png`);
+  }
+  assert.match(html, /rel="icon"[^>]*logo-mark\.png/, 'the tab icon is the mark');
+  assert.match(html, /class="mark"/, 'the header carries the mark next to the wordmark');
+
   // overview: 401 without the owner, shape with it
   assert.equal((await fetch(`${base}/api/overview`)).status, 401);
   const ov = await (await fetch(`${base}/api/overview`, { headers: owner })).json();

@@ -42,10 +42,11 @@ export function createMoiraServer({
   // static app files live in ui/ at the repo root; read per request (tiny,
   // and it keeps deploys to "drop files in place").
   const UI_DIR = new URL('../../ui/', import.meta.url);
-  async function sendFile(res, name, type) {
+  const ROOT_DIR = new URL('../../', import.meta.url); // logo.png lives at the repo root
+  async function sendFile(res, name, type, dir = UI_DIR) {
     try {
       const { readFile } = await import('node:fs/promises');
-      const body = await readFile(new URL(name, UI_DIR));
+      const body = await readFile(new URL(name, dir));
       res.writeHead(200, { 'content-type': type, 'cache-control': 'no-store' });
       res.end(body);
     } catch {
@@ -82,6 +83,11 @@ export function createMoiraServer({
       }
       if (path === '/app/app.js') return sendFile(res, 'app.js', 'text/javascript; charset=utf-8');
       if (path === '/app/ui.css') return sendFile(res, 'ui.css', 'text/css; charset=utf-8');
+      // the logo: one canonical asset at the repo root, plus sized marks for the
+      // header and the tab icon. png only, read per request like the rest.
+      if (path === '/app/logo.png') return sendFile(res, 'logo.png', 'image/png', ROOT_DIR);
+      if (path === '/app/logo-mark.png') return sendFile(res, 'logo-mark.png', 'image/png');
+      if (path === '/app/logo-256.png') return sendFile(res, 'logo-256.png', 'image/png');
 
       // the grade: direct (must be empty) separated from inferred (scored risk)
       if (path === '/api/leakage/grade' && req.method === 'GET') {

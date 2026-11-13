@@ -60,7 +60,8 @@ moira/
 |   |__ apply-insforge.mjs     applies schema.sql to an insforge project
 |   |__ local-verify-stack.mjs local postgres + postgrest verify environment
 |   |__ serve.mjs               runs the http server standalone
-|__ docs/                    the story: about, explain, problemcase, solution, features, buildplan
+|__ docs/                    the story: about, explain, problemcase, solution, features, buildplan, gaps
+|__ logo.png                 the mark (one canonical asset; ui/ carries the sized copies)
 |__ test/                    the suite - one file per domain + conformance + cli
 |__ technobabble/            the deep docs (see below)
 ```

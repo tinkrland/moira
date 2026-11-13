@@ -1,5 +1,7 @@
 # moira
 
+<img src="logo.png" alt="moira" width="88" />
+
 you are one person, but you are not one profile. in a single day you are the
 founder answering email at nine, the student buried in papers by noon, and
 the character drafting scenes at midnight. each of those versions of you has

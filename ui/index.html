@@ -4,11 +4,19 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>moira</title>
+<meta name="theme-color" content="#101010" />
+<meta property="og:title" content="moira" />
+<meta property="og:image" content="/app/logo-256.png" />
+<link rel="icon" type="image/png" href="/app/logo-mark.png" />
+<link rel="apple-touch-icon" href="/app/logo-256.png" />
 <link rel="stylesheet" href="/app/ui.css" />
 </head>
 <body>
 <header class="bar">
-  <span class="brand">moira</span>
+  <a class="brand" href="/app" title="moira">
+    <img class="mark" src="/app/logo-mark.png" alt="" width="26" height="26" />
+    <span class="wordmark">moira</span>
+  </a>
   <span class="hint" id="status">owner session required</span>
   <form id="auth" class="auth">
     <input id="secret" type="password" placeholder="owner secret" autocomplete="off" />

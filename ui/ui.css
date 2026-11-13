@@ -21,7 +21,15 @@ body {
   font: 14px/1.5 'Space Mono', ui-monospace, monospace;
 }
 .bar { display: flex; gap: 14px; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--line); }
-.brand { letter-spacing: .22em; text-transform: uppercase; font-weight: 700; font-size: 12px; }
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  letter-spacing: .22em; text-transform: uppercase; font-weight: 700; font-size: 12px;
+  color: var(--ink); text-decoration: none;
+}
+/* the uploaded mark is a light-blue plant on transparency; a slight glow keeps
+   it legible on the paper background without adding a plate behind it */
+.mark { width: 26px; height: 26px; display: block; filter: drop-shadow(0 0 8px rgba(111, 165, 201, .28)); }
+.wordmark { line-height: 1; }
 .hint { color: var(--muted); font-size: 11px; }
 .auth { margin-left: auto; display: flex; gap: 8px; }
 input, select, button {
