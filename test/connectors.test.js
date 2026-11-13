@@ -84,6 +84,15 @@ test('registry: knowledge jobs - projects, time, reading (planned, connected or 
   assert.equal(jobOf('knowledge', 'reading').label, 'read & write');
   assert.deepEqual(publish.map((p) => p.id).sort(), ['medium', 'substack']);
   for (const p of [...projects, ...time, ...publish]) {
+    // google_calendar is the exception and it earned it: it has an adapter now,
+    // not a file reader but a people feeder (listPeopleSignals), which is the
+    // method the capture path needed and no provider implemented. every other
+    // knowledge provider is still planned, and a row is only ever flipped by
+    // shipped code.
+    if (p.id === 'google_calendar') {
+      assert.equal(p.status, CONNECTOR_STATUS.ACTIVE, 'the calendar feeds people capture');
+      continue;
+    }
     assert.equal(p.status, CONNECTOR_STATUS.PLANNED);
   }
   for (const p of publish) {

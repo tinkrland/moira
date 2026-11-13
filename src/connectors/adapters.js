@@ -151,6 +151,61 @@ export const megaAdapter = {
   }
 };
 
+// --- google calendar (v3, readonly): the people feeder ------------------------
+//
+// people capture had a complete pipeline and no feeder, so only a caller could
+// fill the address book. a calendar is the cheapest honest source: it names
+// people the owner actually met, with a date, and asks for no access the owner
+// has not already granted. it answers `listPeopleSignals`, the one method the
+// hub's capture path needs, and it registers no file methods - a calendar is
+// not a drive and must not look like one.
+
+export const googleCalendarAdapter = {
+  id: 'google_calendar',
+  provider: 'google_calendar',
+  async listPeopleSignals(creds, { calendarId = 'primary', timeMin = null, timeMax = null, maxResults = 100 } = {}, io) {
+    const f = requireFetch(io);
+    const params = new URLSearchParams({
+      maxResults: String(Math.min(Math.max(Number(maxResults) || 100, 1), 250)),
+      singleEvents: 'true',
+      orderBy: 'startTime'
+    });
+    if (timeMin) params.set('timeMin', String(timeMin));
+    if (timeMax) params.set('timeMax', String(timeMax));
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`
+      + `&fields=${encodeURIComponent('items(status,start,attendees(email,displayName,self,resource,responseStatus))')}`;
+    const res = await expectOk(await f(url, { headers: { authorization: `Bearer ${creds.accessToken}` } }), 'google calendar');
+    const body = await res.json();
+
+    const rows = [];
+    for (const ev of body.items ?? []) {
+      // a cancelled event was not an occasion, so it is not a sighting
+      if (ev.status === 'cancelled') continue;
+      const at = ev.start?.dateTime ? Date.parse(ev.start.dateTime)
+        : ev.start?.date ? Date.parse(ev.start.date)
+          : null;
+      for (const person of ev.attendees ?? []) {
+        // the owner is not a contact, a room is not a person, and a decline is
+        // not an appearance. an attendee with no address cannot be deduped, so
+        // it is dropped rather than guessed at from a display name.
+        if (person.self === true || person.resource === true) continue;
+        if (person.responseStatus === 'declined') continue;
+        const handle = typeof person.email === 'string' ? person.email.trim().toLowerCase() : '';
+        if (!handle) continue;
+        rows.push({
+          kind: 'calendar',
+          handle,
+          // raw: the ingest sanitizes captured names as untrusted text, and the
+          // adapter must not pretend to have vetted them
+          name: typeof person.displayName === 'string' ? person.displayName : null,
+          at: Number.isFinite(at) ? at : null
+        });
+      }
+    }
+    return { rows };
+  }
+};
+
 // adapter lookup by registry 'adapter' field
 
 export const FILE_ADAPTERS = {
@@ -160,10 +215,21 @@ export const FILE_ADAPTERS = {
   mega: megaAdapter
 };
 
+// every adapter, file or signal. the registry's `adapter` field is the link; a
+// provider may appear here without being a file reader (a calendar is not one).
+export const ADAPTERS = {
+  ...FILE_ADAPTERS,
+  google_calendar: googleCalendarAdapter
+};
+
+const ADAPTER_NAMES = {
+  google_drive: 'drive', dropbox: 'dropbox', onedrive: 'onedrive', mega: 'mega',
+  google_calendar: 'google_calendar'
+};
+
 export function adapterFor(connectorId, overrides) {
-  const defs = { google_drive: 'drive', dropbox: 'dropbox', onedrive: 'onedrive', mega: 'mega' };
-  const name = defs[connectorId];
-  const a = (overrides?.adapters ?? FILE_ADAPTERS)[name];
+  const name = ADAPTER_NAMES[connectorId];
+  const a = (overrides?.adapters ?? ADAPTERS)[name];
   if (!a) throw new Error(`no adapter registered for connector ${connectorId}`);
   return a;
 }

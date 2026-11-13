@@ -46,6 +46,15 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## the address book can fill itself (2026-11-13)
+
+the first people feeder: `google_calendar` reads events with attendees and
+hands the hub `{kind, handle, name, at}` signals, excluding the owner, rooms and
+declines. the registry row is active because the adapter exists, and the
+registry test now says exactly that instead of asserting every knowledge
+provider is planned. capture still only proposes - two proposals, an empty book,
+over HTTP. drive/dropbox/onedrive keep answering `adapter_cannot_feed_people`.
+
 ## policy, deadlines, and a clock (2026-11-13)
 
 two declarations stopped being prose. **connection policy** is reachable:

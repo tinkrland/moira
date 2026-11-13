@@ -76,6 +76,19 @@ access on the owner's behalf, which is the one decision this layer refuses to
 make.
 
 
+### the first feeder: a calendar (2026-11-13)
+
+the wiring section above described a connector feeding capture, and no adapter
+implemented `listPeopleSignals`, so the pipeline was reachable only by a caller
+holding a signal array. `google_calendar` closes that: events with attendees,
+normalized to `{kind: 'calendar', handle, name, at}`, with the owner, resources
+and declines excluded, cancelled events skipped, and an addressless attendee
+dropped rather than guessed at from a display name.
+
+the shape of the refusal is the part worth keeping: a provider with no feeder
+answers `adapter_cannot_feed_people`, because "could not look" must never read
+like "found nothing". a calendar can look; a drive cannot.
+
 ## two axes, per persona (2026-11-04)
 
 a relationship is not one number. each profile carries two independent axes:

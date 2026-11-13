@@ -135,20 +135,35 @@ either enforce it (a re-pack path that carries `hopsUsed + 1` and refuses at
 the limit) or delete the option. leaving it declared is the worst of the
 three.
 
-### 9. people capture has no adapter that feeds it
+### 9. people capture had no adapter that feeds it — **calendar feeder shipped 2026-11-13**
 
-the ingest pipeline is complete and tested: hub reads signals through
-`adapter.listPeopleSignals`, dedupes by handle, counts sightings, keeps
-disagreeing names as candidates, strips links and handles, marks everything
-untrusted, and lands proposals that mint no facts. `POST /api/people/capture`
-works.
+the ingest pipeline was complete and tested and unreachable: hub reads signals
+through `adapter.listPeopleSignals`, and all four adapters were file readers.
 
-no adapter implements `listPeopleSignals`. `src/connectors/adapters.js`
-exports four adapters (drive, dropbox, onedrive, mega-stub) and all four are
-file readers. so the address book cannot fill itself: a caller has to hand
-the hub a signal array it built elsewhere. the missing piece is one host
-adapter that actually reads a calendar or a mailbox (google calendar events
-with attendees is the cheapest honest start).
+`google_calendar` is the first feeder, and the registry row is `active` because
+code shipped, not because a plan exists. it reads events with
+`singleEvents=true` and normalizes attendees to `{kind:'calendar', handle, name,
+at}`, excluding three things on purpose:
+
+- **the owner** (`self: true`). the owner is not a contact.
+- **rooms and resources** (`resource: true`). a room is not a person.
+- **declines** (`responseStatus: 'declined'`). a decline is not an appearance.
+
+a cancelled event is skipped, an all-day event still dates its people, and an
+attendee with no address is dropped rather than guessed at from a display name,
+since handle is what dedupe runs on. names pass through raw: sanitizing is the
+ingest's job, because captured names are untrusted text.
+
+verified over HTTP against a fixture provider: connect returns an identity,
+`POST /api/people/capture` reports `proposed: 2` (the owner and the room
+excluded), proposals are `untrusted: true` with `sightings: 1` and the event
+date, and the address book is still empty. drive, dropbox and onedrive still
+answer `adapter_cannot_feed_people` - "could not look" never reads as "found
+nothing". a mailbox feeder is the next cheap one; the plumbing is now shared.
+
+**live limit, stated rather than implied:** the calendar adapter is exercised
+against documented-shape fixtures, not a real Google account, exactly like the
+three file adapters. that needs the owner's oauth app.
 
 ### 10. the ledger cannot learn
 

@@ -115,7 +115,7 @@ const time = {
   id: 'time',
   label: 'plan your time',
   providers: [
-    { id: 'google_calendar', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'google calendar' },
+    { id: 'google_calendar', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.ACTIVE, label: 'google calendar' },
     { id: 'notion_calendar', kind: CONNECTOR_KIND.CONNECTED, status: CONNECTOR_STATUS.PLANNED, label: 'notion calendar' }
   ]
 };
