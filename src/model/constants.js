@@ -112,7 +112,9 @@ export const RECEIPT_OP = {
   // a standing rule is a consent act, so it is in the ledger like every other
   STANDING_RULE: 'standing_rule',
   // egress declarations, and every refusal they produce
-  SERVICE_RULE: 'service_rule'
+  SERVICE_RULE: 'service_rule',
+  // a link that answers exactly one ask, and spends itself doing it
+  APPROVAL_LINK: 'approval_link'
 };
 
 // linkage findings (spec 22): kinds only, never values

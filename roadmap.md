@@ -46,6 +46,14 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## no is an answer from a phone (2026-11-13)
+
+approval links: an `appr_` token, returned once and stored as a hash, single use,
+24h, clamped to its ask. it peeks one ask and decides it with no owner session -
+approve through the same path the panel uses, deny as a real answer that mints
+nothing - and refuses with the wall it hit. the inbox mints one per ask and says
+the link is shown this once.
+
 ## egress became a sentence (2026-11-13)
 
 service rules exist: host + path glob + methods + auth kind + optional account,

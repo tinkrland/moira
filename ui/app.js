@@ -887,6 +887,7 @@ async function loadInbox() {
       <div class="verdict">
         <button class="tiny approve">approve</button>
         <button class="tiny deny">deny</button>
+        <button class="tiny make-link" title="a single-use link that answers this one ask, no session needed">copy link</button>
       </div>
     </div>`).join('');
 
@@ -926,6 +927,15 @@ async function loadInbox() {
         await api('/api/requests/decide', { method: 'POST', body: JSON.stringify({ requestId: id, action: 'approve', edits }) });
         await Promise.all([loadInbox(), load()]);
       } catch (err) { status(`declined: ${err.message}`, true); }
+    });
+    // a link that answers exactly this ask: shown once, spent once, and it can
+    // say no - which is the answer that should never require logging in
+    card.querySelector('.make-link').addEventListener('click', async () => {
+      try {
+        const out = await api('/api/requests/link', { method: 'POST', body: JSON.stringify({ requestId: id }) });
+        await navigator.clipboard?.writeText(out.url);
+        status(`link copied: answers this one ask only, once, by ${new Date(out.expiresAt).toLocaleString()}. copy it now - it is shown this once.`);
+      } catch (err) { status(`no link: ${err.message}`, true); }
     });
     card.querySelector('.deny').addEventListener('click', async () => {
       try {

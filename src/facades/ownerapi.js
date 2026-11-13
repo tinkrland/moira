@@ -96,6 +96,19 @@ export class OwnerApi {
     return this.gw.leakage.audit({ personaId, clientId, threshold, observationBudget: observationBudget ?? null });
   }
 
+  // approval links: minted by the owner, spent by whoever holds the link.
+  // the raw token comes back exactly once, because that is the only time it
+  // exists anywhere.
+  approvalLinkMint(ctx, { requestId, ttlMs = undefined } = {}) {
+    this._require(ctx);
+    return this.gw.approvals.mint({ requestId, ttlMs });
+  }
+
+  approvalLinksFor(ctx, { requestId } = {}) {
+    this._require(ctx);
+    return this.gw.approvals.forRequest({ requestId });
+  }
+
   // service rules: the sentence the owner can read about what a hat may call.
   // declarations are owner-stated, like the stack and the ai tools - never
   // inferred from traffic.

@@ -44,6 +44,7 @@ import { SwitchService } from './switching.js';
 import { CoreService } from './core.js';
 import { DisclosureService } from './disclosures.js';
 import { ServiceRuleService } from './services.js';
+import { ApprovalLinkService } from './approvals.js';
 import { TraceService } from './traces.js';
 import { PeopleService } from './people.js';
 import { ConnectionService } from './connect.js';
@@ -116,6 +117,10 @@ export class Moira {
     this.packs = new PackService({ store, personas: this.personas, facts: this.facts, receipts: this.receipts, keys: this.keys, now });
     this.ledger = new LedgerService({ store, personas: this.personas, keys: this.keys, receipts: this.receipts, now });
     this.linkage = new LinkageService({ store, personas: this.personas, ledger: this.ledger, keys: this.keys, now });
+    // approval links: one ask, one decision, no owner session required
+    this.approvals = new ApprovalLinkService({
+      store, requests: this.requests, passes: this.passes, receipts: this.receipts, personas: this.personas, now
+    });
     // egress declarations: judged at the call, not at the adapter
     this.services = new ServiceRuleService({ store, personas: this.personas, ledger: this.ledger, receipts: this.receipts, now });
     this.stack = new StackService({ store, personas: this.personas, receipts: this.receipts, now });

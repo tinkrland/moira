@@ -72,20 +72,38 @@ surface: `GET /api/service-rules`, `POST /api/service-rules`, `DELETE
 /api/service-rules/:id`, owner-gated, and a panel section per hat that writes
 the sentence in a form and says what an empty list means.
 
-### 3. approval links with a short read-only token — **expiry shipped 2026-11-13, the link is still open**
+### 3. approval links with a short read-only token — **shipped 2026-11-13**
 
-an ask now carries a deadline: `ASK_TTL_MS` is 7 days (agent-vault's number),
-`request()` stores `expiresAt` once rather than recomputing it, and
-`requests.view()` reports a pending row past its deadline as `expired` even
-before a sweep touches it. `approve`/`deny` refuse with `request_expired` and
-mint nothing; `sweep()` flips the rows and receipts each expiry exactly once,
-idempotently. the route sweeps before listing, so "pending" never includes a
-ghost, and the inbox says how long is left.
+an ask carries a deadline: `ASK_TTL_MS` is 7 days, `request()` stores `expiresAt`
+once rather than recomputing it, and `requests.view()` reports a pending row past
+its deadline as `expired` even before a sweep touches it. `approve`/`deny` refuse
+with `request_expired` and mint nothing; `sweep()` flips the rows and receipts each
+expiry exactly once. the route sweeps before listing, so "pending" never includes
+a ghost, and the inbox says how long is left.
 
-~~no expiry~~ closed. **still open: the read-only link.** an owner still needs
-an authenticated owner session to say no, which is the wrong ergonomic ask for
-"reply to this one question". the token discipline it needs already exists here
-(hash at rest, raw once, single use) in `connect.js` and the device flow.
+**and the link exists now.** `src/core/approvals.js` mints an `appr_` token -
+256-bit from `randomBytes`, returned **once**, stored as a sha256 hash, single
+use, 24h, and clamped so it can never outlive the ask that carries it. three
+verbs, and they are the whole object:
+
+- `mint` (owner authority): one ask, one link. minting against a decided or
+  expired ask refuses, so a dead link is never issued.
+- `peek` (**no session**): the ask, the hat's name, and how long is left.
+  never a fact, never another ask, never a pass.
+- `decide` (**no session**): approve or deny. approve goes through
+  `requests.approve`, so a link cannot grant one thing the panel would not, and
+  narrowing edits work while widening ones are refused as usual. deny is a real
+  answer and mints nothing.
+
+refusals say which wall was hit: `link_not_found`, `link_already_used`,
+`link_expired`, `request_expired` (the ask's deadline outranks the link),
+`request_already_decided`, `persona_frozen`. a link takes no access for a frozen
+hat, by any route.
+
+surface: `POST /api/requests/link` (owner-gated, returns the url once),
+`GET /api/approvals/:token`, `POST /api/approvals/:token` (no owner header, on
+purpose), and a **copy link** button on each ask in the inbox that says the link
+is shown this once.
 
 ### 4. connection policy has no surface and no clock — **shipped 2026-11-13**
 

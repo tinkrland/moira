@@ -560,6 +560,38 @@ export function createMoiraServer({
         return json(res, out.outcome === 'results' ? 200 : 409, out);
       }
 
+      // approval links. minting is owner-gated; answering is by token alone,
+      // because the whole point is that an owner on a phone should not have to
+      // hold a session to say no.
+      if (path === '/api/requests/link' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.requestId) return json(res, 400, { outcome: 'declined', reason: 'request_id_required' });
+        const out = moira.owner.approvalLinkMint(owner, { requestId: body.requestId, ttlMs: body.ttlMs });
+        if (out.outcome !== 'results') return json(res, out.outcome === 'unavailable' ? 404 : 409, out);
+        return json(res, 200, { ...out, url: `${baseUrl}/approve/${out.token}` });
+      }
+      if (path.startsWith('/api/approvals/') && path.split('/').length === 4) {
+        // no owner session here on purpose: the token IS the authority, and it
+        // reaches exactly one ask
+        const token = decodeURIComponent(path.slice('/api/approvals/'.length));
+        if (req.method === 'GET') {
+          const seen = moira.approvals.peek({ token });
+          return json(res, seen.outcome === 'results' ? 200 : seen.outcome === 'unavailable' ? 404 : 410, seen);
+        }
+        if (req.method === 'POST') {
+          const body = await readBody(req);
+          if (!body || !['approve', 'deny'].includes(body.decision)) {
+            return json(res, 400, { outcome: 'declined', reason: 'decision_required' });
+          }
+          const out = moira.approvals.decide({
+            token, decision: body.decision, edits: body.edits ?? {}, reason: body.reason ?? null
+          });
+          return json(res, out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 409, out);
+        }
+      }
+
       if (path === '/api/set' && req.method === 'POST') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
