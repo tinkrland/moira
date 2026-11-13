@@ -46,6 +46,14 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## what is specced and not built (2026-11-13)
+
+`docs/gaps.md` is the inventory: every spec item with no code behind it, the
+seam that already exists for each, and the order to build them in. three of
+the items are *declared and inert* (the hop limit that counts no hops, the
+rotation clock nothing calls, approval asks that never expire), which is the
+shape this repo treats as a defect rather than a plan.
+
 ## branch topology: three decoupled lines
 
 main, evie, and viola are mutually decoupled: main never imports either
