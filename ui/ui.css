@@ -164,3 +164,7 @@ button { cursor: pointer; background: var(--ink); color: #121212; border-color: 
 .pol .meta { color: var(--muted); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
 .pol select { font-size: 9px; padding: 3px 6px; }
 .pol .due { color: var(--p5); }
+
+/* persona control: three acts, stated in words */
+#detail-body .row { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+#detail-body .row .tiny { flex: 0 0 auto; }

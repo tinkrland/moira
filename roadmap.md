@@ -46,6 +46,14 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## the controls got a surface (2026-11-13)
+
+freeze, thaw, kill switch and persona export were facade methods with no route
+and no button. now: four owner-gated routes, export as a real download carrying
+the receipts, and a `control` section at the top of every persona card that
+states the hat's state in words and offers exactly three acts, each stating its
+own limit.
+
 ## a hop limit that counts (2026-11-13)
 
 `reshare_with_hop_limit` was a declared policy with no number and no path, so it

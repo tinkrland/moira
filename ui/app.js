@@ -423,8 +423,23 @@ async function openDetail(p) {
       <button type="submit">connect</button>
     </form>
     <p id="conn-msg" class="msg" role="status"></p>`;
+  // control: the two acts an owner wants when worried, and the one they are
+  // owed regardless. freeze is reversible and stops new work; the kill switch
+  // stops standing leases and says how many; export leaves with the receipts.
+  const frozen = d.persona.status === 'frozen';
+  const controlBody = `<div class="meta">${frozen ? 'frozen · nothing new is served' : 'active'}</div>
+    <div class="row">
+      ${frozen
+        ? '<button class="tiny thaw">thaw this hat</button>'
+        : '<button class="tiny freeze">freeze this hat</button>'}
+      <button class="tiny kill">kill switch</button>
+      <button class="tiny export">export…</button>
+    </div>
+    <div class="meta">freeze is reversible and stops new work. the kill switch stops standing spend and says how many. export is a file you keep, receipts included.</div>`;
+
   const roomRows = roomList.rooms ?? [];
   $('#detail-body').innerHTML = [
+    detailSection('control', controlBody),
     detailSection(`people · ${(people.people ?? []).length}`, peopleBody),
     detailSection(`rooms · ${roomRows.length}`, roomsSectionHtml(roomRows)),
     detailSection(`connections · ${held.length}`, connBody),
@@ -436,6 +451,58 @@ async function openDetail(p) {
     detailSection('who can read', permBody),
     detailSection('inference check', '<div class="meta">measuring what each connected agent could infer…</div><div id="leaks"></div>')
   ].join('');
+
+  const freezeBtn = $('#detail-body').querySelector('.freeze');
+  if (freezeBtn) freezeBtn.addEventListener('click', async () => {
+    try {
+      await api('/api/personas/freeze', { method: 'POST', body: JSON.stringify({ personaId: d.persona.id }) });
+      status('frozen. nothing new is served from this hat until you thaw it.');
+      await openDetail({ id: d.persona.id });
+    } catch (err) { status(`freeze refused: ${err.message}`, true); }
+  });
+
+  const thawBtn = $('#detail-body').querySelector('.thaw');
+  if (thawBtn) thawBtn.addEventListener('click', async () => {
+    try {
+      await api('/api/personas/thaw', { method: 'POST', body: JSON.stringify({ personaId: d.persona.id }) });
+      status('thawed. what was frozen resumes; what was revoked stays revoked.');
+      await openDetail({ id: d.persona.id });
+    } catch (err) { status(`thaw refused: ${err.message}`, true); }
+  });
+
+  const killBtn = $('#detail-body').querySelector('.kill');
+  if (killBtn) killBtn.addEventListener('click', async () => {
+    // it stops spend, it does not delete. saying so is cheaper than a frightened
+    // owner guessing.
+    if (!confirm('kill switch: stop every standing lease for this hat? nothing is deleted, and a lease cannot be un-stopped - it has to be re-requested.')) return;
+    try {
+      const out = await api('/api/personas/kill', { method: 'POST', body: JSON.stringify({ personaId: d.persona.id }) });
+      status(`stopped ${out.frozenLeases} standing ${out.frozenLeases === 1 ? 'lease' : 'leases'}.`);
+      await openDetail({ id: d.persona.id });
+    } catch (err) { status(`kill switch refused: ${err.message}`, true); }
+  });
+
+  const exportBtn = $('#detail-body').querySelector('.export');
+  if (exportBtn) exportBtn.addEventListener('click', async () => {
+    try {
+      // a download cannot carry the owner header, so the file is fetched with
+      // it and handed to the browser as a blob
+      const res = await fetch(`/api/personas/export?personaId=${encodeURIComponent(d.persona.id)}`, {
+        headers: { 'x-moira-owner': state.secret ?? '' }
+      });
+      if (!res.ok) throw new Error(`http ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${esc(d.persona.name)}-export.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      status('export downloaded: this hat, its facts, its accounts and the receipts that explain them.');
+    } catch (err) { status(`export failed: ${err.message}`, true); }
+  });
 
   const addBtn = $('#detail-body').querySelector('.add-person');
   if (addBtn) addBtn.addEventListener('click', async (e) => {

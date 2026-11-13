@@ -111,18 +111,34 @@ the room tests drove the facade. `test/rooms-http.test.js` now drives them, and
 not an endpoint test, and a surface is not decoration - building one is how
 these were found.
 
-### 7. freeze/thaw, kill switch and persona export are code-only
+### 7. freeze/thaw, kill switch and persona export are code-only — **shipped 2026-11-13**
 
-`ownerapi.js` carries `freezePersona`, `thawPersona`, `killSwitch` and
-`exportPersona`; the panel has none of them and there are no routes for
-export. spec v1 lists "per-persona export and delete with key shredding" -
-delete/shred is reachable, export is not.
+`ownerapi.js` carried `freezePersona`, `thawPersona`, `killSwitch` and
+`exportPersona` with no route and no button, so the two acts a worried owner
+most wants - "stop everything" and "give me my data" - were reachable only from
+the Node api. a control with no surface is a control for the person who wrote
+it, not for the person who owns the data.
 
-export is small: the facade already composes persona + facts + accounts +
-receipts into one object. it needs a route and a signed download, and the
-receipts half is what makes it honest.
+routes now: `POST /api/personas/{freeze,thaw,kill}`, `GET /api/personas/export`,
+all owner-gated, mapped results 200 / a missing persona 404 / a refused act 400.
+export is served as `content-disposition: attachment` and carries the persona,
+its facts, its accounts **and its receipts** - the receipts half is what makes
+an export honest rather than decorative.
 
-### 8. `reshare_with_hop_limit` promises a hop limit it does not count — **enforced 2026-11-13**
+panel: a `control` section at the top of the persona card, with the state in
+words ("frozen · nothing new is served" or "active"), and exactly three acts.
+freeze is labelled reversible; the kill switch states its own limit in the
+confirm ("nothing is deleted, and a lease cannot be un-stopped - it has to be
+re-requested") because that limit is the thing an owner is afraid of getting
+wrong.
+
+**one defect found by the test:** the kill switch answers `frozenLeases` as a
+*count*, not a list. the first test asserted an array and failed, which is the
+right way round - the test now creates a live lease and asserts the switch
+reports exactly one thing stopped.
+
+export in the panel fetches with the owner header and hands the browser a blob;
+a bare `<a href>` would arrive unauthenticated and quietly export nothing.### 8. `reshare_with_hop_limit` promises a hop limit it does not count — **enforced 2026-11-13**
 
 `packs.create` accepted the option and stored `hopsUsed: 0`, and no path let a
 holder re-issue a pack, so a hop-limited pack and a no-reshare pack behaved

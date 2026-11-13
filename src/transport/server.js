@@ -60,6 +60,9 @@ export function createMoiraServer({
     res.end(JSON.stringify(body));
   }
 
+  // persona answers: results 200, a missing persona 404, a refused act 400.
+  const personaStatus = (out) => out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400;
+
   // connector answers use the same triple: results 200, a missing identity 404,
   // a refused policy 400.
   const connectorStatus = (out) => out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400;
@@ -229,6 +232,48 @@ export function createMoiraServer({
         const out = moira.owner.revokeConnector(owner, { identityId: body?.identityId });
         return json(res, out.outcome === 'results' ? 200 : 400, out);
       }
+      // persona controls: the two acts an owner most wants when worried, plus
+      // the one they are owed regardless - take the data out. all owner-gated.
+      if (path === '/api/personas/freeze' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.personaId) return json(res, 400, { outcome: 'declined', reason: 'persona_id_required' });
+        const out = moira.owner.freezePersona(owner, body.personaId);
+        return json(res, personaStatus(out), out);
+      }
+      if (path === '/api/personas/thaw' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.personaId) return json(res, 400, { outcome: 'declined', reason: 'persona_id_required' });
+        const out = moira.owner.thawPersona(owner, body.personaId);
+        return json(res, personaStatus(out), out);
+      }
+      if (path === '/api/personas/kill' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.personaId) return json(res, 400, { outcome: 'declined', reason: 'persona_id_required' });
+        if (!moira.personas.get(body.personaId)) {
+          return json(res, 404, { outcome: 'unavailable', reason: 'persona_not_found' });
+        }
+        const out = moira.owner.killSwitch(owner, body.personaId);
+        return json(res, personaStatus(out), out);
+      }
+      if (path === '/api/personas/export' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.exportPersona(owner, url.searchParams.get('personaId'));
+        if (out.outcome !== 'results') return json(res, personaStatus(out), out);
+        // an export is a file the owner keeps, so it is served as a download
+        // rather than rendered: the receipts half is what makes it honest.
+        const name = String(out.persona?.name ?? 'persona').replace(/[^a-z0-9._-]+/gi, '-').toLowerCase();
+        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.setHeader('content-disposition', `attachment; filename="${name}-export.json"`);
+        return json(res, 200, out);
+      }
+
       // connection policy: how long a credential may live, and what is due for
       // rotation. the maths already existed; these are the routes that make it
       // reachable, and /due is the read a host's clock runs against.
