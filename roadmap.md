@@ -46,6 +46,14 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## the story became readable (2026-11-13)
+
+traces had a chain in code and no way to see it. now five owner-gated routes
+(open, list, read, end, export), and a traces section that opens a unit of work
+into its ordered chain with the sequence leading, refusals included, plus a
+download. the test caught its own mistake first: trace scope is set on the
+gateway, not passed to `receipts.write`.
+
 ## the controls got a surface (2026-11-13)
 
 freeze, thaw, kill switch and persona export were facade methods with no route

@@ -168,3 +168,10 @@ button { cursor: pointer; background: var(--ink); color: #121212; border-color: 
 /* persona control: three acts, stated in words */
 #detail-body .row { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 #detail-body .row .tiny { flex: 0 0 auto; }
+
+/* traces: the sequence is the story, so the number leads */
+ul.traces { list-style: none; margin: 0; padding: 0; }
+ul.traces li { display: flex; gap: 6px; align-items: center; padding: 3px 0; }
+ol.chain { margin: 6px 0 0 0; padding-left: 18px; }
+ol.chain li { padding: 2px 0; }
+ol.chain .seq { font-family: var(--mono, monospace); color: var(--muted); font-size: 9px; margin-right: 4px; }

@@ -85,16 +85,29 @@ so "quiet" is measured from real use, not only from a host's `touchConnection`.
 `touch` remains for activity moira cannot see. verified against a 40-day-old
 credential: `dueRotations` reports `reason: interval, overdueByMs: 864000085`.
 
-### 5. traces exist, the export does not
+### 5. traces exist, the export does not — **shipped 2026-11-13**
 
 the action-log chain shipped: `src/core/traces.js`, a sequence stamped onto
-every receipt, an open trace attached per request via `x-moira-trace`, and
-owner methods `traceBegin` / `traceEnd` / `traceReceipts` / `tracesList`.
+every receipt, an open trace attached per request, and owner methods
+`traceBegin` / `traceEnd` / `traceReceipts` / `tracesList`. there was no route,
+no panel view and no export, so the stitching was a promise the owner could not
+check.
 
-what is missing is the owner-side reading: no `/api/traces` route, no panel
-view, no export. docs/sandbox-problem.md says "an owner-side trace export
-that stitches one unit of delegated work in order" - the stitching exists in
-code and is unreachable from the surface.
+routes now: `POST /api/traces` (open), `GET /api/traces` (list, filterable),
+`GET /api/traces/:id` (the chain, ordered by sequence), `POST
+/api/traces/:id/end`, and `GET /api/traces/export` as an attachment. all
+owner-gated; an unknown trace is 404 rather than an empty story.
+
+panel: a traces section listing recent units of work, each opening into its
+ordered chain - sequence number leading, because the sequence is the story - and
+a download that fetches with the owner header into a blob.
+
+**the scope is explicit, and that shaped the test.** receipts are stamped with
+the trace in scope on the gateway (`useTrace` / `clearTrace`), not by passing a
+`traceId` to `write`; the first version of this test passed a field that is
+ignored and got an empty chain. the test now opens scope, writes a granted read
+and a refused one, clears, and asserts both appear in order with the refusal
+included - a refused read belongs in the story as much as a granted one.
 
 ### 6. rooms, attendance and the group brief have no surface — **shipped 2026-11-13**
 

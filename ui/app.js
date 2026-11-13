@@ -99,6 +99,66 @@ function detailSection(title, body) {
   return `<div class="section"><h3>${esc(title)}</h3>${body}</div>`;
 }
 
+// --- traces: one unit of work, stitched in order ----------------------------
+// the chain existed and nobody could read it. this is the reading: what work
+// ran, in what order, with what outcome - refusals included, because a refused
+// read is part of the story.
+
+async function renderTraces(host) {
+  let traces = [];
+  try {
+    const out = await api('/api/traces?limit=20');
+    traces = out.traces ?? [];
+  } catch (err) {
+    host.innerHTML = `<div class="meta">traces unavailable: ${esc(err.message)}</div>`;
+    return;
+  }
+  if (!traces.length) {
+    host.innerHTML = '<div class="meta">no unit of work recorded yet. a trace opens when a host brackets one.</div>';
+    return;
+  }
+  host.innerHTML = `<ul class="traces">${traces.map((t) => `<li>
+      <button class="tiny trace-open" data-id="${esc(t.id)}">${esc(t.label)}</button>
+      <span class="meta">${esc(t.status)}${t.endedAt ? '' : ' · open'} · ${t.personaId ? 'a hat' : 'no hat'}</span>
+      <button class="x trace-save" data-id="${esc(t.id)}" title="download this chain">↓</button>
+    </li>`).join('')}</ul>
+    <div id="trace-chain"></div>`;
+
+  host.querySelectorAll('.trace-open').forEach((b) => b.addEventListener('click', async () => {
+    const box = host.querySelector('#trace-chain');
+    box.innerHTML = '<div class="meta">reading…</div>';
+    try {
+      const chain = await api(`/api/traces/${encodeURIComponent(b.dataset.id)}`);
+      const rows = (chain.receipts ?? []).map((r) => `<li>
+        <span class="seq">${esc(String(r.seq ?? '').padStart(3, '0'))}</span>
+        ${esc(r.op ?? '')} <span class="meta">${esc(r.actor ?? '')}${r.categories?.length ? ' · ' + esc(r.categories.join(', ')) : ''}${r.reason ? ' · ' + esc(r.reason) : ''}</span>
+      </li>`).join('');
+      box.innerHTML = `<ol class="chain">${rows || '<li class="meta">this trace has no entries yet</li>'}</ol>`;
+    } catch (err) { box.innerHTML = `<div class="meta">could not read it: ${esc(err.message)}</div>`; }
+  }));
+
+  host.querySelectorAll('.trace-save').forEach((b) => b.addEventListener('click', async () => {
+    // same rule as persona export: a download cannot carry the owner header
+    try {
+      const res = await fetch(`/api/traces/export?traceId=${encodeURIComponent(b.dataset.id)}`, {
+        headers: { 'x-moira-owner': state.secret ?? '' }
+      });
+      if (!res.ok) throw new Error(`http ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${b.dataset.id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      status('trace downloaded: the story as it happened.');
+    } catch (err) { status(`trace download failed: ${err.message}`, true); }
+  }));
+}
+// --- traces end
+
 // --- connection policy: how long a credential may live ---------------------
 // revocable is the default, and it is a real choice rather than an absence: a
 // credential stays until the owner revokes it. rotating says otherwise, either
@@ -449,7 +509,8 @@ async function openDetail(p) {
     detailSection('ai tools', aiBody),
     detailSection('sets', setsBody),
     detailSection('who can read', permBody),
-    detailSection('inference check', '<div class="meta">measuring what each connected agent could infer…</div><div id="leaks"></div>')
+    detailSection('inference check', '<div class="meta">measuring what each connected agent could infer…</div><div id="leaks"></div>'),
+    detailSection('traces', '<div class="meta">one unit of work, stitched in order…</div><div id="traces"></div>')
   ].join('');
 
   const freezeBtn = $('#detail-body').querySelector('.freeze');
@@ -598,6 +659,9 @@ async function openDetail(p) {
       } catch (err) { status(`revoke failed: ${err.message}`, true); }
     });
   }
+
+  const traceHost = $('#traces');
+  if (traceHost) renderTraces(traceHost).catch(() => {});
 
   // policy reads are per connection and slow enough to want their own pass
   mountPolicies(held).catch(() => {});

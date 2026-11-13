@@ -60,6 +60,9 @@ export function createMoiraServer({
     res.end(JSON.stringify(body));
   }
 
+  // trace answers: results 200, an unknown trace 404, a refused act 400.
+  const traceStatus = (out) => out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400;
+
   // persona answers: results 200, a missing persona 404, a refused act 400.
   const personaStatus = (out) => out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400;
 
@@ -232,6 +235,51 @@ export function createMoiraServer({
         const out = moira.owner.revokeConnector(owner, { identityId: body?.identityId });
         return json(res, out.outcome === 'results' ? 200 : 400, out);
       }
+      // traces: one unit of delegated work, stitched in order. begin, read the
+      // chain, end it, or take the whole thing away as a file. the stitching
+      // existed in code and was unreachable from the surface, which made it a
+      // promise the owner could not check.
+      if (path === '/api/traces' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const limit = Number(url.searchParams.get('limit')) || 50;
+        const out = moira.owner.tracesList(owner, { status: url.searchParams.get('status'), limit });
+        return json(res, 200, out);
+      }
+      if (path === '/api/traces' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        if (!body?.label) return json(res, 400, { outcome: 'declined', reason: 'label_required' });
+        const out = moira.owner.traceBegin(owner, { label: body.label, personaId: body.personaId ?? null, onBehalfOf: body.onBehalfOf ?? null });
+        return json(res, traceStatus(out), out);
+      }
+      if (path === '/api/traces/export' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.traceReceipts(owner, { traceId: url.searchParams.get('traceId') });
+        if (out.outcome !== 'results') return json(res, traceStatus(out), out);
+        const safe = String(out.traceId).replace(/[^a-z0-9_-]+/gi, '-').toLowerCase();
+        res.setHeader('content-type', 'application/json; charset=utf-8');
+        res.setHeader('content-disposition', `attachment; filename="trace-${safe}.json"`);
+        return json(res, 200, out);
+      }
+      const traceMatch = path.match(/^\/api\/traces\/([^/]+)(\/end)?$/);
+      if (traceMatch) {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const traceId = decodeURIComponent(traceMatch[1]);
+        if (traceMatch[2]) {
+          if (req.method !== 'POST') return json(res, 405, { outcome: 'unavailable', reason: 'method_not_allowed' });
+          const body = await readBody(req);
+          const out = moira.owner.traceEnd(owner, { traceId, outcome: body?.outcome ?? 'completed' });
+          return json(res, traceStatus(out), out);
+        }
+        if (req.method !== 'GET') return json(res, 405, { outcome: 'unavailable', reason: 'method_not_allowed' });
+        const out = moira.owner.traceReceipts(owner, { traceId });
+        return json(res, traceStatus(out), out);
+      }
+
       // persona controls: the two acts an owner most wants when worried, plus
       // the one they are owed regardless - take the data out. all owner-gated.
       if (path === '/api/personas/freeze' && req.method === 'POST') {
