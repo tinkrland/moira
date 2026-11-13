@@ -122,18 +122,29 @@ export is small: the facade already composes persona + facts + accounts +
 receipts into one object. it needs a route and a signed download, and the
 receipts half is what makes it honest.
 
-### 8. `reshare_with_hop_limit` promises a hop limit it does not count
+### 8. `reshare_with_hop_limit` promises a hop limit it does not count — **enforced 2026-11-13**
 
-**[inert]** `packs.create` accepts `RESHARE.HOP_LIMIT` and stores
-`hopsUsed: 0`. nothing increments `hopsUsed`, and no path lets a recipient
-re-issue a pack, so a hop-limited pack and a no-reshare pack behave
-identically at every seam. it is not exploitable (only the owner creates
-packs), but it is a declared policy with no enforcement - exactly the shape
-this repo refuses elsewhere.
+`packs.create` accepted the option and stored `hopsUsed: 0`, and no path let a
+holder re-issue a pack, so a hop-limited pack and a no-reshare pack behaved
+identically at every seam. the option had **no number in it either**, which is
+the part that made it pure decoration.
 
-either enforce it (a re-pack path that carries `hopsUsed + 1` and refuses at
-the limit) or delete the option. leaving it declared is the worst of the
-three.
+closed by building the path it described. `packs.reshare` re-issues a pack
+forward under the pack's own policy: `no_reshare` refuses with
+`reshare_not_allowed`, a named-recipient policy refuses with
+`reshare_needs_the_owner` (a borrower cannot widen a grant by re-issuing it),
+and a hop-limited pack is copied with `hopsUsed + 1` and refused at the limit
+with `hop_limit_reached`. `create` now requires an integer `hopLimit` for that
+policy and refuses `hop_limit_invalid` otherwise.
+
+the child is a new signed pack: same contents (copied, not re-derived), its own
+recipient binding, no inherited budget lease, a ttl **clamped to the parent's
+remaining life**, and a recorded chain (`parentPackId`, `rootPackId`). revocation
+now walks the chain, because a consent that survives its own withdrawal is not
+consent. every hop is receipted with `reshare:hop_N_of_M`.
+
+agent surface: `context_pack_reshare`, so the holder is the actor and the count
+is enforced where the act happens.
 
 ### 9. people capture had no adapter that feeds it — **calendar feeder shipped 2026-11-13**
 

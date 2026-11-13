@@ -46,6 +46,14 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## a hop limit that counts (2026-11-13)
+
+`reshare_with_hop_limit` was a declared policy with no number and no path, so it
+behaved exactly like `no_reshare`. now `packs.reshare` exists: a holder passes a
+pack forward, each pass costs a hop, the pack refuses at the limit, a named
+policy stays the owner's act, the child's ttl is clamped to the parent's
+remainder, and `revoke` walks the chain so a passed-on pack dies with its root.
+
 ## the address book can fill itself (2026-11-13)
 
 the first people feeder: `google_calendar` reads events with attendees and

@@ -310,6 +310,13 @@ export class AgentApi {
     return this.gw.packs.redeem(packId, { agentId: ctx.clientId });
   }
 
+  // a holder passing a pack on is the act the hop limit exists to bound.
+  context_pack_reshare(accessToken, { packId, recipientAgentId, ttlMs = null, brief = null }) {
+    const ctx = this._ctx(accessToken);
+    if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
+    return this.gw.packs.reshare({ packId, recipientAgentId, fromAgentId: ctx.clientId, ttlMs, brief });
+  }
+
   handoff_create(accessToken, { toAgentId, packId, task, budget, returnContract, ttlMs }) {
     const ctx = this._ctx(accessToken);
     if (ctx.outcome !== OUTCOME.RESULTS) return ctx;
