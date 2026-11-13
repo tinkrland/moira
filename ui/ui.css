@@ -158,3 +158,9 @@ button { cursor: pointer; background: var(--ink); color: #121212; border-color: 
 .room-view label.ack { display: flex; gap: 8px; align-items: flex-start; font-size: 10px; color: var(--ink); }
 .room-view label.ack input { width: auto; margin-top: 2px; }
 .room-view .gap { color: var(--muted); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+
+/* connection policy: a deadline and the two acts that exist */
+.pol { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 0 0; grid-column: 1 / -1; }
+.pol .meta { color: var(--muted); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+.pol select { font-size: 9px; padding: 3px 6px; }
+.pol .due { color: var(--p5); }

@@ -13,7 +13,12 @@ import { expandBasis } from './policy.js';
 import { randomId } from '../util/crypto.js';
 import { OUTCOME, PASS_DURATION, RECEIPT_OP } from '../model/constants.js';
 
-const STATUS = { PENDING: 'pending', APPROVED: 'approved', DENIED: 'denied' };
+const STATUS = { PENDING: 'pending', APPROVED: 'approved', DENIED: 'denied', EXPIRED: 'expired' };
+// an unanswered ask is not pending forever. seven days is agent-vault's number
+// and it is the right shape: long enough that an owner who is away still sees
+// the ask, short enough that the inbox never fills with ghosts. expiry grants
+// nothing, so a stale ask is a bookkeeping fact, never a permission change.
+const ASK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DURATIONS = new Set(Object.values(PASS_DURATION));
 
 export class AccessRequestService {
@@ -66,6 +71,9 @@ export class AccessRequestService {
       note: note ? String(note).slice(0, 500) : null,
       status: STATUS.PENDING,
       createdAt: this.now(),
+      // computed once, at the ask, and stored: a deadline that moved with the
+      // clock would be a deadline nobody can plan around.
+      expiresAt: this.now() + ASK_TTL_MS,
       decidedAt: null
     };
     this.store.put('accessRequests', req.id, req);
@@ -76,16 +84,51 @@ export class AccessRequestService {
     return { outcome: OUTCOME.RESULTS, request: req };
   }
 
+  // the effective status, computed rather than trusted: a pending row past its
+  // deadline reads as expired even before a sweep touches it, so "still
+  // waiting" never describes an ask the owner can no longer answer.
+  view(row) {
+    if (!row) return row;
+    if (row.status === STATUS.PENDING && Number.isFinite(row.expiresAt) && this.now() >= row.expiresAt) {
+      return { ...row, status: STATUS.EXPIRED };
+    }
+    return row;
+  }
+
   list({ personaId = null, status = null } = {}) {
-    return this.store.list('accessRequests', (r) =>
-      (personaId === null || r.personaId === personaId) && (status === null || r.status === status))
+    return this.store.list('accessRequests', (r) => personaId === null || r.personaId === personaId)
+      .map((r) => this.view(r))
+      .filter((r) => status === null || r.status === status)
       .sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  // bookkeeping, not judgement: flip the rows a read has been reporting as
+  // expired, and receipt each one once. idempotent by construction - only a
+  // pending row flips, and it never flips back.
+  sweep({ now = null } = {}) {
+    const at = Number.isFinite(now) ? now : this.now();
+    let expired = 0;
+    for (const row of this.store.list('accessRequests', (r) => r.status === STATUS.PENDING, {})) {
+      if (!Number.isFinite(row.expiresAt) || at < row.expiresAt) continue;
+      this.store.update('accessRequests', row.id, (r) => ({ ...r, status: STATUS.EXPIRED, expiredAt: at }));
+      this.receipts.write({
+        actor: 'owner', personaId: row.personaId, op: RECEIPT_OP.ACCESS_REQUEST,
+        categories: row.categories, reason: 'access_request_expired'
+      });
+      expired += 1;
+    }
+    return { outcome: OUTCOME.RESULTS, now: at, expired };
   }
 
   deny({ requestId, reason = null }) {
     const req = this.store.get('accessRequests', requestId);
     if (!req) return { outcome: OUTCOME.UNAVAILABLE, reason: 'request_not_found' };
     if (req.status !== STATUS.PENDING) return { outcome: OUTCOME.DECLINED, reason: 'request_already_decided' };
+    if (this.view(req).status === STATUS.EXPIRED) {
+      // a decision after the deadline is not a late approval, it is a new ask
+      this.store.update('accessRequests', requestId, (r) => ({ ...r, status: STATUS.EXPIRED }));
+      return { outcome: OUTCOME.DECLINED, reason: 'request_expired' };
+    }
     const next = this.store.update('accessRequests', requestId, (r) => ({
       ...r, status: STATUS.DENIED, decidedAt: this.now(), denialReason: reason ? String(reason).slice(0, 300) : null
     }));
@@ -100,6 +143,11 @@ export class AccessRequestService {
     const req = this.store.get('accessRequests', requestId);
     if (!req) return { outcome: OUTCOME.UNAVAILABLE, reason: 'request_not_found' };
     if (req.status !== STATUS.PENDING) return { outcome: OUTCOME.DECLINED, reason: 'request_already_decided' };
+    if (this.view(req).status === STATUS.EXPIRED) {
+      // a decision after the deadline is not a late approval, it is a new ask
+      this.store.update('accessRequests', requestId, (r) => ({ ...r, status: STATUS.EXPIRED }));
+      return { outcome: OUTCOME.DECLINED, reason: 'request_expired' };
+    }
 
     const duration = edits.duration ?? req.duration;
     if (!DURATIONS.has(duration)) return { outcome: OUTCOME.DECLINED, reason: 'duration_invalid' };

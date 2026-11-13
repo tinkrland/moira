@@ -99,6 +99,88 @@ function detailSection(title, body) {
   return `<div class="section"><h3>${esc(title)}</h3>${body}</div>`;
 }
 
+// --- connection policy: how long a credential may live ---------------------
+// revocable is the default, and it is a real choice rather than an absence: a
+// credential stays until the owner revokes it. rotating says otherwise, either
+// on a calendar (every N days, or on a date) or on quiet (a period with no use
+// we can see, with a max-age ceiling so a busy token is not immortal). the
+// panel shows the deadline and offers the two acts that exist: re-schedule, and
+// present new material.
+
+const POLICY_CHOICES = [
+  { value: 'revocable', label: 'revocable · until you revoke it' },
+  { value: 'every:30', label: 'rotate every 30 days' },
+  { value: 'every:90', label: 'rotate every 90 days' },
+  { value: 'quiet:14', label: 'rotate after 14 quiet days' }
+];
+
+const policyChoice = (p) => {
+  if (p.mode !== 'rotating') return 'revocable';
+  const s = p.schedule ?? {};
+  if (s.kind === 'every') return `every:${Math.round(s.everyMs / 86400000)}`;
+  if (s.kind === 'quiet') return `quiet:${Math.round(s.quietMs / 86400000)}`;
+  return 'revocable';
+};
+
+const policyBody = (choice) => {
+  if (choice === 'revocable') return { mode: 'revocable' };
+  const [kind, days] = choice.split(':');
+  const ms = Number(days) * 86400000;
+  return { mode: 'rotating', schedule: kind === 'quiet' ? { kind: 'quiet', quietMs: ms } : { kind: 'every', everyMs: ms } };
+};
+
+function policySlot(identity) {
+  return `<div class="pol" data-id="${esc(identity.identityId)}">
+    <div class="meta">reading policy…</div></div>`;
+}
+
+function policyHtml(p, due) {
+  const next = p.nextRotationAt ? new Date(p.nextRotationAt).toISOString().slice(0, 10) : null;
+  const overdue = due && p.nextRotationAt && p.nextRotationAt <= Date.now();
+  const state = p.mode === 'rotating'
+    ? `rotating${next ? ` · next ${esc(next)}` : ''}${p.scheduleComplete ? ' · schedule complete' : ''}`
+    : 'revocable · stays until you revoke it';
+  return `<div class="meta">${state}${overdue ? ' · <span class="due">due now</span>' : ''}</div>
+    <select class="pol-mode">${POLICY_CHOICES.map((c) => `<option value="${esc(c.value)}"${policyChoice(p) === c.value ? ' selected' : ''}>${esc(c.label)}</option>`).join('')}</select>
+    <button class="tiny pol-apply">apply</button>
+    <button class="tiny pol-rotate">new credential…</button>`;
+}
+
+async function mountPolicies(held) {
+  if (!held.length) return;
+  const due = await api('/api/connectors/due').catch(() => ({ identities: [] }));
+  const dueIds = new Set((due.identities ?? []).map((x) => x.identityId));
+  for (const slot of document.querySelectorAll('.pol[data-id]')) {
+    const identityId = slot.dataset.id;
+    const policy = await api(`/api/connectors/policy?identityId=${encodeURIComponent(identityId)}`).catch(() => null);
+    if (!policy) { slot.innerHTML = '<div class="meta">policy unavailable</div>'; continue; }
+    slot.innerHTML = policyHtml(policy, dueIds.has(identityId));
+    slot.querySelector('.pol-apply').addEventListener('click', async () => {
+      try {
+        await api('/api/connectors/policy', {
+          method: 'POST',
+          body: JSON.stringify({ identityId, ...policyBody(slot.querySelector('.pol-mode').value) })
+        });
+        status('policy saved. the deadline below is the next one moira will report.');
+        await mountPolicies(held);
+      } catch (err) { status(`policy refused: ${err.message}`, true); }
+    });
+    slot.querySelector('.pol-rotate').addEventListener('click', async () => {
+      const raw = prompt('paste the new credential for this account (replaces the old one, same identity)');
+      if (!raw) return;
+      try {
+        const out = await api('/api/connectors/rotate', {
+          method: 'POST',
+          body: JSON.stringify({ identityId, credentials: { token: raw } })
+        });
+        status(`rotated. rotation ${out.rotationCount}${out.scheduleComplete ? ', schedule complete' : ''}.`);
+        await mountPolicies(held);
+      } catch (err) { status(`rotation refused: ${err.message}`, true); }
+    });
+  }
+}
+// --- policy end
+
 // --- rooms: shared memory, one hat at a time --------------------------------
 // a room is the one place in moira where several hats see the same thing. the
 // rules are the service's, not the panel's: nothing enters except an item a
@@ -328,7 +410,8 @@ async function openDetail(p) {
   // refuses it today, so it is not a button that pretends to work.
   const connectable = (conns.providers ?? []).filter((x) => x.kind === 'connected');
   const heldBody = held.length
-    ? `<ul>${held.map((c) => `<li>${esc(c.connectorId)} <span class="meta">${esc(c.account)} · ${c.mine ? 'this hat\'s' : 'borrowed, shared with this hat'} <button class="x revoke" data-id="${esc(c.identityId)}" title="revoke for everyone">×</button></span></li>`).join('')}</ul>`
+    ? `<ul>${held.map((c) => `<li>${esc(c.connectorId)} <span class="meta">${esc(c.account)} · ${c.mine ? 'this hat\'s' : 'borrowed, shared with this hat'} <button class="x revoke" data-id="${esc(c.identityId)}" title="revoke for everyone">×</button></span>
+      ${policySlot(c)}</li>`).join('')}</ul>`
     : '<div class="meta">no accounts connected to this hat</div>';
   const connBody = `${heldBody}
     <form id="conn-form" class="form-row">
@@ -449,6 +532,9 @@ async function openDetail(p) {
     });
   }
 
+  // policy reads are per connection and slow enough to want their own pass
+  mountPolicies(held).catch(() => {});
+
   // inference check runs after paint: one audit per agent holding a pass
   (async () => {
     const agents = [...new Set(d.passes.map((x) => x.clientId))];
@@ -534,6 +620,13 @@ async function loadInbox() {
     <div class="ask" data-id="${esc(r.id)}">
       <div class="from">${esc(r.clientId)} → ${esc(r.personaId)}</div>
       <div class="why">${r.note ? esc(r.note) : 'no note'}</div>
+      <div class="meta">${(() => {
+        // an ask carries its own deadline now; the panel says how long is left
+        // rather than letting an owner believe the ask waits forever
+        if (!r.expiresAt) return 'no deadline';
+        const left = Math.ceil((r.expiresAt - Date.now()) / 86400000);
+        return left <= 0 ? 'expires today' : `expires in ${left} day${left === 1 ? '' : 's'}`;
+      })()}</div>
       <div class="want">wants ${esc(r.categories.join(', '))}${r.fields ? ' · ' + esc(r.fields.join(', ')) : ''} · purpose ${esc(r.purpose)} · ${esc(r.duration)}${r.sets ? ' · sets ' + esc(r.sets.join(', ')) : ' · whole hat (will need acknowledgement)'}</div>
       <div class="form-row">
         <label>sets <input name="sets" value="${r.sets ? esc(r.sets.join(', ')) : ''}" placeholder="work" /></label>

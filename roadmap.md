@@ -46,6 +46,20 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## policy, deadlines, and a clock (2026-11-13)
+
+two declarations stopped being prose. **connection policy** is reachable:
+`GET/POST /api/connectors/policy`, `/api/connectors/due`, `/api/connectors/rotate`,
+a deadline and a `due now` marker on every held connection in the panel, and
+`scripts/sweep.mjs` as the clock a host crons (it reports, it never rotates: new
+material is a person's act). **asks expire**: seven days, stored at the ask,
+reported as `expired` before any sweep, refused with `request_expired`, and
+swept idempotently with one receipt per expiry so "pending" never means a ghost.
+
+also corrected a claim in docs/gaps.md: idle rotation was never quite dead.
+connector reads stamp activity internally; only activity moira cannot see needs
+a host's `touchConnection`.
+
 ## rooms reach the surface (2026-11-13)
 
 the room api was 500-ing and nobody knew, because the room tests drove the

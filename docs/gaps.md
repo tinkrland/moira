@@ -50,41 +50,40 @@ a sealed credential with scopes, and egress is implicit in whichever adapter
 happens to be installed. a service rule makes egress a sentence the owner can
 read.
 
-### 3. approval links with a short read-only token
+### 3. approval links with a short read-only token — **expiry shipped 2026-11-13, the link is still open**
 
-an access request is decided over an authenticated owner session
-(`POST /api/requests/decide`). there is no link, no read-only token, and no
-expiry: `src/core/requests.js` has no `ttl`, no `expiresAt`, and nothing
-sweeps stale asks.
+an ask now carries a deadline: `ASK_TTL_MS` is 7 days (agent-vault's number),
+`request()` stores `expiresAt` once rather than recomputing it, and
+`requests.view()` reports a pending row past its deadline as `expired` even
+before a sweep touches it. `approve`/`deny` refuse with `request_expired` and
+mint nothing; `sweep()` flips the rows and receipts each expiry exactly once,
+idempotently. the route sweeps before listing, so "pending" never includes a
+ghost, and the inbox says how long is left.
 
-two consequences worth naming:
+~~no expiry~~ closed. **still open: the read-only link.** an owner still needs
+an authenticated owner session to say no, which is the wrong ergonomic ask for
+"reply to this one question". the token discipline it needs already exists here
+(hash at rest, raw once, single use) in `connect.js` and the device flow.
 
-- an ask that nobody answers stays pending forever. agent-vault's proposals
-  expire in 7 days; ours do not. reads stay `approval_required` while
-  pending, so this fails closed, but the inbox inflates.
-- an owner has to hold an owner session to say no. a short-lived read-only
-  approval link is the ergonomic fix, and the token discipline already exists
-  in this repo (hash-at-rest, raw once, single use) in `connect.js` and the
-  device flow.
+### 4. connection policy has no surface and no clock — **shipped 2026-11-13**
 
-### 4. connection policy has no surface and no clock
+closed on all three counts. routes: `GET/POST /api/connectors/policy`,
+`GET /api/connectors/due`, `POST /api/connectors/rotate`, owner-gated, results
+200 / missing 404 / refused 400. panel: each held connection shows its deadline
+in words ("revocable · stays until you revoke it" or "rotating · next 2026-12-13"),
+a `due now` marker when it is overdue, a schedule picker (30/90 days, quiet 14)
+and one "new credential…" act.
 
-`setConnectionPolicy` / `connectionPolicy` / `dueRotations` /
-`rotateConnection` all exist in `src/core/connectors/hub.js` and the owner
-facade, and the rotation reasons (interval, scheduled, idle, max_age) are
-computed properly. but:
+the clock is `scripts/sweep.mjs`: it stamps expired asks and prints the due
+rotations as json for cron. it rotates nothing, on purpose - rotation needs new
+material from the provider, which is a person's act, not a timer's. refusal: it
+will not run without `MOIRA_OWNER_CONFIRMED=1`.
 
-- the panel has no control for policy mode (`grep policy ui/app.js` is empty),
-  so mode and schedule are reachable only through the Node API.
-- nothing calls `dueRotations`. there is no `setInterval`, no cron, no
-  scheduler in `src/` - by design the clock is the host's. that means a
-  credential past its rotation deadline is only discovered by a host that
-  remembers to ask, which is the same as not rotating.
-
-**[inert] one part is a real hazard:** an "idle" policy is supposed to fire
-when the connection goes quiet, but idleness is only knowable from
-`touchConnection`, which the host must call. nothing calls it. so activity
-policies silently never trigger until a host integrates.
+**and the idle hazard was smaller than this doc claimed.** connector reads and
+people captures already stamp `lastActivityAt` internally (`hub.js` read path),
+so "quiet" is measured from real use, not only from a host's `touchConnection`.
+`touch` remains for activity moira cannot see. verified against a 40-day-old
+credential: `dueRotations` reports `reason: interval, overdueByMs: 864000085`.
 
 ### 5. traces exist, the export does not
 
@@ -209,11 +208,10 @@ says `PLANNED` rather than pretending. the honest inventory:
 
 1. **rooms in the panel** (6) - the layer is done and dark; a surface is the
    difference between a feature and a test file.
-2. **policy + clock** (4) - either a scheduler calls `dueRotations`, or the
-   rotation story is prose. a credential rotation nobody runs is not a
-   rotation.
-3. **approval links + ask expiry** (3) - small, closes an unbounded inbox,
-   and reuses token discipline that already exists.
+2. ~~**policy + clock** (4)~~ shipped: routes, panel controls, and
+   `scripts/sweep.mjs` for a host's cron.
+3. **approval links** (3) - the expiry half is shipped; the read-only link is
+   still the ergonomic gap, and it reuses token discipline that already exists.
 4. **people adapter** (9) - one calendar reader turns the whole ingest path
    from "tested" into "used".
 5. **traces export** (5) and **persona export** (7) - both are routes over

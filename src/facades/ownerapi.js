@@ -69,6 +69,13 @@ export class OwnerApi {
     return { outcome: OUTCOME.RESULTS, requests: this.gw.requests.list({ personaId, status }) };
   }
 
+  // maintenance: stamp the asks a read already reports as expired. the route
+  // calls this before listing, so an owner never sees a ghost as pending.
+  sweepAccessRequests(ctx, { now = null } = {}) {
+    this._require(ctx);
+    return this.gw.requests.sweep({ now });
+  }
+
   approveAccessRequest(ctx, { requestId, edits = {} } = {}) {
     this._require(ctx);
     if (!requestId) return { outcome: OUTCOME.DECLINED, reason: 'request_id_required' };

@@ -60,6 +60,10 @@ export function createMoiraServer({
     res.end(JSON.stringify(body));
   }
 
+  // connector answers use the same triple: results 200, a missing identity 404,
+  // a refused policy 400.
+  const connectorStatus = (out) => out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400;
+
   // a room answer carries its own verdict: results 200, a missing room/persona
   // 404, anything the policy refused 400. "declined" is never a success.
   const roomStatus = (out) => out.outcome === 'results' ? 200 : out.outcome === 'unavailable' ? 404 : 400;
@@ -225,6 +229,31 @@ export function createMoiraServer({
         const out = moira.owner.revokeConnector(owner, { identityId: body?.identityId });
         return json(res, out.outcome === 'results' ? 200 : 400, out);
       }
+      // connection policy: how long a credential may live, and what is due for
+      // rotation. the maths already existed; these are the routes that make it
+      // reachable, and /due is the read a host's clock runs against.
+      if (path === '/api/connectors/policy' && (req.method === 'GET' || req.method === 'POST')) {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = req.method === 'GET'
+          ? moira.owner.connectionPolicy(owner, { identityId: url.searchParams.get('identityId') })
+          : moira.owner.setConnectionPolicy(owner, await readBody(req));
+        return json(res, connectorStatus(out), out);
+      }
+      if (path === '/api/connectors/due' && req.method === 'GET') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const out = moira.owner.dueRotations(owner);
+        return json(res, connectorStatus(out), out);
+      }
+      if (path === '/api/connectors/rotate' && req.method === 'POST') {
+        const owner = getOwnerContext ? getOwnerContext(req) : null;
+        if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        const body = await readBody(req);
+        const out = moira.owner.rotateConnection(owner, { identityId: body?.identityId, credentials: body?.credentials });
+        return json(res, connectorStatus(out), out);
+      }
+
       // rooms: shared memory, one persona at a time. every route here is
       // owner-gated and re-checks membership in the service, so a 401/404/400
       // below is a real answer rather than the 500 this block used to throw
@@ -376,6 +405,10 @@ export function createMoiraServer({
       if (path === '/api/requests' && req.method === 'GET') {
         const owner = getOwnerContext ? getOwnerContext(req) : null;
         if (!owner) return json(res, 401, { outcome: 'unavailable', reason: 'owner_session_required' });
+        // stamp what has gone stale before answering, so "pending" never
+        // includes an ask the owner can no longer answer. a sweep is
+        // bookkeeping: it grants nothing and mints nothing.
+        moira.owner.sweepAccessRequests(owner);
         return json(res, 200, moira.owner.listAccessRequests(owner, { status: url.searchParams.get('status') ?? 'pending' }));
       }
       if (path === '/api/requests/decide' && req.method === 'POST') {
