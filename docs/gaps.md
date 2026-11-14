@@ -245,7 +245,18 @@ nothing". a mailbox feeder is the next cheap one; the plumbing is now shared.
 against documented-shape fixtures, not a real Google account, exactly like the
 three file adapters. that needs the owner's oauth app.
 
-### 10. the ledger cannot learn
+### 10. the ledger cannot learn — **specified 2026-11-14, still unbuilt**
+
+`docs/ledger-learning.md` is the spec, written before any provider key exists so
+the first live key tests the design instead of authoring it. it names the three
+sources and what each can prove (metering beats polls on spend, mail beats both
+on events), the proposal object and its three safety rules, three confidence
+tiers and what each may do, the polling contract (host-called, single-flight,
+backoff, idempotent), how a poller authenticates through a sealed identity, a
+service rule and a `usage:read` capability, and the three artefacts that make
+"no live keys" honest: contract fixtures, an owner-run probe, and a verification
+page. nothing in it is built; the acceptance tests are named and none exist.
+
 
 `src/core/ledger.js` states its own contract in the header: manual entry and
 owner-confirmed proposals here, and "provider usage polling and billing-mail
@@ -259,6 +270,19 @@ ends in 3 days, confirm". spec v1's billing-mail extraction is untouched.
 related and smaller: `rankFor` takes `burnRateFraction` as an argument.
 nothing learns it, so the "spend forecasting with burn-rate learning" item is
 also open (`burn` in `src/core/` is only this knob).
+
+### 10b. the card has no contract for sectioning or for isolation-vs-sharing
+
+`docs/id-card.md` now states it: the card is one persona's identity on the front
+and its consent state on the back, sections are derived (categories, sets, rung
+ceiling) and never authored, and the back carries **three columns** - exists,
+shared, inferable - because isolation and sharing are different questions and a
+single "shared: 40%" bar lies by aggregation. the surface fails the contract in
+one visible way: the card's three-column back is currently fourteen drawer
+sections, so the summary and the evidence are the same place. the logo rules
+(chrome not content, never on a front face) are written there too, with the
+clear-space, minimum-size and no-recolour mechanics that were previously only
+implied by `.mark` in `ui/ui.css`.
 
 ### 11. standing-rule suggestions — **shipped 2026-11-13**
 

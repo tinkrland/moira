@@ -276,6 +276,24 @@ single-host deployment, not final owner auth. passkeys/oidc remain the
 stated next step, and the verifier is a reference implementation to swap
 out, not a claim.
 
+## the card, and where the logo goes
+
+the card is the artifact, so it has a contract rather than a mood: one persona's
+identity on the front, its consent state on the back, sections derived from
+categories and sets and never hand-labelled, and a back that keeps **three
+columns** apart: what exists, what is shared, what could be inferred. one
+"shared: 40%" bar would lie by aggregation, so there isn't one.
+
+the mark (`logo.png`, rendered to `ui/logo-mark.png` at 128 and `ui/logo-256.png`
+at 256) is chrome, not content: header letterhead and the card's back footer,
+never the front face, because the front is the persona and a product mark there
+reads as their avatar. clear space is a quarter of the mark's width, one shadow,
+no recolour.
+
+docs: `docs/id-card.md` for the anatomy and the rules, `docs/ledger-learning.md`
+for how the ledger learns from providers and mail without a live key. both are
+contracts the code is measured against, not descriptions of code that exists.
+
 ## modality
 
 moira is designed to be reached the way you actually live:

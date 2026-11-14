@@ -46,6 +46,20 @@ what is planned, what is deliberately deferred.
 - [ ] **phase 4 - v2 commerce + actions** (payments, bookings): after the
   connector hub.
 
+## two contracts written before the code (2026-11-14)
+
+`docs/ledger-learning.md` specs how the ledger learns from providers and mail
+without pretending a fixture is a live account: three sources with separate
+provinces, a proposal that can never edit an account, three confidence tiers with
+named limits, a polling contract that is host-called and single-flight, and a
+verification page instead of an assumption. `docs/id-card.md` specs the card as an
+identity artifact: derived sections, a three-column back (exists / shared /
+inferable) that refuses to collapse into one number, six states, a binding table
+where every field names its endpoint, and the logo as chrome rather than content.
+
+both are contracts the code is measured against, not descriptions of code that
+exists. no live key was used to write either.
+
 ## no is an answer from a phone (2026-11-13)
 
 approval links: an `appr_` token, returned once and stored as a hash, single use,
